@@ -1,0 +1,268 @@
+/**
+ * Description. A table object to be used for showing the data
+ *
+ * @file   This files defines the Table_Manager class.
+ * @author Kevin Worthington
+ *
+ * @param {Object} properties     The properties passed as a json object specifying:
+
+
+*/
+
+class Table_Manager {
+  constructor(properties,_resource_id) {
+
+    //store all the properties passed
+    for (var p in properties){
+        this[p]=properties[p]
+    }
+    this.layer_data={}
+    this.elm_wrap=$("#"+this.elm_wrap)
+    // keep track of the selected layer
+    this.selected_layer_id;
+
+     this.page_start=0;
+     this.page_rows=10;
+     this.query="1=1"
+     this.sort_col;
+
+
+
+  }
+  init(){
+    // now that everything has been loaded setup the table area
+    var $this= this;
+    $("[for='table_bounds_checkbox']").text(LANG.DATA_TABLE.LIMIT)
+    $('#table_bounds_checkbox').change(
+        function(){
+            $this.get_layer_data()
+        });
+    // detect scroll bottom
+    $("#"+this.elm).scroll( function(e) {
+         if (Math.round($(this).scrollTop() + $(this).innerHeight()) >= $(this)[0].scrollHeight){
+            // check if there are more to load
+            if( $this.page_count> $this.page_start){
+                // load the next page
+                 $this.page_start+=$this.page_rows;//start where we left off
+                 $this.get_data($this.selected_layer_id,$this.append_to_table)
+
+            }
+         }
+    });
+
+  }
+  get_layer_data(_layer_id){
+     // perform an initial search using the specified layer_id or the previously selected one
+     // @param _layer_id: a string for the resource
+     if (!_layer_id){
+       _layer_id =  this.selected_layer_id
+     }
+    this.page_start=0
+    this.elm_wrap.show();
+    layer_manager.map.invalidateSize(true);
+    $(window).trigger("resize");
+
+    this.get_data(_layer_id,this.show_response)
+    this.show_layer_select(_layer_id)
+
+  }
+  show_layer_select(_layer_id){
+    // create a layer select dropdown for changing the layer
+    //todo - test to make sure removing a layer doesn't affect the table data view
+    // @param _layer_id: a string for the resource
+    var trigger_layer_data_load=false; //trigger the
+    if (typeof(_layer_id)!="undefined"){
+        this.selected_layer_id = _layer_id
+     }
+     // if the _layer_id is not set and the this.selected_layer_id is no longer on the map trigger a new map click with the first layer
+     if ((!_layer_id || !layer_manager.is_on_map(this.selected_layer_id)) && this.elm_wrap.is(":visible")){
+        if(layer_manager.layers.length>0){
+            this.selected_layer_id=layer_manager.layers[0].id
+            trigger_layer_data_load = true
+        }else{
+            // hide the table
+            this.close()
+
+            return
+        }
+
+     }
+      // create a dropdown to enable layer selection
+    $("#data_table_select").html(layer_manager.get_layer_select_html( this.selected_layer_id,"table_manager.set_selected_layer_id"))
+    if(trigger_layer_data_load){
+        this.get_layer_data( this.selected_layer_id)
+    }
+  }
+  bounds_change_handler(){
+    // when the map bounds changes and the
+     if (this.elm_wrap.is(":visible") && $('#table_bounds_checkbox').is(':checked')){
+         this.get_layer_data()
+
+     }
+
+  }
+
+  set_selected_layer_id(elm){
+      // when the layer selection dropdown changes trigger a selection
+      // @param elm: a dom element for getting the selected layer id
+      table_manager.get_layer_data($(elm).val())
+
+  }
+  get_data(_layer_id,func){
+   $("#data_table_total .spinner-border").show();
+    var $this=this
+
+    var layer = layer_manager.get_layer_obj(_layer_id)
+    var layer_obj =layer.layer_obj
+
+    if(!$this.sort_col && layer.resource_obj.fields){
+        // use the first col if no sort specified
+      this.sort_col =layer.resource_obj.fields[0].name
+      this.sort_dir = "ASC"
+    }
+
+
+    // passing options
+    // https://esri.github.io/esri-leaflet/api-reference/tasks/query.html
+    var query_start = layer_obj.query().where($this.query)
+    var query_full = layer_obj.query().where($this.query).limit($this.page_rows).offset($this.page_start)
+    if(this.sort_col){
+        query_full=query_full.orderBy($this.sort_col,$this.sort_dir)
+    }
+    if ($('#table_bounds_checkbox').is(':checked')){
+        // add map bounds
+        query_start=query_start.intersects(layer_manager.map.getBounds())
+        query_full=query_full.intersects(layer_manager.map.getBounds())
+    }
+    query_start.count(function (error, response) {$this.page_count = response
+          query_full.run(func);
+        });
+
+  }
+  show_response(error, featureCollection, response){
+  var $this=table_manager
+  if (error) {
+        console.log(error);
+        return;
+      }
+      $this.results = featureCollection.features
+      $this.generate_table(featureCollection.features)
+      $this.show_totals()
+  }
+  append_to_table(error, featureCollection, response){
+    var $this=table_manager
+    $this.results = $this.results.concat(featureCollection.features)
+    //when the table is scrolled just append the results
+    var html=$this.get_rows_html(featureCollection.features)
+    $(".fixed_headers tbody").append(html)
+
+    $this.show_totals()
+
+  }
+  //
+  generate_table(_features){
+    //the first call to generated the table
+    var html= "<table class='fixed_headers'><thead><tr>"
+    // loop through the header elements
+    var first_row = _features[0]
+    for (var p in first_row.properties){
+    //todo add domain names (alias) for headers and pass database name to function for sorting
+     var sort_icon="<i/>"
+     if(this.sort_col ==p){
+        sort_icon=this.get_sort_icon(this.sort_dir)
+     }
+     html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
+    }
+
+    html +="</tr></thead><tbody>";
+    html+=this.get_rows_html(_features)
+
+    html +="</tbody></table>";
+
+    $("#"+this.elm).html(html)
+
+    setTimeout(function(){ $(window).trigger("resize"); }, 100);
+
+  }
+  get_rows_html(_rows){
+    var html="";
+    for(var i =0;i<_rows.length;i++){
+        var id=0
+        html+="<tr onclick='table_manager.highlight_feature(this,\""+_rows[i].id+"\")' ondblclick='table_manager.zoom_feature(this,\""+_rows[i].id+"\")'>"
+        for (var p in _rows[i].properties){
+              html+="<td>"+_rows[i].properties[p]+"</td>"
+        }
+        html+="</tr>"
+    }
+    return html
+  }
+
+  highlight_feature(elm,_id){
+    //take the currently selected layer and the id to make a selection
+    var feature = this.get_feature(_id)
+
+    map_manager.show_highlight_geo_json(feature.geometry)
+
+    $(".fixed_headers tr").removeClass('highlight');
+    $(elm).addClass('highlight');
+  }
+  zoom_feature(elm,_id){
+    //take the currently selected layer and the id to make a selection
+    var feature = this.get_feature(_id)
+    map_manager.map_zoom_event(L.geoJSON(feature.geometry).getBounds())
+  }
+
+  sort(elm,col){
+    // sort the selected column first asc then descending
+    var direction="ASC"
+    if(!this.sort_col || this.sort_col != col || (this.sort_col == col && this.sort_dir != direction)){
+        $(elm).parent().find("i").remove()
+        $(elm).find("i").replaceWith('<i/>')
+    }else{
+        direction="DESC"
+        $(elm).find("i").replaceWith(' '+this.get_sort_icon(direction))
+    }
+    this.sort_col = col
+    this.sort_dir = direction
+    this.page_start=0;
+    this.get_layer_data()
+
+  }
+  get_sort_icon(direction){
+    var icon = "up"
+    if (direction== "DESC"){ icon="down" }
+    return  '<i class="fas fa-sort-'+icon+'"></i>'
+  }
+
+  get_feature(_id){
+    for (var i =0;i<this.results.length;i++){
+        if(this.results[i].id==_id){
+            return this.results[i]
+        }
+    }
+  }
+  show_totals(){
+
+        var totals_results=this.page_count
+        var showing_start=1
+        var showing_end=this.results.length
+        $("#data_table_total .total_results").text(LANG.RESULT.FOUND+" "+totals_results+" "+LANG.RESULT.RESULTS)
+        $("#data_table_total .total_showing").text(LANG.RESULT.SHOWING_RESULTS+" "+showing_start+" "+LANG.RESULT.TO+" "+showing_end)
+        // when there are no results
+        if (showing_end==0){
+            $("#data_table_total .total_showing").text("")
+        }
+        $("#data_table_total .spinner-border").hide();
+  }
+  close(){
+     this.elm_wrap.hide();
+     delete this.sort_col;
+     $( window ).trigger("resize");
+     if (map_manager.highlighted_feature) {
+      $(".fixed_headers tr").removeClass('highlight');
+      // remove the map highlight
+      map_manager.map.removeLayer(map_manager.highlighted_feature);
+    }
+  }
+
+}

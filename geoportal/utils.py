@@ -1,0 +1,198 @@
+import json
+from . import views
+
+import re
+
+
+def get_lang(_LANG):
+    if not _LANG:
+        _LANG = 'en'
+    return json.load(open('static/i18n/' + _LANG + '.json'))  # deserializes it
+
+
+def get_ref_link(_json_refs,_type):
+    # look for a download link
+    if type(_json_refs) is dict:
+        json_refs = _json_refs
+    else:
+        try:
+            json_refs = json.loads(_json_refs)
+
+        except:
+            json_refs =None
+
+    if json_refs:
+
+        for j in json_refs:
+            ref = get_ref_type(j)
+
+            if ref == _type:
+                    # not list and type(json_refs[j]) is not dict
+                    # print("get_ref_link found",_type,type(json_refs[j]),json_refs[j])
+                    if type(json_refs[j]) is not list and json_refs[j].find("[")>-1:
+                        return json_refs[j].replace('[', '').replace(']', '').split(",")
+                    elif type(json_refs[j]) is list:
+
+                        return json_refs[j][0]['url']
+                    else:
+                        return json_refs[j]
+    else:
+        return None
+
+
+
+
+
+def get_ref_type(_ref):
+    if _ref == 'http://schema.org/url':
+        return "info_page"
+    elif _ref == 'http://www.isotc211.org/schemas/2005/gmd/':
+        return "metadata"
+    elif _ref == 'http://schema.org/downloadUrl':
+        return "download"
+    elif _ref == 'https://schema.org/ImageObject':
+        return "image"
+    else:
+        return ""
+
+def get_toggle_but_html(resource,LANG):
+    add_func = "layer_manager.toggle_layer"
+    print()
+    add_txt = LANG["RESULT"]["ADD"]
+    #
+    child_arr = []
+    if resource["lyr_count"] and resource["lyr_count"]>1:
+        # get dynamic add text - get all the ids for use in determining if on map
+        child_ids= views.get_solr_data("q=path:"+resource["layer_slug_s"]+".layer&fl=layer_slug_s&rows=1000")
+
+        for c in child_ids["response"]["docs"]:
+            child_arr.append(c["layer_slug_s"])
+
+        add_txt = get_count_text(resource,LANG)
+        add_func = "filter_manager.get_layers"
+
+    #Allow button to remain active
+    # extra_class= "active"
+    if (add_txt!=LANG["RESULT"]["REMOVE"]):
+        extra_class=""
+
+    return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr='" + ",".join( child_arr) + "' onclick='" + add_func + "(\"" + resource["dc_identifier_s"] + "\")'>" + add_txt + "</button>"
+
+
+def get_count_text(resource,LANG):
+    return LANG["RESULT"]["ADD"]+" - <span></span>"+"<span>/"+str(resource["lyr_count"])+"</span>"
+
+def get_details_but_html(resource,LANG):
+    return "<button type='button' class='btn btn-primary' href='"+get_catelog_url(resource)+"' onclick='filter_manager.show_details(\"" + resource["dc_identifier_s"] + "\")'>" + \
+           LANG["RESULT"]["DETAILS"] + "</button>"
+
+def get_catelog_link_html(resource,LANG):
+    return '<a href ="'+get_catelog_url(resource)+'" target="_blank">'+LANG["DETAILS"]["CATALOG_VIEW"]+'</a>'
+
+def get_catelog_url(resource):
+    panel = "details"
+    # for child layers
+
+    if "dc_source_sm" in resource:
+        panel = "sub_details"
+
+
+    return "?t=search_tab/"+panel+"/"+resource["dc_identifier_s"]
+
+def get_geom_type_icon(_geom_type):
+    # returns an html icon
+    if _geom_type == 'Image':
+        return '<i class="far fa-image"></i>'
+    elif _geom_type == 'Raster':
+        return '<i class="fas fa-globe-americas"></i>'
+    elif _geom_type == 'Point':
+        return '<i class="fas fa-map-marker-alt"></i>'
+    elif _geom_type == 'Polygon':
+        return '<i class="fas fa-vector-square"></i>'
+    elif _geom_type == 'Line':
+        return '<div style="width:12px;height:12px;display:inline-block;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-labelledby="aria-label-line">'+\
+            '<rect x="2" y="22.9" width="7.1" height="7.1" style="stroke-width:3;stroke:#333;fill-opacity:0;" />'+\
+            '<rect x="22.9" y="2" width="7.1" height="7.1" style="stroke-width:3;stroke:#333;fill-opacity:0;" />'+\
+            '<path fill="none" stroke="#333" stroke-miterlimit="10" stroke-width="3" d="M9.1 22.9L22.9 9.1"></path></svg></div>'
+    else:
+        return ""
+
+def get_access_icon(resource):
+    html = "<i class='fas fa-lock'></i>"
+    if resource['dc_rights_s'] == "Public":
+        html = "<i class='fas fa-unlock'></i>"
+    return html
+
+def get_reference_data(resource_id):
+    return views.get_solr_data("q=dc_identifier_s:" + str(resource_id))
+
+def get_more_details_link_html(resource,LANG):
+    info_link=get_ref_link(resource['dct_references_s'], "info_page")
+    if info_link:
+        html=""
+        if isinstance(info_link, str):
+            html += get_more_details_link(info_link, LANG)
+        else:
+            for i in info_link:
+                html+= get_more_details_link(i,LANG)
+
+        return html
+    else:
+        return ""
+
+def get_more_details_link(url,LANG):
+    return '<a href="' + url + '" target="_blank">' + LANG["DETAILS"][
+        "MORE_DETAILS"] + ' <i class="fas fa-external-link-alt"></i></a><br/>'
+
+def get_fields_html(_fields,lang):
+    """
+    Convert the solr field into a pretty table
+    :param _fields:
+    :return: html
+    """
+    int_type=["esriFieldTypeOID","esriFieldTypeSingle","esriFieldTypeDouble"]
+    html="<table class='attr_table'>"
+    html += "<tr><th>"+lang["DETAILS"]["NAME"]+"</th><th>"+lang["DETAILS"]["TYPE"]+"</th></tr>"
+
+    for f in _fields:
+        #
+        j = convert_text_to_json(f)
+
+        if type(j) is dict:
+            type_str=j['type']
+            if type_str in int_type:
+                type_str = lang["DETAILS"]["NUMBER"]
+            else:
+                type_str = lang["DETAILS"]["TEXT"]
+            html += "<tr><td>" +j['name'] + "</td><td>" + type_str + "</td></tr>"
+        else:
+            html +=str(j)
+
+    return html+"</table><br/>"
+
+def convert_text_to_json(text):
+    # //solr stores the json structure of nested elements as a smi usable string
+    # // convert the string to json for use!
+    # // returns a usable json object
+
+    reg = r'(\w+)=([^\s|\[|,|\{|\}]+)'  # get words between { and = (\w+)=([^\s|\[|,|\{|\}]+)
+    text = re.sub(reg, r'"\1"="\2"', text)
+
+    # find all the {att: instances
+    text = re.sub(r'({)([^"|{]*)(=)', r'{"\2"=', text)
+
+    # and wrap the last attributes that equal something - adding back '='
+    text = re.sub(r'\s([^=|"|,]*)=', r'"\1"=', text)
+
+    # replace any empty strings =,
+    text = text.replace('=,', '="",')
+    # and empty slots
+    text = text.replace(', ,', ',')
+
+    # lastly replace the '=' with ':'
+    text = text.replace('=', ':')
+
+    try:
+        return json.loads(text)
+    except:
+        return text

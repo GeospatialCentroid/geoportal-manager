@@ -1,0 +1,78 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html, body, .map{
+   height: 100%;
+}
+
+.map{
+  float:left;
+  width: 50%;
+}
+#image_map{
+        border-right: 1px solid grey;
+}
+#map{
+
+}
+
+.leaflet-but {
+    height: 30px;
+    width: 30px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 24px 24px;
+    background-color:#fff;
+}
+.leaflet-save-but {
+    background-image: url(../../images/icons/save-regular.svg);
+
+}
+.leaflet-image_plus-but {
+    background-image: url(../../images/icons/image_plus.svg);
+    height: 20px;
+    background-position: 4px 1px;
+}
+.leaflet-image_minus-but {
+    background-image: url(../../images/icons/image_minus.svg);
+}
+
+.form_icon{
+/*Jason Tropp, US*/
+}
+
+.ui-dialog { z-index: 1000 !important ;}
+
+p { margin-bottom: 1em; }
+
+
+
+#dialog ol {
+
+   counter-reset: item;
+
+    margin:0px 0;
+    padding:0;
+    list-style: decimal-leading-zero inside none;
+}
+
+#dialog ol li
+{
+    margin: 0px;
+    padding: 0px;
+    text-indent: -2.2em;
+    margin-left: 3.4em;
+}
+#dialog li {
+  display: block
+}
+#dialog li:before {
+  content: counters(item, ".") " ";
+  counter-increment: item;
+
+}
+.hide{
+    display:None
+}

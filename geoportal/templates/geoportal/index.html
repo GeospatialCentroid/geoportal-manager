@@ -1,0 +1,321 @@
+
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+    {% if title %}
+        {{title}}
+    {% else %}
+         Mountain Scholar Geoportal
+    {% endif %}
+
+
+    </title>
+
+    {% load static %}
+
+    <link rel="icon" href="{% static 'images/favicon.png' %}" type="image/x-icon" />
+
+
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/leaflet.js' %}'></script>
+    <script type="text/javascript" src='{% static 'plugins/esri-leaflet/esri-leaflet.js' %}'></script>
+
+     <script type="text/javascript" src='{% static 'plugins/leaflet/side-by-side/leaflet-side-by-side.js' %}'></script>
+
+
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet.css' %}" />
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/leaflet-locatecontrol/L.Control.Locate.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet-locatecontrol/L.Control.Locate.css' %}" />
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/leaflet-geosearch/geo-search.min.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet-geosearch/geo-search.css' %}" />
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/leaflet-ruler/leaflet-ruler.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet-ruler/leaflet-ruler.css' %}" />
+
+     <!--leaflet draw-->
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.draw/leaflet.draw.css' %}" />
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Leaflet.draw.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/Edit.Poly.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/Edit.SimpleShape.js' %}"></script>
+     <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/Edit.CircleMarker.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/Edit.Circle.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/Edit.Rectangle.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Feature.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Polyline.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Polygon.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.SimpleShape.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Rectangle.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Marker.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.CircleMarker.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Circle.js' %}"></script>
+
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/TouchEvents.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/LatLngUtil.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/GeometryUtil.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/LineUtil.Intersect.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/Polyline.Intersect.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/Polygon.Intersect.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Control.Draw.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Tooltip.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Toolbar.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/DrawToolbar.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/EditToolbar.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/EditToolbar.Edit.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/EditToolbar.Delete.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Leaflet.Draw.Event.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/leaflet-iiif.js' %}"></script>
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/Leaflet.DistortableImage/vendor.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.DistortableImage/vendor.css' %}" />
+    <script type="text/javascript" src='{% static 'plugins/leaflet/Leaflet.DistortableImage/leaflet.distortableimage.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.DistortableImage/leaflet.distortableimage.css' %}" />
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.markercluster-1.4.1/dist/MarkerCluster.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.markercluster-1.4.1/dist/MarkerCluster.Default.css' %}">
+
+     <script type="text/javascript" src='{% static 'plugins/leaflet/esri-leaflet-cluster.js' %}'></script>
+
+     <script type="text/javascript"  src='{% static 'plugins/leaflet/vector-tile-pbf/Leaflet.VectorGrid.bundled.min.js' %}'"></script>
+     <script type="module" src='{% static 'plugins/leaflet/vector-tile-pbf/Leaflet.VectorGrid.Protobuf_extend.js' %}'></script>
+     <!--jquery-->
+    <link rel="stylesheet" href="{% static 'plugins/jquery-ui/jquery-ui.css' %}">
+    <script src="{% static 'plugins/jquery-ui/external/jquery/jquery.js' %}"></script>
+    <script src="{% static 'plugins/jquery-ui/jquery-ui.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'plugins/jquery/jquery.drawrpalette-min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/jquery/jquery-dateformat.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/jquery/jquery.datetimepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/jquery/jquery.datetimepicker.full.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'plugins/jquery/jquery.datetimepicker.css' %}">
+
+
+    <!--bootstrap-->
+     <script src="{% static 'plugins/popper.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap.min.js' %}"></script>
+
+
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap.min.css' %}">
+
+
+     <script src="{% static 'plugins/fontawesome.min.js' %}"></script>
+     <link rel="stylesheet" href="{% static 'plugins/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/all.min.css' %}" />
+
+
+    <script src="{% static 'plugins/rison.js' %}"></script>
+
+    <script src="{% static 'js/index.js' %}?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+     <script src="{% static 'js/utils.js' %}?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+     <script src="{% static 'js/filter_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+
+     <script src="{% static 'js/map_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+    <script src="{% static 'js/layer_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+    <script src="{% static 'js/table_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+    <script src="{% static 'js/download_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={% now "SHORT_DATETIME_FORMAT" %}" />
+
+<script type="text/javascript">
+    DJANGO_STATIC_URL = '{{ STATIC_URL }}';
+</script>
+
+
+<body>
+
+<div class="page vh-100">
+    <div id="header" class="col-lg-12">
+       <a href="/"><img class="logo" src="{{ STATIC_URL }}images/logo.png"/></a>
+    </div>
+    <div id="content">
+        <div id="side_bar" >
+             <div id="tabs">
+                <button id="search_tab" class="btn btn-primary rounded-0 active tab_but"></button>
+                 <button id="map_tab" class="btn btn-primary rounded-0 tab_but"><span class="label"></span> (<span class="value">1</span>)</button>
+                 <button id="download_tab" class="btn btn-primary rounded-0 tab_but"></button>
+            </div>
+
+
+            <div id="map_panel_wrapper" class="tab_panel" >
+                <div id="map_panel" >
+                   <ul id="sortable_layers">
+
+                   </ul>
+                    <ul id="basemap_layer" class="med_pad">
+
+                    </ul>
+                </div>
+                <div id="map_panel_scroll" class="scroll_wrapper">
+                    <div id="map_panel_scroll_content" >
+                    </div>
+                </div>
+
+
+            </div>
+            <div id="download_panel_wrapper" class="tab_panel">
+               <div id='download_instruction'></div>
+                <div id='downloadable_layers'></div>
+                <div class='download_but_wrapper'></div>
+                <br/>
+                <button id='download_button'  type='button' class='btn btn-primary' onclick='download_manager.download(this)'></button>
+            </div>
+
+            <div id="search_panel_wrapper" class="tab_panel">
+                <div id="side_header">
+                    <div class="input-group search_wrapper">
+                      <input id="search" type="text" class="form-control" placeholder="">
+                      <div class="input-group-append">
+                        <button class="btn  btn-primary" type="button" id="search_but"> <i class="fas fa-search"></i></button>
+                      </div>
+                    </div>
+
+                     <div id="filter_bounds">
+                         <div  class="float-left">
+                          <input  id="filter_bounds_checkbox" type="checkbox" value="">
+                          <label class="form-check-label" for="filter_bounds_checkbox"></label>
+                        </div>
+                     </div>
+                    <br/>
+                     <div id="filter_date">
+                         <input  id="filter_date_checkbox" type="checkbox" value="">
+                          <label class="form-check-label" for="filter_date_checkbox"></label>
+                         <input id="filter_start_date" type="text" class="date_field"/>
+                         <span id="filter_date_to"></span>
+                         <input id="filter_end_date" type="text" class="date_field"/>
+                         <div class='filter_slider_box'></div>
+                     </div>
+                     <div id="filter_box"></div>
+                </div>
+                <div id="nav_wrapper">
+                    <a id="nav" href="javascript:filter_manager.go_back()"></a>
+                </div>
+                <div id="panels">
+                    <div id="panel_scroll" >
+                        <div id='browse_wrapper' class="panel scroll_wrapper">
+                            <div id="browse_panel">
+                                 <div class="title"></div>
+                                {% include  'geoportal/browse.html' %}
+                            </div>
+                        </div>
+                        <div id="results_panel" class="panel">
+                            <div id="result_total" class="med_pad">
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <span class="total_results" ></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="total_showing"></span>
+                                            <a id="next_link" href="{{next_url}}" {% if not next_url %}class="disabled"{% endif %}>Next »</a>
+                                        </td>
+                                        <td>
+                                            <div class="spinner_wrapper">
+                                                <div class="spinner-border spinner-border-sm" role="status">
+                                                  <span class="sr-only">Loading...</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                </table>
+
+                                <label id="sort_by_dropdown_label" for="sort_by_dropdown"></label>
+                                <select id="sort_by_dropdown" ></select>
+                            </div>
+                            <div id="result_wrapper" class="scroll_wrapper">
+                                <div id="results">
+                                    <div class="content_left med_pad"></div>
+                                    <div class="content_right">
+                                        {% include 'geoportal/result.html' %}
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
+
+                        <div id="details_wrapper" class="panel scroll_wrapper">
+                            <div id="details_panel" class="med_pad">
+                             {% if title %}
+                                {% include  'resource/details.html' %}
+                             {% endif %}
+                            </div>
+                        </div>
+                        <div id="layers_wrapper" class="panel scroll_wrapper">
+                            <div id="layers_panel" >
+                                 <div id="layers" >
+                                      {% if sub_result_html %}
+                                        {% include 'geoportal/sub_result.html' %}
+                                     {% endif %}
+                                 </div>
+                            </div>
+                        </div>
+                        <div id="sub_details_wrapper" class="panel scroll_wrapper">
+                            <div id="child_panel" class="med_pad">
+                               {% if sub_title %}
+                                {% include  'resource/details.html' %}
+                             {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map_wrapper" >
+            <div id="image_map" class="map"></div>
+            <div id="map" class="map"></div>
+        </div>
+        <div id="data_table_wrapper">
+            <div id="data_table_total" class="float-left">
+                <table>
+                    <tr>
+                        <td>
+                            <span class="total_results" ></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="total_showing"></span>
+                        </td>
+                        <td>
+                            <div class="data_table_spinner_wrapper">
+                                <div id="data_table_spinner" class="spinner-border spinner-border-sm" role="status">
+                                  <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="data_table_select" class="float-left"></div>
+            <div >
+              <input  id="table_bounds_checkbox" type="checkbox" value="">
+              <label class="form-check-label" for="table_bounds_checkbox">
+
+              </label>
+            </div>
+            <a class='fa fa-times btn data_table_close' onclick='table_manager.close()'></a>
+            <div id ="data_table"></div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

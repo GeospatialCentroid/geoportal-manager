@@ -1,0 +1,63 @@
+[{"code":"001", "name":"farming", "title":"Agriculture and farming", "desc":"Rearing of animals or cultivation of plants, for example agriculture, irrigation, aquaculture, plantations, herding, pests and diseases affecting crops and livestock", "keywords": [
+  "rearing","cultivation","agriculture","irrigation","aquaculture","plantation","crop","livestock"
+]},
+{"code":"002", "name":"biota", "title":"Flora or fauna", "desc":"Flora or fauna in natural environment, for example wildlife, vegetation, biological sciences, ecology, wilderness, sea life, wetlands, habitat, biological resources" , "keywords": [
+  "flora","fauna","wildlife","vegetation","wilderness","natural habitat","biological resource"
+]},
+{"code":"003", "name":"boundaries", "title":"Census and administrative boundaries", "desc":"Legal land descriptions, for example political and administrative boundaries, governmental units, marine boundaries, voting districts, school districts, international boundaries" , "keywords": [
+  "political","administrative","boundaries","boundary","governmental","government","voting","census","district","international"
+]},
+{"code":"004", "name":"climatologyMeteorologyAtmosphere", "title":"Climatology Meteorology and Atmosphere", "desc":"Processes and phenomena of the atmosphere, for example cloud cover, weather, climate, atmospheric conditions, climate change, precipitation" , "keywords": [
+  "cloud","weather","climate","atmospheric","precipitation","air quality"
+]},
+{"code":"005", "name":"economy", "title":"Business and economic", "desc":"Economic activities, conditions, and employment, for example production, labor, revenue, business, commerce, industry, tourism and ecotourism, forestry, fisheries, commercial or subsistence hunting, exploration and exploitation of resources such as minerals, oil and gas" , "keywords": [
+  "labor","revenue","business","commerce","industry","tourism","ecotourism","forestry" ,"fisheries","commercial" ,"resources"
+]},
+{"code":"006", "name":"elevation", "title":"Elevation and derived products", "desc":"Height above or below sea level, for example altitude, bathymetry, digital elevation models, slope, derived products, DEMs, TINs" , "keywords": [
+  "altitude","bathymetry","elevation","slope","derived products","DEM","TIN","environmental modeling"
+]},
+{"code":"007", "name":"environment", "title":"Environment and conservation", "desc":"Environmental resources, protection and conservation, for example environmental pollution, waste storage and treatment, environmental impact assessment, monitoring environmental risk, nature reserves, landscape, water quality, air quality, environmental modeling" , "keywords": [
+  "pollution","environmental impact","water quality","nature reserve"
+]},
+{"code":"008", "name":"geoscientificInformation", "title":"Geological and geophysical", "desc":"Information pertaining to earth sciences, for example geophysical features and processes, geology, minerals, sciences dealing with the composition, structure and origin of the earth's rocks, risks of earthquakes, volcanic activity, landslides, gravity information, soils, permafrost, hydrogeology, groundwater, erosion" , "keywords": [
+  "geology","mineral","rock","earthquakes","volcanic","volcano","landslides","soils","permafrost","erosion","groundwater"
+]},
+{"code":"009", "name":"health", "title":"Health", "desc":"Health, health services, human ecology, and safety, for example disease and illness, factors affecting health, hygiene, substance abuse, mental and physical health, health services, health care providers, public health" , "keywords": [
+  "illness","health","hygiene","substance abuse","mental","health care","pandemic","disease"
+]},
+{"code":"010", "name":"imageryBaseMapsEarthCover", "title":"Imagery, base maps, and land cover", "desc":"Base maps, for example land/earth cover, topographic maps, imagery, unclassified images, annotations, digital ortho imagery" , "keywords": [
+  "earth cover","base map","topographic","ortho"," unclassified images","annotations", "imagery"
+]},
+{"code":"011", "name":"intelligenceMilitary", "title":"Military and intelligence", "desc":"Military bases, structures, activities, for example barracks, training grounds, military transportation, information collection" , "keywords": [
+  "military","barracks", "fort"
+]},
+{"code":"012", "name":"inlandWaters", "title":"Inland water resources", "desc":"Inland water features, drainage systems and characteristics, for example rivers and glaciers, salt lakes, water utilization plans, dams, currents, floods and flood hazards, water quality, hydrographic charts, watersheds, wetlands, hydrography" , "keywords": [
+  "river","glacier","lake","dam","current","flood","hydrographic","watershed"," wetland","hydrography"
+]},
+{"code":"013", "name":"location", "title":"Locations and geodetic networks", "desc":"Positional information and services, for example addresses, geodetic networks, geodetic control points, postal zones and services, place names, geographic names" , "keywords": [
+  "addresses","geodetic","postal","geographic names"
+]},
+{"code":"014", "name":"oceans", "title":"Oceans", "desc":"Features and characteristics of salt water bodies (excluding inland waters), for example tides, tidal waves, coastal information, reefs, maritime, outer continental shelf submerged lands, shoreline" , "keywords": [
+  "tide","wave","coast","reef","maritime","submerge","shoreline"
+]},
+{"code":"015", "name":"planningCadastre", "title":"Cadastral/Planning", "desc":"Information used for appropriate actions for future use of the land, for example land use maps, zoning maps, cadastral surveys, land ownership, parcels, easements, tax maps, federal land ownership status, public land conveyance records" , "keywords": [
+  "land use","zone","zoning","cadastral","ownership","parcel"," easement","land survey","park"
+]},
+{"code":"016", "name":"society", "title":"Cultural, society, and demographic", "desc":"Characteristics of society and culture, for example settlements, housing, anthropology, archaeology, education, traditional beliefs, manners and customs, demographic data, tourism, recreational areas and activities, parks, recreational trails, historical sites, cultural resources, social impact assessments, crime and justice, law enforcement, census information, immigration, ethnicity" , "keywords": [
+  "settlement", "anthropology", "archaeology", "education", "traditional beliefs", "manners and customs", "demographic" ,"activity", "parks", "crime", "law" ,  "immigration", "ethnicity"
+]},
+{"code":"017", "name":"structure", "title":"Building Infrastructure", "desc":"Man-made construction, for example buildings, museums, churches, factories, housing, monuments, shops, towers, building footprints, architectural and structural plans" , "keywords": [
+  "construction","building","museum","church","factory","factories","house", "shop","tower","monument", "architecture"
+]},
+{"code":"018", "name":"transportation", "title":"Transportation networks", "desc":"Means and aids for conveying persons or goods, for example roads, airports/airstrips, shipping routes, tunnels nautical charts, vehicle or vessel location, aeronautical charts, railways" , "keywords": [
+  "road","airport","airstrip","shipping","route","tunnel","vehicle","aeronautical","railway","bike"
+]},
+{"code":"019", "name":"utilitiesCommunication", "title":"Utilities/Communication", "desc":"Energy, water and waste systems and communications infrastructure and services, for example hydroelectricity, geothermal, solar and nuclear sources of energy, water purification and distribution, sewage collection and disposal, electricity and gas distribution, data communication, telecommunication, radio, communication networks" , "keywords": [
+  "energy","waste","infrastructure","hydroelectricity","geothermal","solar","nuclear","water purification","sewage","garbage","electricity","natural gas", "disposal", "telecommunication","radio"
+]},
+{"code":"000", "name":"historic","title":"Historical Scanned Maps", "desc":"Non-digital maps that have been scanned" , "keywords": [
+  "history","scanned map","historic"
+]}
+
+]
+

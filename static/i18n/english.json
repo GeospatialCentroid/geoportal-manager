@@ -1,0 +1,216 @@
+{
+  "INTERFACE": {
+    "LANG": "Language"
+  },
+  "FACET": {
+		"BROWSE_BY":		"Browse by...",
+		"TOPIC":			"Topics",
+		"KEYWORDS":			"Keywords",
+	  	"PLACE":			"Place",
+	  	"AUTHOR":			"Author",
+		"PRODUCERS":		"Producers",
+		"SCALE":			"Scale",
+		"REFINE_SEARCH":	"Refine search:",
+		"TOPICS": 			"Subject Category",
+		"KEYWORDS": 		"Keywords",
+		"NEW_DATA":			"New Data Layers",
+	  	"CATEGORIES": {
+			"farming":{"code":"001", "name":"farming", "title":"Agriculture and farming", "desc":"Rearing of animals or cultivation of plants, for example agriculture, irrigation, aquaculture, plantations, herding, pests and diseases affecting crops and livestock"},
+			"biota":{"code":"002", "name":"biota", "title":"Flora or fauna", "desc":"Flora or fauna in natural environment, for example wildlife, vegetation, biological sciences, ecology, wilderness, sea life, wetlands, habitat, biological resources"},
+			"boundaries":{"code":"003", "name":"boundaries", "title":"Census and administrative boundaries", "desc":"Legal land descriptions, for example political and administrative boundaries, governmental units, marine boundaries, voting districts, school districts, international boundaries"},
+			"climatologyMeteorologyAtmosphere":{"code":"004", "name":"climatologyMeteorologyAtmosphere", "title":"Climatology Meteorology and Atmosphere", "desc":"Processes and phenomena of the atmosphere, for example cloud cover, weather, climate, atmospheric conditions, climate change, precipitation"},
+			"economy":{"code":"005", "name":"economy", "title":"Business and economic", "desc":"Economic activities, conditions, and employment, for example production, labor, revenue, business, commerce, industry, tourism and ecotourism, forestry, fisheries, commercial or subsistence hunting, exploration and exploitation of resources such as minerals, oil and gas"},
+			"elevation":{"code":"006", "name":"elevation", "title":"Elevation and derived products", "desc":"Height above or below sea level, for example altitude, bathymetry, digital elevation models, slope, derived products, DEMs, TINs"},
+			"environment":{"code":"007", "name":"environment", "title":"Environment and conservation", "desc":"Environmental resources, protection and conservation, for example environmental pollution, waste storage and treatment, environmental impact assessment, monitoring environmental risk, nature reserves, landscape, water quality, air quality, environmental modeling"},
+			"geoscientificInformation": {"code":"008", "name":"geoscientificInformation", "title":"Geological and geophysical", "desc":"Information pertaining to earth sciences, for example geophysical features and processes, geology, minerals, sciences dealing with the composition, structure and origin of the earth's rocks, risks of earthquakes, volcanic activity, landslides, gravity information, soils, permafrost, hydrogeology, groundwater, erosion"},
+			"health":{"code":"009", "name":"health", "title":"Health", "desc":"Health, health services, human ecology, and safety, for example disease and illness, factors affecting health, hygiene, substance abuse, mental and physical health, health services, health care providers, public health"},
+			"imageryBaseMapsEarthCover": {"code":"010", "name":"imageryBaseMapsEarthCover", "title":"Imagery, base maps, and land cover", "desc":"Base maps, for example land/earth cover, topographic maps, imagery, unclassified images, annotations, digital ortho imagery"},
+			"intelligenceMilitary": {"code":"011", "name":"intelligenceMilitary", "title":"Military and intelligence", "desc":"Military bases, structures, activities, for example barracks, training grounds, military transportation, information collection"},
+			"inlandWaters":{"code":"012", "name":"inlandWaters", "title":"Inland water resources", "desc":"Inland water features, drainage systems and characteristics, for example rivers and glaciers, salt lakes, water utilization plans, dams, currents, floods and flood hazards, water quality, hydrographic charts, watersheds, wetlands, hydrography"},
+			"location":{"code":"013", "name":"location", "title":"Locations and geodetic networks", "desc":"Positional information and services, for example addresses, geodetic networks, geodetic control points, postal zones and services, place names, geographic names"},
+			"oceans":{"code":"014", "name":"oceans", "title":"Oceans", "desc":"Features and characteristics of salt water bodies (excluding inland waters), for example tides, tidal waves, coastal information, reefs, maritime, outer continental shelf submerged lands, shoreline"},
+			"planningCadastre":{"code":"015", "name":"planningCadastre", "title":"Cadastral/Planning", "desc":"Information used for appropriate actions for future use of the land, for example land use maps, zoning maps, cadastral surveys, land ownership, parcels, easements, tax maps, federal land ownership status, public land conveyance records"},
+			"society":{"code":"016", "name":"society", "title":"Cultural, society, and demographic", "desc":"Characteristics of society and culture, for example settlements, housing, anthropology, archaeology, education, traditional beliefs, manners and customs, demographic data, tourism, recreational areas and activities, parks, recreational trails, historical sites, cultural resources, social impact assessments, crime and justice, law enforcement, census information, immigration, ethnicity"},
+			"structure":{"code":"017", "name":"structure", "title":"Building Infrastructure", "desc":"Man-made construction, for example buildings, museums, churches, factories, housing, monuments, shops, towers, building footprints, architectural and structural plans"},
+			"transportation":{"code":"018", "name":"transportation", "title":"Transportation networks", "desc":"Means and aids for conveying persons or goods, for example roads, airports/airstrips, shipping routes, tunnels nautical charts, vehicle or vessel location, aeronautical charts, railways"},
+			"utilitiesCommunication":{"code":"019", "name":"utilitiesCommunication", "title":"Utilities/Communication", "desc":"Energy, water and waste systems and communications infrastructure and services, for example hydroelectricity, geothermal, solar and nuclear sources of energy, water purification and distribution, sewage collection and disposal, electricity and gas distribution, data communication, telecommunication, radio, communication networks"},
+			"historic":{"code":"000", "name":"historic","title":"Historical Scanned Maps", "desc":"Non-digital maps that have been scanned"}
+		}
+	},
+	"RESULT": {
+		"FOUND": "Found",
+		"RESULTS": "results",
+		"SHOWING_RESULTS": "showing results",
+		"TO": "to",
+
+		"DETAILS": 			"Details",
+		"PRODUCER": 		"Producer",
+		"PLACE":			"Place",
+	  	"AUTHOR":			"Author",
+		"ADD": 					"Add",
+		"REMOVE": 			"Remove",
+		"DOWNLOAD": 		"Download",
+
+		"DATE_PUBLISHED":"Date published",
+		"DATE_REVISED": 	"Last revision",
+		"DATA_TYPE": 		"Type of data layer",
+		"CREATION":			"creation",
+		"PUBLICATION":	"publication",
+		"REVISION":			"revision",
+		"ZOOM":			"Zoom"
+
+	},
+	"DETAILS": {
+		"MORE_INFO": "More Details",
+		"CATALOG_VIEW": "View in Catalog",
+		"METADATA_LINK": "View Metadata",
+		"WEBSERVICE_LINK": "View Webservice"
+
+	},
+	"SEARCH": {
+		"RADIO_DATA_LABEL": 		"Data",
+		"RADIO_PLACE_LABEL": 		"Place or address",
+		"SUBMIT_BUT_LABEL": 		"Search",
+		"CHIP_SUBMIT_BUT_LABEL":	"Search",
+
+		"SORT_BY_LABEL": 	"Sort by:",
+		"TITLE_LABEL":		"Title:",
+		"KEYWORD_LABEL": 	"Keyword:",
+		"ABSTACT_LABEL":	"Description:",
+		"SERIES_LABEL": 	"Series:",
+		"BBOX_LABEL": 		"Include area:",
+
+		"LIMIT":			"Limit to map bounds",
+		"TO": "to",
+		"SORT_OPTIONS": {
+			"RELEVANCE": 		"Relevance",
+			"TITLE":            "Alphabetical",
+			"NEWEST":			"Publish date: newest",
+			"OLDEST":			"Publish date: oldest",
+			"LARGEST":			"Area: largest",
+			"SMALLEST":			"Area: smallest"
+		}
+	},
+	"DOWNLOAD": {
+		"DOWNLOAD_BUT": 		"Download",
+		"ORIGINAL": 			"Original",
+		"DOWNLOAD_ALL":			"Download all",
+		"DOWNLOAD_CLIP":		"Clip to map bounds",
+		"DOWNLOAD_INSTRUCTION":		"Select map layers to download:",
+		"OPTIONS": {
+			"SHAPE_FILE": { "name": "Shapefile", "ext": "zip"},
+			"CSV": { "name": "CSV", "ext": "csv"},
+			"KML": { "name": "KML", "ext": "kml"},
+			"GEOJSON": { "name": "GeoJSON", "ext": "geojson"}
+		}
+	},
+
+	"IDENTIFY": {
+		"NO_INFORMATION": 			"No information available.",
+		"IDENTIFY_SELECT_LAYER":	"Select identify layer:",
+		"ZOOM_TO": 					"Zoom to"
+
+	},
+	"TAB_TITLES": {
+		"BROWSE_TAB": 	"Search",
+		"MAP_TAB": 		"Map",
+		"DOWNLOAD_TAB":	"Download",
+		"ACCOUNT_TAB":	"My GeoPortal",
+		"HISTORY": 		"History",
+		"LOGIN_TAB": 	"Login",
+		"HELP_TAB":		"?"
+	},
+	"NAV": {
+		"BACK_BROWSE": 		"Back to Browse",
+		"BACK_RESULTS":		"Back to Results",
+		"BACK_DOWNLOADS":	"Back to Downloads"
+	},
+	"MAP": {
+		"TRANSPARENCY": "Transparency",
+		"OUTLINE_COLOR": "Line",
+		"Fill_COLOR": "Fill"
+
+	},
+	"BASEMAP": {
+		"TITLE": "Basemap",
+		"TIP": "Choose a Basemap",
+		"BACKGROUND": "Background",
+		"BASEMAP_OPTIONS": {
+
+			"Topographic":{
+				"title": "Topographic",
+				"image": "/images/topo.png",
+				"attribution":"Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community",
+				"url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+			},
+		  "Streets":{
+					"title": "Streets",
+					"image": "/images/world_street_map.jpg",
+						"attribution":"Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012",
+						"url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+		  },
+		  "NationalGeographic":{
+						"title": "National Geographic",
+						"image": "/images/natgeo.jpg",
+						"attribution":"Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC",
+						"url": "https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
+		   },
+
+		   "Gray":{
+						"title": "Gray",
+						"image": "/images/light_gray.jpg",
+						"attribution":"Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+						"url": "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+			},
+		   "DarkGray":{
+						"title": "Dark Gray",
+						"image": "/images/dark_grey.png",
+						"attribution":"Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+						"url": "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+			},
+		   "Imagery":{
+						"title": "Imagery",
+						"image": "/images/esri_imagery.png",
+						"attribution":"Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+						"url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+			},
+			"OpenStreetMap":{
+						"title": "OpenStreetMap",
+						"image": "/images/osm.jpg",
+						"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright\">OpenStreetMap contributors</a>",
+						"url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+			}
+
+
+		}
+	},
+	"DATA_TABLE": {
+		"LIMIT":				"Limit to map bounds",
+		"LIMIT_DATE": 			"Limit to date range",
+		"moreQueryHelp":		"More help",
+		"exportQueryTooltip":	"Export the query results as an Excel (.xls) table",
+		"basicExamples":		"Basic examples",
+		"exportQueryMenuItem": 	"Export Query",
+		"error412":				"non-existant or expired license agreement",
+		"tableData":			"Table Data",
+		"selectQueryLayer": 	"Select layer to query",
+		"viewTableButtonLabel": "View",
+		"exportTableMenuItem": 	"Export Result",
+		"makeQueryButtonLabel": "Query",
+		"viewMenuItem":			"View/Refresh",
+		"queryMenuItem":		"Query",
+		"queryExecute": 		"Execute",
+		"title":				"Create a custom query",
+
+		"asXLS":				"...as Excel (.xls)",
+		"asCSV":				"...as CSV (.csv)",
+		"asSHP":				"...as Shapefile (.shp)",
+		"loading":				"loading...",
+		"pleaseWait":			"Please wait - loading table",
+		"reset":				"Reset"
+	}
+}
+
+
+
+

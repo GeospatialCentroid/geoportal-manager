@@ -1,0 +1,49 @@
+<div id="document" data-document-id="{{resource_id}}" itemscope="itemscope" itemtype="http://schema.org/Dataset" class="document">
+    <span class="page_nav">
+        <a href="{{prev_resource_url}}" {% if not prev_resource_url %}class="disabled"{% endif %}>« {{LANG.DETAILS.NEXT}}</a>
+        | {{cur_num}} of {{num_found}} |
+        <a href="{{next_resource_url}}" {% if not next_resource_url %}class="disabled"{% endif %}>{{LANG.DETAILS.PREVIOUS}} »</a>
+    </span>
+
+    <div class="item_title item_title_lg font-weight-bold" itemprop="name">{% firstof title sub_title %}</div>
+    {% if toggle_but_html %}
+     {{toggle_but_html|safe}}
+    {% endif %}
+
+    <span class="item_collection"><i class="fas fa-unlock fa-2x" style="color: #fd7e14;"></i></span>
+
+
+    {% if bbox %}
+    <button type="button" class="btn btn-primary"
+            onclick="filter_manager.zoom_layer('{{bbox}}')">{{LANG.RESULT.ZOOM}}</button>
+    {% endif %}
+
+    {% if download_link_html %}
+     {{download_link_html|safe}}
+    {% endif %}
+
+    <div class="item_label" >{{LANG.RESULT.AUTHOR}}: <span class="font-weight-bold" itemprop="author">{{producer_html|safe}}</span></div>
+    <div class="item_label" >{{LANG.RESULT.PUBLISHER}}: <span class="font-weight-bold" itemprop="publisher">{{publisher_html|safe}}</span></div>
+    <div class="item_label">{{LANG.RESULT.DATE_PUBLISHED}}: <span class="font-weight-bold">{{published|date:"Y-m-d"}}</span></div>
+    <div class="item_label">{{LANG.RESULT.DATA_FORMAT}}: <span class="font-weight-bold">{{format|safe}}</span></div>
+
+
+    <p>
+        <div id="item_thumb"><img src="{{thumb}}"></div>
+        <span class="font-weight-bold">{{LANG.SEARCH.ABSTACT_LABEL}}</span> {{desc|safe}}
+    </p>
+
+    {{attribute_html|safe}}
+    {{get_more_details_link_html|safe}}
+    {{get_catelog_link_html|safe}}
+    <div class="clearfix"></div><br/>
+
+    {% if georeference_link_html %}
+     {{georeference_link_html|safe}}
+    {% endif %}
+    <span class="font-weight-bold">{{LANG.DETAILS.CITATION}}:</span><br/>
+    <span>
+        {{producer|safe}}. ({{published|date:"Y"}}). [{{format|safe}}]. {{publisher|safe}}. {{LANG.DETAILS.RETRIEVED_FROM}} {{get_catelog_html|safe}}
+
+    </span>
+</div>

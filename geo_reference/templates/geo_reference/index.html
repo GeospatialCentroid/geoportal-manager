@@ -1,0 +1,118 @@
+﻿
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Georeference</title>
+
+    {% load static %}
+    <!--jquery-->
+    <link rel="stylesheet" href="{% static 'plugins/jquery-ui/jquery-ui.css' %}">
+    <script src="{% static 'plugins/jquery-ui/external/jquery/jquery.js' %}"></script>
+    <script src="{% static 'plugins/jquery-ui/jquery-ui.js' %}"></script>
+
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/leaflet.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet.css' %}" />
+
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/Leaflet.DistortableImage/vendor.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.DistortableImage/vendor.css' %}" />
+    <script type="text/javascript" src='{% static 'plugins/leaflet/Leaflet.DistortableImage/leaflet.distortableimage.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.DistortableImage/leaflet.distortableimage.css' %}" />
+
+
+
+
+    <script type="text/javascript" src='{% static 'plugins/leaflet/leaflet-geosearch/geo-search.min.js' %}'></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet-geosearch/geo-search.css' %}" />
+
+     <script src="{% static 'plugins/urlon.js' %}"></script>
+
+    <script src="{% static 'geo_reference/js/index.js' %}?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+    <script src="{% static 'geo_reference/js/slider_control.js' %}?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+    <link rel="stylesheet" href="{% static 'geo_reference/css/style.css' %}?v={% now "SHORT_DATETIME_FORMAT" %}" />
+</head>
+
+
+<body>
+
+       <div id="image_map" class="map"></div>
+       <div id="map" class="map"></div>
+
+
+
+<div id="dialog" title="Georeferencer">
+  <p>In an effort to make historical maps spatially discoverable and viewable from a web map,
+      this tool enables you to add geospatial coordinates to a scanned image.</p>
+
+    <p><i>Note: This tool allows you to scale, skew and rotate scanned images, though is some cases more warping is required.
+        You can request to have a scanned image warped by completing the <a href="">request form.</a></i></p>
+    <p>Instructions: The Georeferencer interface is broken-up into two parts, the image viewer (on the left), and the map viewer on the right.
+    Our objective is to place the scanned image atop the map as accurately as possible and save the coordinates.
+        The following steps provide guidance how this can be achieved:
+    </p>
+    <ol>
+        <li>Use the search address feature to move the map to the scanned image location.
+            To help with searching for an address, the scan will often have a title indicating a location.
+            Using the image viewer to zoom into the scan by using either the mouse wheel or "+" icon on the left, will help with legibility of any title information.
+            Panning the image viewer can be done by clicking the image viewer area once and then using the keyboard arrow keys,
+            or clicking and dragging.
+            <br/>With a suitable search address:
+             <ol>
+                 <li><b>Click</b> the <i>magnifying glass icon</i> to display the <i>address field</i> for entering an address.</li>
+                 <li><b>Enter the address</b> in the <i>address field</i> next to the icon.
+                     <i>As you type the address, a list of location options will appear.</i></li>
+                 <li><b>Select</b> the location option to move the map to the location of interest.</li>
+                 <li>When done searching for an address, <b>click</b> the <i>magnifying glass icon</i> to hide the address field.</li>
+             </ol>
+        </li>
+        <li><b>Click</b> the <i>image icon</i> to add the scan to the map viewer</li>
+        <li>With the scan viewable in the map viewer, it can be repositioned using the following techniques:
+            <ol>
+                <li>Use the <i>transparency slider</i> at the top right to reveal more or less of the basemap beneath the scanned image.</li>
+                <li><b>Click and drag</b> the image on the map to reposition it.</li>
+                <li>With the scan selected, <b>click</b> one of the icons in the menu above the scan to change the mode to:
+                     <ol>
+                         <li>Scale</li>
+                         <li>Rotation</li>
+                         <li>Free Rotate (scale and rotate)</li>
+                         <li>Lock the image, so it can't be accidentally moved</li>
+                     </ol>
+                 </li>
+                <li>With the mode set as desired, <b>click</b> one of the 4 corned to adjust the positioning of the image.</li>
+             </ol>
+        </li>
+
+        <li>When the image is positioned appropriately on the map, <b>click</b> the <i>disk icon</i> to save the map coordinates</li>
+    </ol>
+</div>
+<div id="dialog_save" title="Submit Map Coordinates" class="hide">
+    <p>
+        To give you credit for your contribution please complete the form below.
+    </p>
+    <form>
+    <fieldset>
+      <label for="name">Name</label>
+      <input type="text" name="name" id="name" value="" class="text ui-widget-content ui-corner-all">
+        <br/>
+      <label for="email">Email</label>
+      <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all">
+
+
+      <!-- Allow form submission with keyboard without duplicating the dialog button -->
+      <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+    </fieldset>
+  </form>
+</div>
+
+
+<div id="dialog_resp" title="Saved"  class="hide">
+    Thank you for taking the time to georeference this scanned image! Your contribution has been saved and you can now close this window.
+
+</div>
+
+</body>
+</html>
