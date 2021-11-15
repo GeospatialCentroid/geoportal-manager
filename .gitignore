@@ -1,2 +1,4 @@
 /resources/harvester/data/
 /resources/ingester/json/
+.idea
+.DS_Store
