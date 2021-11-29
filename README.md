@@ -1,3 +1,26 @@
+
+Conversation opened. 1 unread message. 
+
+Skip to content
+Using Gmail with screen readers
+Meet
+New meeting
+Join a meeting
+Hangouts
+
+1 of 17,357
+for git
+Inbox
+
+Kevin Worthington <kevin.a.worthington@gmail.com>
+Attachments
+7:52 AM (7 hours ago)
+to me
+
+
+Kevin
+2 Attachments
+
 # Geoportal Manager
 
 #### Project Overview
@@ -82,7 +105,8 @@ Add the following lines to the open text document,
 changing the text between the single quotes as appropriate.
 ```export GEOPORTAL_DB_PASS='YOUR DATABASE PASSWORD'```
 ```export SOLR_PASSWORD='YOUR SORL PASSWORD'```
-```export SOLR_PASSWORD='YOUR SORL PASSWORD'```
+```export SECRET_KEY='YOUR SECRET Key for Django'```  
+see https://humberto.io/blog/tldr-generate-django-secret-key/ to generate Django Secret Key
 
 Then in the terminal again enter
 ```source ~/.bash_profile```
@@ -265,3 +289,5 @@ Karen Majewicz, University of Minnesota, BTAA
 Yijing (Zoey) Zhou, University of Minnesota, BTAA
 https://github.com/BTAA-Geospatial-Data-Project/dcat-metadata
 https://github.com/BTAA-Geospatial-Data-Project/workflow
+README.md
+Displaying requirements.txt.
