@@ -1,26 +1,3 @@
-
-Conversation opened. 1 unread message. 
-
-Skip to content
-Using Gmail with screen readers
-Meet
-New meeting
-Join a meeting
-Hangouts
-
-1 of 17,357
-for git
-Inbox
-
-Kevin Worthington <kevin.a.worthington@gmail.com>
-Attachments
-7:52 AM (7 hours ago)
-to me
-
-
-Kevin
-2 Attachments
-
 # Geoportal Manager
 
 #### Project Overview
