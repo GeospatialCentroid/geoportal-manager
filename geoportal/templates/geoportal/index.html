@@ -127,6 +127,8 @@
     <script src="{% static 'js/table_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
     <script src="{% static 'js/download_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
 
+    <script src="{% static 'js/disclaimer_manager.js' %}?v=0.0?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
+
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v={% now "SHORT_DATETIME_FORMAT" %}" />
 
 <script type="text/javascript">
@@ -315,6 +317,26 @@
 
     </div>
 
+</div>
+
+<div class="modal fade" id="disclaimer" tabindex="-1" role="dialog" aria-labelledby="disclaimer" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <div class="modal-body" id="disclaimer_heading"></div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="disclaimer_text">
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="disclaimer_disagree"></button>
+        <button type="button" class="btn btn-primary" id="disclaimer_agree"></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 </body>

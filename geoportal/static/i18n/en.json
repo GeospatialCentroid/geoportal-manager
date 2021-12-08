@@ -93,6 +93,11 @@
 		"GEOREFERENCE": "Georeference this Image"
 
 	},
+	"DISCLAIMER": {
+		"DISCLAIMER":"Disclaimer",
+		"AGREE": "Agree",
+		"DISAGREE": "Disagree"
+	},
 	"SEARCH": {
 		"RADIO_DATA_LABEL": 		"Data",
 		"RADIO_PLACE_LABEL": 		"Place or address",

@@ -37,6 +37,8 @@ class Filter_Manager {
     this.filters=[]
 
     this.sort_str=""
+    // track the filter query for only showing parents in search results
+    this.fq_str=""
 
     // for showing loading
     // this.progress_interval;
@@ -91,6 +93,7 @@ class Filter_Manager {
                $this.page_start+=$this.page_rows;
 
                $("#result_total .spinner-border").show();
+//               +"&fq="+$this.fq_str
                $.get($this.result_url+"f="+rison.encode_array($this.filters)+"&rows="+$this.page_rows+"&start="+$this.page_start+"&sort="+$this.sort_str,$this.append_results)
                // update the url to reflect result page change
                save_params()
@@ -327,15 +330,18 @@ class Filter_Manager {
         $("#result_wrapper").scrollTop(0)
         var filter_str = this.get_filter_str()
         $("#result_total .spinner-border").show();
+//        // show only parents but search within both parent and children
+//        this.fq_str="{!parent which='solr_type:parent'}"
+//        +"&fq="+this.fq_str
         var results_url=this.result_url+"f="+rison.encode_array(filter_manager.filters)+"&rows="+this.page_rows+"&start="+this.page_start+"&sort="+this.sort_str
         $.get(results_url,this.show_results)
         //update the facets on the first search requests.
         var facet_url=this.base_url+this.facet_params+filter_str
         this.load_json(facet_url,this.update_facets)
 
-        console_log("results_url",results_url)
+        console_log("results_url:",results_url)
 
-        console_log("facet_url",facet_url)
+        console_log("facet_url:",facet_url)
     }
     get_filter_str(){
         var filter_str_array=[]
@@ -351,9 +357,9 @@ class Filter_Manager {
          }
 
          //restrict to parent results
-       var fq="&fq={!parent which='solr_type:parent'}"
-           // restrict suppressed
-//         filter_str_array.push("suppressed_b:False")
+        var fq="&fq={!parent which='solr_type:parent'}"
+        // restrict suppressed
+        //filter_str_array.push("suppressed_b:False")
 
         return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
     }

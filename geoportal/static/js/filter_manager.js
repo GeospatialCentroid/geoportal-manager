@@ -159,7 +159,6 @@ class Filter_Manager {
 
     load_json(file_name,call_back,extra){
         // A generic loader of json
-        var obj=this
         $.ajax({
             type: "GET",
             extra:extra,

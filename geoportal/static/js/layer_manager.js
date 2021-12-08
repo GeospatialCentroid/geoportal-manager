@@ -37,6 +37,7 @@ class Layer_Manager {
     this.side_by_side= L.control.sideBySide().addTo(this.map);
     this.split_left_layers=[];
     this.split_right_layers=[];
+
     //
     var $this=this;
     // make the map layers sortable
@@ -84,8 +85,17 @@ class Layer_Manager {
     });
 
   }
+
   toggle_layer(_resource_id,z){
+
+
     console.log("toggle_layer",_resource_id)
+    var $this=layer_manager;
+
+    if(!disclaimer_manager.check_status(_resource_id,z,$this.toggle_layer)){
+         console.log("Accept disclaimer first")
+         return
+    }
     // either add or hide a layer
     var resource = filter_manager.get_resource(_resource_id)
 
@@ -96,16 +106,16 @@ class Layer_Manager {
          return
     }
     try{
-    var json_refs = JSON.parse(resource.dct_references_s)
+        var json_refs = JSON.parse(resource.dct_references_s)
     }catch(e){
         console.log("Error parsing JSON")
         console.log(resource.dct_references_s)
     }
 
-    if(this.is_on_map(_resource_id)){
-        this.remove_feature_layer(_resource_id);
+    if($this.is_on_map(_resource_id)){
+        $this.remove_feature_layer(_resource_id);
         $("#"+_resource_id+"_drag").remove();
-        this.remove_legend(_resource_id);
+        $this.remove_legend(_resource_id);
         filter_manager.update_parent_toggle_buttons(".content_right");
         return
     }
@@ -114,12 +124,12 @@ class Layer_Manager {
     //$.inArray(type,feature_types)>-1
     console.log(resource["drawing_info"])
     if (resource["drawing_info"] && typeof(resource["drawing_info"][0])!="undefined"){
-            var drawing_info = this.convert_text_to_json(resource["drawing_info"][0])
+            var drawing_info = $this.convert_text_to_json(resource["drawing_info"][0])
             resource["drawing_info"]=drawing_info
             // also decode the fields
             if (resource.fields){
                 for(var i=0;i<resource.fields.length;i++){
-                    resource.fields[i] = this.convert_text_to_json(resource.fields[i])
+                    resource.fields[i] = $this.convert_text_to_json(resource.fields[i])
                 }
             }
 
@@ -128,16 +138,16 @@ class Layer_Manager {
     console.log(json_refs)
     for (var r in json_refs){
             //check if it's an acceptable format
-            for (var i=0;i<this.service_method.length;i++){
-               if (r==this.service_method[i].service){
+            for (var i=0;i<$this.service_method.length;i++){
+               if (r==$this.service_method[i].service){
 
                     var type =""
                     if (resource?.layer_geom_type_s)
                         type = resource.layer_geom_type_s
                     console.log("And the type is: ",type)
 
-                    this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
-                    this.add_to_map_tab(_resource_id,z);
+                    $this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
+                    $this.add_to_map_tab(_resource_id,z);
                     filter_manager.update_parent_toggle_buttons(".content_right");
                     return
                }

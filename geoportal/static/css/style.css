@@ -788,3 +788,16 @@ position: absolute;
     border-width: 4px;
   }
 
+.modal-dialog{
+    overflow-y: initial !important
+}
+#disclaimer_text{
+    height: 400px;
+    overflow-y: auto;
+}
+
+
+body.modal-open {
+  height: 100vh;
+  overflow-y: hidden;
+}

@@ -95,8 +95,12 @@ class Layer_Manager {
          console.log("try again!!!")
          return
     }
-
+    try{
     var json_refs = JSON.parse(resource.dct_references_s)
+    }catch(e){
+        console.log("Error parsing JSON")
+        console.log(resource.dct_references_s)
+    }
 
     if(this.is_on_map(_resource_id)){
         this.remove_feature_layer(_resource_id);

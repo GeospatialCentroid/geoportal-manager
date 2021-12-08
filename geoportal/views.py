@@ -7,7 +7,7 @@ from django.template.response import TemplateResponse
 from django.conf import settings
 
 from django.contrib.gis.geos import GEOSGeometry
-from resources.models import Resource,Community_Input
+from resources.models import Resource,Community_Input,End_Point
 
 from django.http import JsonResponse
 from django.core import serializers
@@ -56,8 +56,6 @@ def index(request,_LANG=False):
                 if len(result_data['response']['docs'])>0 and "dc_source_sm" in result_data['response']['docs'][0] and parts[1]=="sub_details":
                     # load the sub records
                     args["sub_result_html"] = html_generation.get_results_html("q=path:"+result_data['response']['docs'][0]["dc_source_sm"][0]+".layer&rows=1000", _LANG=False)
-
-
 
     start=10
     if request.GET.get('start'):
@@ -149,3 +147,8 @@ def set_geo_reference(request):
     # pass c - for community to identify the source of the change
     r.save('c',c)
     return HttpResponse(json.dumps({'complete': True}, cls=DjangoJSONEncoder), content_type='application/json')
+
+def get_disclaimer(request):
+   if request.GET.get('e'):
+       e = End_Point.objects.get(id=request.GET.get('e'))
+       return HttpResponse(e.disclaimer)

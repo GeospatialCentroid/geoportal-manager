@@ -297,6 +297,9 @@ function save_params(){
     if (filter_manager.sort_str){
         p +="&sort="+filter_manager.sort_str
     }
+//    if (filter_manager.fq_str){
+//        p +="&fq="+filter_manager.fq_str
+//    }
     // retain debug mode
     if (DEBUGMODE){
         p +="&d=1"

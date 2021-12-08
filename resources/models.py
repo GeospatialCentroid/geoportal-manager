@@ -47,6 +47,7 @@ class End_Point(models.Model):
     thumbnail = models.CharField(help_text="The URL to a static image of the publisher", max_length=512, null=True,
                                  blank=True)
 
+    disclaimer = RichTextField(null=True, blank=True)
     def __str__(self):
         return str(self.name)
 

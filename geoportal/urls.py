@@ -19,6 +19,8 @@ urlpatterns = [
     path('result/', views.result_page, name='result_page'),
     #
     # path('admin/delete/', views.resource_admin_delete_page, name='delete_page'),
+    path('disclaimer/', views.get_disclaimer, name='get_disclaimer'),
+
 
 ]
 
