@@ -65,9 +65,12 @@ And remember your solr password.
 If not already started
 ```solr start```
 
-##### Enable Solr schema
-Using the contents of 'solr-blackligh-core.zip' place the scheme in the solr installation directory and restart
-```solr restart``` from the Terminal or use the 'Reload' button from the Solr Core Admin web interface
+##### Create the Solr core and enable the Solr schema
+1. Go to http://localhost:8983/ and click the "No cores available button" on the bottom left.
+2. Enter 'solr-blackligh-core' for both the name and instanceDir fields.
+3. Navigate to the home directory for solr. Note this can be found from the solr Dashboard under the variable "-Dsolr.solr.home"
+4. Using the contents of 'solr-blackligh-core.zip' place the scheme in the solr core directory
+5. Execute ```solr restart``` in the Terminal
 
 ##### Installing postgres with PostGIS
 Follow the instructions at https://morphocode.com/how-to-install-postgis-on-mac-os-x/
@@ -76,9 +79,9 @@ Create a database called 'geoportal' and a user called 'geoportal_admin' with a 
 
 #### Store your passwords as environment variables
 To keep your password safe, this program uses environment variables.
-from the Terminal enter 
-```touch ~/.bash_profile; open ~/.bash_profile``` 
-Add the following lines to the open text document, 
+from the Terminal enter
+```touch ~/.bash_profile; open ~/.bash_profile```
+Add the following lines to the open text document,
 changing the text between the single quotes as appropriate.
 ```export GEOPORTAL_DB_PASS='YOUR DATABASE PASSWORD'```
 ```export SOLR_PASSWORD='YOUR SORL PASSWORD'```
@@ -92,8 +95,8 @@ Then in the terminal again enter
 If not already started
 ```pg_ctl -D /usr/local/var/postgres start```
 
-##### Install Python 
-You'll need python version >3. 
+##### Install Python
+You'll need python version >3.
 The following instructions explain how https://docs.python-guide.org/starting/install3/osx/
 
 ##### Setup the Python Virtual Environment
@@ -103,14 +106,14 @@ The following instructions explain how https://docs.python-guide.org/starting/in
 ```source venv/bin/activate```
 
 ##### Install the dependencies in the Virtual Environment
-In the Terminal with the virtual environment activated, 
+In the Terminal with the virtual environment activated,
 navigate to the directory of the program code and run
 ```pip install -r requirements.txt```
 
 ##### Create the database tables
 ```python manage.py migrate```
 
-#### Create an Admin user 
+#### Create an Admin user
 ```python manage.py createsuperuser```
 
 ### Start the Geoportal application
@@ -127,15 +130,15 @@ Out of the box there aren't any data layers in the database. To add some, follow
 4. Enter a:
    * name
    * Org_name, used as the prefix for harvested data.
-   * Url, the json feed to access the data. E.g for ArcGIS hub pages use simply append "/data.json". 
+   * Url, the json feed to access the data. E.g for ArcGIS hub pages use simply append "/data.json".
      E.g https://geospatialcentroid-csurams.hub.arcgis.com/data.json
    * Use the '+' button to create a default publisher for the end_point
-   * Choose your end_point type 
+   * Choose your end_point type
         Supported end points include
         * DCAT (ArcGIS Hub)
-        * ArcGIS Online. This uses organizational id. 
+        * ArcGIS Online. This uses organizational id.
             Note, in an academic setting this is often not a curated collection
-        * CONTENTdm 
+        * CONTENTdm
         * dSPACE (not yet integrated with change management)
         * more end_point types can be created, see instructions below
     * a thumnaile url is optional
@@ -158,8 +161,8 @@ omit this to have today's date appended to loaded data when using local matadata
 
 -r for reference ids to target from endpoint
 
--o for overwriting existing loaded data 
-without this, subsequent harvests will not refresh existing data 
+-o for overwriting existing loaded data
+without this, subsequent harvests will not refresh existing data
 
 ###### Curation
 1. Navigate to http://localhost:8000/admin/, use the Django admin username and password created earlier to log-in
@@ -171,8 +174,8 @@ without this, subsequent harvests will not refresh existing data
 
 
 ###### Ingestion
-When ingesting resources into the Solr search engine, 
-the status value for a resource can help determine what gets ingested. 
+When ingesting resources into the Solr search engine,
+the status value for a resource can help determine what gets ingested.
 The status options are as follows with their two character code in brackets:
 * Needs Review (nr)- default setting for harvested records
 * Approved for Staging (as)
@@ -190,16 +193,16 @@ A typical ingest command looks like this:
 -s is the two character status code, typically 'as' or 'ap', though any of the two character status codes can be used
 
 Other Arguments
--n is for preventing a status promotion from 
-* Approved for Staging to In Staging 
+-n is for preventing a status promotion from
+* Approved for Staging to In Staging
 * Or Approved for Production to In Production
 
 -r is for reference ids to target for ingestion
 Note: Be sure to include a status value so child records can be retrieved too ;)
 
 ###### Deletion from Solr
-With the 'remove staging' (or 'ns') flag set in the django admin, 
-calling the following will remove all these flagged records from solr 
+With the 'remove staging' (or 'ns') flag set in the django admin,
+calling the following will remove all these flagged records from solr
 and update their status to 'Needs Review' (or 'nr')
 `python manage.py delete -s 'rs'`
 
@@ -211,7 +214,7 @@ Other Arguments
 Passing an "-s 'all'" instead will remove all records from solr
 You will be prompted to confirm acceptance before all the records are deleted.
 
-Note: From the Resource Management page, 
+Note: From the Resource Management page,
 you can also select specific resources to be removed from Staging (Production coming soon).
 
 #### deleting resources from postgres
@@ -227,15 +230,15 @@ If a new end_point type needs to be created, do the following
 2. From the Terminal run
     ```python manage.py makemigrations```
     ```python manage.py migrate```
-   
-3. Create file collection class for processing the file. This script will load the end_point, loop over the layers 
-   and create the parent and child records as appropriate. Follow one of the other custom FileCollection##.py files 
-   in the geoportal_manager/resources/harvester/ folder for guidance. 
-4. Create file parser class to parse the json file. Follow one of the other custom FileParser##.py files 
-   in the geoportal_manager/resources/harvester/ folder for guidance. For ArcGIS Map Services, the FilePArse_ARC may already be equipped 
+
+3. Create file collection class for processing the file. This script will load the end_point, loop over the layers
+   and create the parent and child records as appropriate. Follow one of the other custom FileCollection##.py files
+   in the geoportal_manager/resources/harvester/ folder for guidance.
+4. Create file parser class to parse the json file. Follow one of the other custom FileParser##.py files
+   in the geoportal_manager/resources/harvester/ folder for guidance. For ArcGIS Map Services, the FilePArse_ARC may already be equipped
    for your needs.
-   
-5. Update the geoportal_manager/resources/harvester/FileManager.py file: 
+
+5. Update the geoportal_manager/resources/harvester/FileManager.py file:
     - Add lines to import both the new FileCollection and FileParser scripts
     - Update the load method to include an 'elif'
 
@@ -244,7 +247,7 @@ If a new end_point type needs to be created, do the following
 Copy the existing translation file /static/i18n/en.json
 Give it a new name, e.g fr.json
 Replace all the text values for the language you are translating to.
-Save the file and in the terminal run the command below to have the file placing in the mirror 
+Save the file and in the terminal run the command below to have the file placing in the mirror
 'static' folder so that it's accessible from the browser
 ```python manage.py collectstatic```
 
@@ -258,13 +261,11 @@ Note: this only works for dynamically loaded results
 #### Credits and acknowledgments
 Kevin Worthington, Colorado State University
 
-Kara Handren, University of Toronto 
+Kara Handren, University of Toronto
 
-Jack Reed, Stanford Libraries 
+Jack Reed, Stanford Libraries
 
 Karen Majewicz, University of Minnesota, BTAA
 Yijing (Zoey) Zhou, University of Minnesota, BTAA
 https://github.com/BTAA-Geospatial-Data-Project/dcat-metadata
 https://github.com/BTAA-Geospatial-Data-Project/workflow
-README.md
-Displaying requirements.txt.
