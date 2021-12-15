@@ -360,7 +360,8 @@ class Filter_Manager {
         // restrict suppressed
         //filter_str_array.push("suppressed_b:False")
 
-        return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
+         // return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
+         return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
     }
     show_results(data){
         filter_manager.update_results_info(data)

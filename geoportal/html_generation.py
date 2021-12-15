@@ -97,7 +97,7 @@ def get_list_group_html(id,title, list,facet_name,translate,no_collapsed,reset):
 def get_results_html(request,_LANG=False):
     #",sort:'geom_area asc'"
     # generate the results html
-    # this html can be appended for when scrolling is performed
+    # this html can be appended to when scrolling is performed
 
     html=""
     rows = ""
@@ -109,7 +109,7 @@ def get_results_html(request,_LANG=False):
     if is_request and request.GET.get('f') is not None:
         filter_param = request.GET.get('f')
 
-        f = ("!("+unquote(filter_param)+")").replace("+"," ").replace("~","'")
+        f = ("!("+unquote(filter_param)+")").replace("~","'")
 
         filter_str = get_filter_str(rison.loads(f))
 
@@ -187,7 +187,8 @@ def get_filter_str(filter_arr):
 
     # restrict suppressed
     filter_str_array.append("suppressed_b:False")
-    return  "json={query:'"+" AND ".join(filter_str_array)+"'}"
+    #return "json={query:'" + " AND ".join(filter_str_array) + "'}"
+    return  views.base_search+" AND ".join(filter_str_array)
 
 def get_resource_header_html(resource,LANG,num):
     html = ""

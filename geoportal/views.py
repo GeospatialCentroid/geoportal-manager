@@ -20,8 +20,14 @@ from . import details_view
 
 from . import utils
 
-fq="&fq={!parent%20which='solr_type:parent'}"
-
+fq="&fq=solr_type:parent"
+child_filter="&childFilter={!edismax v=$q.user}"
+fl="&fl=*,[child childFilter=$childFilter]"
+# adding accommodation for child searching
+q= "&q={!parent which=solr_type:parent v=$q.child} OR {!edismax v=$q.user}"
+q_child="&q.child= %2Bsolr_type:child  %2B{!edismax v=$q.user}" # note + replaced with %2B
+q_user="&q.user="
+base_search=fq+child_filter+fl+q+q_child+q_user
 def index(request,_LANG=False):
     # for loading relative items dynamically
     args = {'STATIC_URL': settings.STATIC_URL}
@@ -34,7 +40,8 @@ def index(request,_LANG=False):
         # when no filter simply access first page of results
         # args["result_html"] = html_generation.get_results_html("json = {query: 'suppressed_b:False'}", _LANG)
         # Added parent filter
-        args["result_html"] = html_generation.get_results_html("json = {query:''}"+fq, _LANG)
+        print("pre--base_search------",base_search)
+        args["result_html"] = html_generation.get_results_html(base_search.replace(" ","%20")+"*:*", _LANG)
 
     # http://localhost:8000/?f=!(!f,CRB_California)&e=(c:~36.527294814546245,-98.87695312500001~,z:3)&l=!()&t=search_tab/sub_details/7949bb91a02741a7961712a7b81b7b9e_7&rows=10
     if request.GET.get('t'):
