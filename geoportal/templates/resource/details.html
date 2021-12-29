@@ -10,7 +10,13 @@
      {{toggle_but_html|safe}}
     {% endif %}
 
+
     <span class="item_collection"><i class="fas fa-unlock fa-2x" style="color: #fd7e14;"></i></span>
+    {% if pub_icon %}
+     {{pub_icon|safe}}
+    {% endif %}
+
+
 
 
     {% if bbox %}
@@ -25,13 +31,14 @@
     <div class="item_label" >{{LANG.RESULT.AUTHOR}}: <span class="font-weight-bold" itemprop="author">{{producer_html|safe}}</span></div>
     <div class="item_label" >{{LANG.RESULT.PUBLISHER}}: <span class="font-weight-bold" itemprop="publisher">{{publisher_html|safe}}</span></div>
     <div class="item_label">{{LANG.RESULT.DATE_PUBLISHED}}: <span class="font-weight-bold">{{published|date:"Y-m-d"}}</span></div>
-    <div class="item_label">{{LANG.RESULT.DATA_FORMAT}}: <span class="font-weight-bold">{{format|safe}}</span></div>
+    {% if format %}<div class="item_label">{{LANG.RESULT.DATA_FORMAT}}: <span class="font-weight-bold">{{format|safe}}</span></div>{% endif %}
 
-
-    <p>
-        <div id="item_thumb"><img src="{{thumb}}"></div>
-        <span class="font-weight-bold">{{LANG.SEARCH.ABSTACT_LABEL}}</span> {{desc|safe}}
-    </p>
+    <br/>
+    <div class="description">
+        {% if thumb %}<div id="item_thumb"><img src="{{thumb}}"></div>{% endif %}
+        <span class="font-weight-bold">{{LANG.SEARCH.ABSTACT_LABEL}}</span><br/>{{desc|safe}}
+    </div>
+    <br/>
 
     {{attribute_html|safe}}
     {{get_more_details_link_html|safe}}
@@ -43,7 +50,7 @@
     {% endif %}
     <span class="font-weight-bold">{{LANG.DETAILS.CITATION}}:</span><br/>
     <span>
-        {{producer|safe}}. ({{published|date:"Y"}}). [{{format|safe}}]. {{publisher|safe}}. {{LANG.DETAILS.RETRIEVED_FROM}} {{get_catelog_html|safe}}
+        {{producer|safe}}. ({{published|date:"Y"}}). {% if format %}[{{format|safe}}].{% endif %} {{publisher|safe}}. {{LANG.DETAILS.RETRIEVED_FROM}} {{get_catelog_html|safe}}
 
     </span>
 </div>

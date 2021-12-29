@@ -100,7 +100,7 @@ $( function() {
     filter_manager = new Filter_Manager({
      base_url:'/fetch_solr?',
      result_url:'/result?',
-     facet_params:'rows=0&facet.mincount=1&facet=on&wt=json&',
+     facet_params:'rows=0&facet.mincount=1&facet=on&wt=json&df=text&',
      params:params['f'],
      })
 

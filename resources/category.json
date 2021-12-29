@@ -2,7 +2,7 @@
   "rearing","cultivation","agriculture","irrigation","aquaculture","plantation","crop","livestock"
 ]},
 {"code":"002", "name":"biota", "title":"Flora or fauna", "desc":"Flora or fauna in natural environment, for example wildlife, vegetation, biological sciences, ecology, wilderness, sea life, wetlands, habitat, biological resources" , "keywords": [
-  "flora","fauna","wildlife","vegetation","wilderness","natural habitat","biological resource"
+  "flora","fauna","wildlife","vegetation","wilderness","natural habitat","biological resource","turkey","deer","hare","crane","skink","lizard","snake","mouse","lynx","chicken","grouse","geese","elk","quail","bear","dog","bird","frog","squirrel","eagle","bat"
 ]},
 {"code":"003", "name":"boundaries", "title":"Census and administrative boundaries", "desc":"Legal land descriptions, for example political and administrative boundaries, governmental units, marine boundaries, voting districts, school districts, international boundaries" , "keywords": [
   "political","administrative","boundaries","boundary","governmental","government","voting","census","district","international"

@@ -224,23 +224,7 @@ The following script called when logged into the database works for now, though 
 ```ALTER USER geoportal_admin WITH SUPERUSER;```
 
 
-#### Adding a new End_point
-If a new end_point type needs to be created, do the following
-1. Add a new End_Point_Type to 'geoportal_manager/resources/models.py' with an 2 character abbreviation and long name
-2. From the Terminal run
-    ```python manage.py makemigrations```
-    ```python manage.py migrate```
 
-3. Create file collection class for processing the file. This script will load the end_point, loop over the layers
-   and create the parent and child records as appropriate. Follow one of the other custom FileCollection##.py files
-   in the geoportal_manager/resources/harvester/ folder for guidance.
-4. Create file parser class to parse the json file. Follow one of the other custom FileParser##.py files
-   in the geoportal_manager/resources/harvester/ folder for guidance. For ArcGIS Map Services, the FilePArse_ARC may already be equipped
-   for your needs.
-
-5. Update the geoportal_manager/resources/harvester/FileManager.py file:
-    - Add lines to import both the new FileCollection and FileParser scripts
-    - Update the load method to include an 'elif'
 
 
 #### Adding translation text
