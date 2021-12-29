@@ -3,6 +3,7 @@ from . import views
 
 import re
 
+from resources.models import Resource,End_Point
 
 def get_lang(_LANG):
     if not _LANG:
@@ -57,19 +58,26 @@ def get_ref_type(_ref):
 
 def get_toggle_but_html(resource,LANG):
     add_func = "layer_manager.toggle_layer"
-    print()
+
     add_txt = LANG["RESULT"]["ADD"]
     #
-    child_arr = []
-    if resource["lyr_count"] and resource["lyr_count"]>1:
-        # get dynamic add text - get all the ids for use in determining if on map
-        child_ids= views.get_solr_data("q=path:"+resource["layer_slug_s"]+".layer&fl=layer_slug_s&rows=1000")
 
-        for c in child_ids["response"]["docs"]:
-            child_arr.append(c["layer_slug_s"])
+    child_arr=[]
+    # take the embedded _childDocuments_ and show those children
+    print("the resource is .......",resource)
+    if "_childDocuments_" in resource and len(resource["_childDocuments_"]) > 0:
+        # get dynamic add text - get all the ids for use in determining if on map
+        child_arr = get_child_array(resource["_childDocuments_"])
 
         add_txt = get_count_text(resource,LANG)
         add_func = "filter_manager.get_layers"
+    elif resource["lyr_count"] and resource["lyr_count"]>1:
+        # get dynamic add text - get all the ids for use in determining if on map
+        child_arr = get_child_array(views.get_solr_data("q=path:"+resource["layer_slug_s"]+".layer&fl=layer_slug_s&rows=1000")["response"]["docs"])
+
+        add_txt = get_count_text(resource,LANG)
+        add_func = "filter_manager.get_layers"
+
 
     #Allow button to remain active
     # extra_class= "active"
@@ -78,9 +86,24 @@ def get_toggle_but_html(resource,LANG):
 
     return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr='" + ",".join( child_arr) + "' onclick='" + add_func + "(\"" + resource["dc_identifier_s"] + "\")'>" + add_txt + "</button>"
 
+def get_child_array(children):
+    """
+
+    :param children:
+    :return:
+    """
+    child_arr = []
+    for c in children:
+        child_arr.append(c["layer_slug_s"])
+    return child_arr
 
 def get_count_text(resource,LANG):
-    return LANG["RESULT"]["ADD"]+" - <span></span>"+"<span>/"+str(resource["lyr_count"])+"</span>"
+    #
+    if "_childDocuments_" in resource and len(resource["_childDocuments_"]) > 0:
+        return LANG["RESULT"]["ADD"] + " - <span></span>" + "<span>/" + str(len(resource["_childDocuments_"])) + "</span>"
+    else:
+        return LANG["RESULT"]["ADD"] + " - <span></span>" + "<span>/" + str(resource["lyr_count"]) + "</span>"
+
 
 def get_details_but_html(resource,LANG):
     return "<button type='button' class='btn btn-primary' href='"+get_catelog_url(resource)+"' onclick='filter_manager.show_details(\"" + resource["dc_identifier_s"] + "\")'>" + \
@@ -196,3 +219,16 @@ def convert_text_to_json(text):
         return json.loads(text)
     except:
         return text
+
+def get_endpoints():
+   return End_Point.objects.values_list('name', 'thumbnail')
+
+def get_publisher_icon(resource,end_points,size_class=""):
+    html = ""
+    for e in end_points:
+       if "dc_publisher_sm" in resource:
+            for p in resource["dc_publisher_sm"]:
+                if p == e[0] and e[1]:
+                    html += '<div class="pub_icon '+size_class+'"><img src="'+e[1]+'" title="'+e[0]+'"></div>'
+
+    return html

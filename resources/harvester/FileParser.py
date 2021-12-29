@@ -22,6 +22,8 @@ class FileParser:
         print("A file parser is born")
 
     def get_categories(self, r):
+
+
         """
 
         :param r:
@@ -37,7 +39,14 @@ class FileParser:
         if 'tags' in r:
             text += ', '.join(r['tags'])
 
+        if 'title' in r:
+            text += ' '+r["title"]
+
+        text = text.lower()
+
         match={}
+
+        print(" looking for categories-------------",text)
         if len(categories)==0 and text is not None:
 
             # look through the description and pull out and matches
@@ -49,6 +58,7 @@ class FileParser:
                             match[c.name]=[]
                         match[c.name].append(k.name)
 
+            print("match",match)
             r['match'] = match
             # choose the category with the highest number
             count=0
@@ -97,6 +107,9 @@ class FileParser:
         """
         print("get_utc_from_unix",ts)
         if isinstance(ts, int):
+            # if the string is only 8 characters it's likely in the yyyymmdd format
+            if len(str(ts))==8:
+                return ts
             return datetime.utcfromtimestamp(ts/1000).strftime('%Y%m%d')
         elif isinstance(ts, str):
             return datetime.strptime(ts, '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y%m%d')
@@ -136,7 +149,7 @@ class FileParser:
             for p in self.places:
                 if t.lower() == p.name.lower() or t.lower() == p.name_lsad.lower():
                     val = p.name.lower()+"|"+p.name_lsad
-                    if val not in places and t.lower() not in ["trail","basin","wells","hydro","Forest"]:
+                    if val not in places and t.lower() not in ["trail","basin","wells","hydro","forest"]:
                         # so that we can map to the same place - use both the name and lsad
                         places.append(val)
 

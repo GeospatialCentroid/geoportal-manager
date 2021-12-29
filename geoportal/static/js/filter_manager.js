@@ -89,7 +89,7 @@ class Filter_Manager {
             if( $this.page_count> $("#result_wrapper .content_right li").length){
 
                // load the next page
-               var filter_str = $this.get_filter_str()
+//               var filter_str = $this.get_filter_str()
                $this.page_start+=$this.page_rows;
 
                $("#result_total .spinner-border").show();
@@ -159,7 +159,6 @@ class Filter_Manager {
 
     load_json(file_name,call_back,extra){
         // A generic loader of json
-        var obj=this
         $.ajax({
             type: "GET",
             extra:extra,
@@ -353,7 +352,10 @@ class Filter_Manager {
             if (!f[0]){
                 f_id=''
             }
-            filter_str_array.push(f_id+f[1])
+            if (f[1]!=''){
+                filter_str_array.push(f_id+f[1])
+            }
+
          }
 
          //restrict to parent results
@@ -361,7 +363,7 @@ class Filter_Manager {
         // restrict suppressed
         //filter_str_array.push("suppressed_b:False")
 
-        return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
+         return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
     }
     show_results(data){
         filter_manager.update_results_info(data)
@@ -420,7 +422,14 @@ class Filter_Manager {
 
     }
     get_layers(_resource_id){
-       $.get(this.result_url+"q=path:"+_resource_id+".layer&rows="+1000,this.show_sublayer_details)
+        //get all the filtered children of the parent
+        //   $.get(this.result_url+"q=path:"+_resource_id+".layer&rows="+1000,this.show_sublayer_details)
+        console.log(filter_manager.filters)
+        var filters_copy = JSON.parse(JSON.stringify(filter_manager.filters));
+        filters_copy.push(["path",String(_resource_id)+".layer"])
+        var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
+        $.get(results_url,this.show_sublayer_details)
+
     }
 
     show_sublayer_details(layers_html,_resource_id){
@@ -620,6 +629,10 @@ class Filter_Manager {
             go_to_panel = "results"
         }else if(this.panel_name == 'sub_details'){
             go_to_panel = "layers"
+        }else{
+            //trigger a search
+             $("#search_but").trigger("click");
+             return
         }
         this.slide_position(go_to_panel)
     }

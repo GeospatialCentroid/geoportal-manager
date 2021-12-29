@@ -12,7 +12,6 @@ from . import utils
 
 from urllib.parse import unquote,urlparse,quote_plus
 
-from resources.models import Resource,End_Point
 
 
 def get_browse_html(_LANG=False):
@@ -97,25 +96,31 @@ def get_list_group_html(id,title, list,facet_name,translate,no_collapsed,reset):
 def get_results_html(request,_LANG=False):
     #",sort:'geom_area asc'"
     # generate the results html
-    # this html can be appended for when scrolling is performed
+    # this html can be appended to when scrolling is performed
 
     html=""
-    rows = ""
+    # Add paging and sorting url params
+    rows = "1000"
     start = ""
     sort = ""
+
     fq = ""
     is_request=hasattr(request, "GET")
 
     if is_request and request.GET.get('f') is not None:
         filter_param = request.GET.get('f')
 
-        f = ("!("+unquote(filter_param)+")").replace("+"," ").replace("~","'")
+        f = ("!("+unquote(filter_param)+")").replace("~","'")
+        # get the filter string for all the parents
+        filter_str,has_parent_path = get_filter_str(rison.loads(f))
+        # if no path is specified - restrict results to parents
+        if not has_parent_path:
+            filter_str= views.base_search+filter_str
+            fq=views.fq
+        else:
+            filter_str= "&q="+filter_str+"&df=text"
 
-        filter_str = get_filter_str(rison.loads(f))
 
-        # Add paging and sorting url params
-        rows = ""
-        start= ""
 
         if request.GET.get('rows') is not None:
             rows= "&rows=" + str(request.GET.get('rows'))
@@ -129,10 +134,6 @@ def get_results_html(request,_LANG=False):
             # relevance
             sort = "&sort=score asc"
 
-        # if request.GET.get('fq') is not None:
-        #     rows = "&fq=" + str(request.GET.get('fq'))
-        fq=views.fq
-
     elif is_request and hasattr(request, "META"):
         # get the parent
         filter_str=request.META['QUERY_STRING']
@@ -140,10 +141,11 @@ def get_results_html(request,_LANG=False):
         filter_str = request
 
     # perform a search
+    print("we're performing a search -------------- ",filter_str+rows+start+sort+fq)
     data = views.get_solr_data((filter_str+rows+start+sort+fq).replace(" ","%20"))
     LANG = utils.get_lang(_LANG)
 
-    end_points=get_endpoints()
+    end_points=utils.get_endpoints()
 
     #start with paging details
     page_count = data["response"]["numFound"]
@@ -163,7 +165,7 @@ def get_results_html(request,_LANG=False):
         html += get_resource_header_html(resource,LANG,str(index_number)+". ")
         html+= get_resource_button_html(resource,LANG)
         html+= " "+get_resource_icon(resource)
-        html += " " + get_publisher_icon(resource,end_points)
+        html += " " + utils.get_publisher_icon(resource,end_points)
         html += " " + utils.get_access_icon(resource)
         html+="</li>"
 
@@ -171,6 +173,12 @@ def get_results_html(request,_LANG=False):
 
     return html
 def get_filter_str(filter_arr):
+    """
+
+    :param filter_arr:
+    :return: modified filter array, and flag for parent path
+    """
+    has_parent_path=False
     filter_str_array=[]
     # compile a url to fetch the filtered results
     for i in range(len(filter_arr)):
@@ -178,16 +186,25 @@ def get_filter_str(filter_arr):
         f_id = str(f[0]) + ":"
         if f[0] == False:
             f_id=''
-            filter_str_array.append(f_id + "" + f[1] + "")
-        if f[0] == "solr_geom" or f[0] == "dct_issued_s":
+            if f[1] !='':
+                filter_str_array.append(f_id + "" + f[1] + "")
+        elif f[0] == "solr_geom" or f[0] == "dct_issued_s":
             filter_str_array.append(f_id + "" + f[1] + "")
         else:
             # be sure to encapsulate facet spaces
             filter_str_array.append(f_id + "\"" + f[1] + "\"")
 
+        # set e parent path
+        if f[0] == "path":
+            has_parent_path=True
+
+        print("the array ", filter_str_array)
+
     # restrict suppressed
     filter_str_array.append("suppressed_b:False")
-    return  "json={query:'"+" AND ".join(filter_str_array)+"'}"
+    #return "json={query:'" + " AND ".join(filter_str_array) + "'}"
+
+    return " AND ".join(filter_str_array),has_parent_path
 
 def get_resource_header_html(resource,LANG,num):
     html = ""
@@ -209,7 +226,8 @@ def get_resource_header_html(resource,LANG,num):
 
     html +="<div class='item_label'>"+LANG["RESULT"]["AUTHOR"]+": <span class='font-weight-bold'>"+producer+"</span></div>"
     html +="<div class='item_label'>"+LANG['RESULT']["DATE_PUBLISHED"]+": <span class='font-weight-bold'>"+published+"</span></div>"
-    html +="<div class='item_label'>"+LANG["RESULT"]["DATA_FORMAT"]+": <span class='font-weight-bold'>"+format+"</span></div>"
+    if format != "":
+        html +="<div class='item_label'>"+LANG["RESULT"]["DATA_FORMAT"]+": <span class='font-weight-bold'>"+format+"</span></div>"
     return html
 
 def get_resource_button_html(resource,LANG,no_details=False):
@@ -243,14 +261,5 @@ def get_resource_icon(resource):
     return html
 
 
-def get_publisher_icon(resource,end_points):
-    html = ""
-    for e in end_points:
-        for p in resource["dc_publisher_sm"]:
-            if p == e[0] and e[1]:
-                html += '<div class="pub_icon"><img src="'+e[1]+'"></div>'
 
-    return html
 
-def get_endpoints():
-   return End_Point.objects.values_list('name', 'thumbnail')

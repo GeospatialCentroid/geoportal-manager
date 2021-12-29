@@ -24,8 +24,8 @@ class FileParser_ARC(FileParser):
         '''
 
         # create new dict for each and assign the remapped values
-        for k in _r:
-            print("_r",k)
+        # for k in _r:
+        #     print("_r",k)
 
         _r = dict(_r)
 
@@ -70,6 +70,11 @@ class FileParser_ARC(FileParser):
 
         if "geometryType" in _r and _r["geometryType"] is not None and _r["geometryType"] != "":
             resource["geometry_type"] = _r["geometryType"]
+
+
+        # make the type available even when nested
+        if child_obj and "type" in child_obj:
+            _r["type"] = child_obj["type"]
 
         if "type" in _r:
             resource["type"] = _r["type"]
@@ -121,8 +126,9 @@ class FileParser_ARC(FileParser):
         # add some modified values
         # todo keep track of whether we added new pieces of information
         # this will be captured in the database
-        resource["categories"] = self.get_categories(resource)
 
+        resource["categories"] = self.get_categories(resource)
+        print ("get categories ----------- ", resource["categories"])
         resource["places"] = self.get_places(resource)
 
         # print(resource["places"])

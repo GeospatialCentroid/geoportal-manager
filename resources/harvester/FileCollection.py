@@ -110,10 +110,13 @@ class FileCollection:
         :param data_str: The date string - could be either str, int or date object
         :return: the date object
         """
-        if isinstance(date_str, int) :
-            return datetime.fromtimestamp(int(date_str)/1000.0)
-
         db_format = '%Y-%m-%d %H:%M:%S+00:00'
+        if isinstance(date_str, int) :
+            if len(str(date_str))==8:
+                return datetime.strptime(str(date_str), '%Y%m%d').strftime(db_format)
+            return datetime.fromtimestamp(date_str/1000.0)
+
+
         if isinstance(date_str, str):
             return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.000Z').strftime(db_format)
         else:

@@ -6,6 +6,8 @@ This class should be modified to support your own unique system
 import os.path
 from os import path
 from .FileCollection import FileCollection
+from datetime import datetime
+import re
 
 class FileCollection_CO(FileCollection):
     '''
@@ -28,6 +30,7 @@ class FileCollection_CO(FileCollection):
 
         self.open_prefix = "https://opendata.arcgis.com/datasets/"
         self.api_types = ["Esri Rest API", "ArcGIS GeoServices REST API", "ArcGIS GeoService"]
+
 
         super(FileCollection_CO, self).__init__(props)
 
@@ -67,6 +70,7 @@ class FileCollection_CO(FileCollection):
         root_domain = self.end_point_url[:self.end_point_url.rindex("/")]
 
         for r in data['layers']:
+
             # download the file url+'/layers?f=pjson' - create records for each and associate these records with the parent
             _r=r['layer']
             _r["id"] = _r["Nid"]
@@ -77,7 +81,16 @@ class FileCollection_CO(FileCollection):
 
             _r["urls"]=[]
             _r["urls"].append({'url_type': "mapserver", 'url': _r["url"]})
-            self.load_data( _r["url"]+"?f=pjson",_r["id"], _r, layers_path)
+
+            if self.resource_ids:
+                # only load specified resource ids
+                for r_id in self.resource_ids:
+                    if r_id ==  _r["id"]:
+                        print("Loading....", _r["id"])
+                        self.load_data( _r["url"]+"?f=pjson",_r["id"], _r, layers_path)
+            else:
+                self.load_data(_r["url"] + "?f=pjson", _r["id"], _r, layers_path)
+
 
 
     def load_data(self, _url,id, r, layers_path):
@@ -95,6 +108,21 @@ class FileCollection_CO(FileCollection):
         print("The URL is...",_url)
         self.load_file_call_func(_file, _url, 'ingest_parent_record', r)
 
+    def add_details(self,data, stub):
+        if 'Layer Description' in data:
+            # get the date from the layer description
+            regex = "\d{8}"
+            match = re.findall(regex, data['Layer Description'])
+            if len(match) > 0:
+                stub["modified"] = int(match[0])
+
+            # get an acronym if it exists
+            regex = "\w[A-Z]{2,}"
+            match = re.findall(regex, data['Layer Description'])
+            if len(match) > 0:
+                stub["owner"] = match[0]
+
+        return stub
 
     def ingest_parent_record(self, data, parent_data):
         """
@@ -116,6 +144,11 @@ class FileCollection_CO(FileCollection):
         obj["urls"]=parent_data["urls"]
         obj["id"] = parent_data["id"]
 
+        obj["urls"].append({'url_type': "info_page", 'url': self.end_point_url[:self.end_point_url.rindex("/")] })
+
+
+        obj = self.add_details(parent_data, obj)
+
         # create a parent object
         r = self.save_record(obj, parent_data, data)
         parent_data['parent_resource']=r
@@ -133,7 +166,13 @@ class FileCollection_CO(FileCollection):
         # loop over the layers
         # and generate the url to the sub service
         layers_path = self.path + self.folder + "/layers"
+        limit =2
+        count =0
         for l in data["layers"]:
+            if count>limit:
+                return
+            count +=1
+
             _id=str(l["id"])
             child_url=parent_data["url"]+"/"+_id+"?f=pjson"
             _file = layers_path+"/"+parent_data['id']+"_"+ _id+"_service.json"
@@ -148,6 +187,12 @@ class FileCollection_CO(FileCollection):
         :param parent_data:
         :return:
         """
+        # if type is group ignore
+        if "type" in data and data["type"]=="Group Layer":
+            return
+
+        data = self.add_details(parent_data, data)
+
 
         child_obj = self.file_parser.create_record(parent_data,data, self)
         child_obj['id']=str(parent_data['id'])+"_"+str(data['id'])

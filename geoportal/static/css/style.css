@@ -494,6 +494,12 @@ position: absolute;
     height: 16px;
 
  }
+ .pub_icon_med{
+    float: right;
+ }
+ .pub_icon_med img{
+     height: 24px;
+ }
 
  #basemap_layer_dropdown li{
     cursor:pointer;
@@ -788,3 +794,18 @@ position: absolute;
     border-width: 4px;
   }
 
+.modal-dialog{
+    overflow-y: initial !important
+}
+#disclaimer_text{
+    height: 400px;
+    overflow-y: auto;
+}
+
+
+body.modal-open {
+  height: 100vh;
+  overflow-y: hidden;
+}
+
+.description p { display: inline }

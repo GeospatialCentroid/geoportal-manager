@@ -7,7 +7,7 @@ from django.template.response import TemplateResponse
 from django.conf import settings
 
 from django.contrib.gis.geos import GEOSGeometry
-from resources.models import Resource,Community_Input
+from resources.models import Resource,Community_Input,End_Point
 
 from django.http import JsonResponse
 from django.core import serializers
@@ -20,7 +20,14 @@ from . import details_view
 
 from . import utils
 
-fq="&fq={!parent%20which='solr_type:parent'}"
+fq="&fq=solr_type:parent"
+child_filter="&childFilter={!edismax v=$q.user}"
+fl="&fl=*,[child childFilter=$childFilter  limit=1000]"
+# adding accommodation for child searching
+q= "&q={!parent which=solr_type:parent v=$q.child} OR {!edismax v=$q.user}"
+q_child="&q.child= %2Bsolr_type:child  %2B{!edismax v=$q.user}" # note '+' replaced with %2B
+q_user="&q.user="
+base_search=fq+child_filter+fl+q+q_child+q_user
 
 def index(request,_LANG=False):
     # for loading relative items dynamically
@@ -34,7 +41,8 @@ def index(request,_LANG=False):
         # when no filter simply access first page of results
         # args["result_html"] = html_generation.get_results_html("json = {query: 'suppressed_b:False'}", _LANG)
         # Added parent filter
-        args["result_html"] = html_generation.get_results_html("json = {query:''}"+fq, _LANG)
+        print("pre--base_search------",base_search)
+        args["result_html"] = html_generation.get_results_html(base_search.replace(" ","%20")+"*:*", _LANG)
 
     # http://localhost:8000/?f=!(!f,CRB_California)&e=(c:~36.527294814546245,-98.87695312500001~,z:3)&l=!()&t=search_tab/sub_details/7949bb91a02741a7961712a7b81b7b9e_7&rows=10
     if request.GET.get('t'):
@@ -56,8 +64,6 @@ def index(request,_LANG=False):
                 if len(result_data['response']['docs'])>0 and "dc_source_sm" in result_data['response']['docs'][0] and parts[1]=="sub_details":
                     # load the sub records
                     args["sub_result_html"] = html_generation.get_results_html("q=path:"+result_data['response']['docs'][0]["dc_source_sm"][0]+".layer&rows=1000", _LANG=False)
-
-
 
     start=10
     if request.GET.get('start'):
@@ -149,3 +155,8 @@ def set_geo_reference(request):
     # pass c - for community to identify the source of the change
     r.save('c',c)
     return HttpResponse(json.dumps({'complete': True}, cls=DjangoJSONEncoder), content_type='application/json')
+
+def get_disclaimer(request):
+   if request.GET.get('e'):
+       e = End_Point.objects.get(id=request.GET.get('e'))
+       return HttpResponse(e.disclaimer)

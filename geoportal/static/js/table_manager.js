@@ -108,12 +108,16 @@ class Table_Manager {
       table_manager.get_layer_data($(elm).val())
 
   }
-  get_data(_layer_id,func){
+  get_data(_layer_id,func,no_page){
    $("#data_table_total .spinner-border").show();
     var $this=this
 
     var layer = layer_manager.get_layer_obj(_layer_id)
     var layer_obj =layer.layer_obj
+
+    //store the layer obj incase we need to rerun without paging
+    $this.layer_id = _layer_id
+    $this.func = func
 
     if(!$this.sort_col && layer.resource_obj.fields){
         // use the first col if no sort specified
@@ -125,7 +129,14 @@ class Table_Manager {
     // passing options
     // https://esri.github.io/esri-leaflet/api-reference/tasks/query.html
     var query_start = layer_obj.query().where($this.query)
-    var query_full = layer_obj.query().where($this.query).limit($this.page_rows).offset($this.page_start)
+
+    var query_full
+    if (no_page){
+        var query_full = layer_obj.query().where($this.query)
+    }else{
+        var query_full = layer_obj.query().where($this.query).limit($this.page_rows).offset($this.page_start)
+    }
+
     if(this.sort_col){
         query_full=query_full.orderBy($this.sort_col,$this.sort_dir)
     }
@@ -140,14 +151,17 @@ class Table_Manager {
 
   }
   show_response(error, featureCollection, response){
-  var $this=table_manager
-  if (error) {
+    var $this=table_manager
+    if (error) {
         console.log(error);
+        if (error?.message && error.message=='Pagination is not supported.'){
+            $this.get_data( $this.layer_id,$this.func,true)
+        }
         return;
       }
-      $this.results = featureCollection.features
-      $this.generate_table(featureCollection.features)
-      $this.show_totals()
+    $this.results = featureCollection.features
+    $this.generate_table(featureCollection.features)
+    $this.show_totals()
   }
   append_to_table(error, featureCollection, response){
     var $this=table_manager

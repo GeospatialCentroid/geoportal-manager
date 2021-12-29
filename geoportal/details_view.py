@@ -85,6 +85,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     # get the add button
     args['toggle_but_html'] = utils.get_toggle_but_html(d,args['LANG'])
+
     if download_link:
 
         if len(download_link) == 1:
@@ -125,7 +126,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
                 if i>0:
                     prev_resource_data = utils.get_reference_data(ds[i - 1]['layer_slug_s'])
                     args['prev_resource_url'] = utils.get_catelog_url(prev_resource_data['response']['docs'][0])
-                if i <  args['num_found']:
+                if i <  args['num_found'] and len(ds)>i+1:
                     # load the resource to generate the appropriate link
                     next_resource_data= utils.get_reference_data(ds[i + 1]['layer_slug_s'])
                     args['next_resource_url'] = utils.get_catelog_url(next_resource_data['response']['docs'][0])
@@ -133,6 +134,8 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
                 args['cur_num'] = i+1
 
                 break
+
+    args['pub_icon'] = utils.get_publisher_icon(d, utils.get_endpoints(),"pub_icon_med")
 
     args['get_catelog_link_html'] = utils.get_catelog_link_html(d, args['LANG'])
     args['get_more_details_link_html'] = utils.get_more_details_link_html(d, args['LANG'])

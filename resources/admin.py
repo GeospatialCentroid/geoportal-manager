@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.views.decorators.cache import never_cache
 
-from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Change_Log,Community_Input, Georeference_Request
+from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request
 
 from django.utils.safestring import mark_safe
 
@@ -116,9 +116,9 @@ class ResourceInline(admin.StackedInline):
 class ResourceAdmin(OSMGeoAdmin):
     list_filter = ('end_point',"type","status_type","owner")
     search_fields = ('title','alt_title','description','resource_id')
-    list_display = ('title', 'year','end_point','get_thumb_small','type','status_type',"child_count","accessioned")
+    list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
-    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_places","child_count")
+    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_places","get_category","child_count")
     fieldsets = [
         (None, {'fields': ['resource_id','year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
@@ -154,7 +154,8 @@ class ResourceAdmin(OSMGeoAdmin):
     def get_places(self, obj=None):
         return ", ".join([p.name for p in obj.place.all()])
 
-
+    def get_category(self, obj):
+        return ",".join([p.name for p in obj.category.all()])
 
     def get_thumb(self, obj=None):
         html = '<img src="{}" alt="False">'.format(obj.thumbnail) if obj.thumbnail else ""
@@ -309,6 +310,21 @@ admin_site.register(Geometry_Type, Geometry_TypeAdmin)
 class FormatAdmin(OSMGeoAdmin):
    pass
 admin_site.register(Format, FormatAdmin)
+
+
+class Category_KeywordsInline(admin.StackedInline):
+    model = Category_Keywords.category.through
+    extra = 0
+
+class Category_KeywordsAdmin(OSMGeoAdmin):
+    pass
+admin_site.register(Category_Keywords, Category_KeywordsAdmin)
+
+class CategoryAdmin(OSMGeoAdmin):
+    inlines = [
+        Category_KeywordsInline
+    ]
+admin_site.register(Category, CategoryAdmin)
 
 
 class TagAdmin(OSMGeoAdmin):

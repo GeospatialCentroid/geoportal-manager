@@ -23,9 +23,73 @@ class DB_ToGBL:
         if not os.path.exists(self.path+"json/"):
             os.mkdir(self.path+"json/")
 
+        self.single_dict = {  # dictionary to translate single-value Dublin Core/GBL fields into GBLJson
+            "resource_id": ["layer_slug_s", "dc_identifier_s"],
+            # "Status": ["b1g_status_s"],
+            # "Date Accessioned": ["b1g_dateAccessioned_s"],
+            # "Date Retired": ["b1g_dateRetired_s"],
+
+            # "Accrual Method": ["dct_accrualMethod_s"],
+            "title": ["dc_title_s"],
+            "alt_title": ["dct_alternativeTitle_sm"],
+            # we're only supporting one alterate title but could be '|' separator
+            "description": ["dc_description_s"],
+
+            "year": ["solr_year_i"],
+            # "owner": ["dct_provenance_s"],
+            "format": ["dc_format_s"],
+            "geometry_type": ["layer_geom_type_s"],
+            # replaced  was "type: and "dc_type_sm" as it's more for the the service type
+
+            # "Layer ID": ["layer_id_s"],
+            "thumbnail": ["thumbnail_path_ss"],
+
+            "temporal_coverage": ["dct_temporal_sm"]
+
+        }
+        self.multiple_dict = {  # dictionary to translate multivalue Dublin Core/GBL fields into GBLJson
+
+            "category": ["dc_subject_sm"],
+            "tag": ["b1g_keyword_sm"],
+
+            "place": ["dct_spatial_sm"],
+            # todo use owner 'full_name' if available
+            "owner": ["dc_creator_sm"],
+            "publisher": ["dc_publisher_sm"],
+
+            "languages": ["dc_language_sm"],
+
+        }
+
         for r in self.resources:
             self.export(r)
 
+    def map_data(self, data, stub):
+        """
+
+        :param data:
+        :param stub:
+        :return:
+        """
+        for sd in self.single_dict:
+            for v in self.single_dict[sd]:
+                val = getattr(data, sd)
+                if val:
+                    stub[v] = str(val)
+
+            # now do the multi dictionary values and separate by '|'
+        for md in self.multiple_dict:
+            for v in self.multiple_dict[md]:
+                li = []
+                for m in getattr(data, md).all():
+                    # this relies on the fact that 'name' or 'full' be present in each of the model objects
+                    if hasattr(m, 'full_name') and m.full_name != None and m.full_name != "":
+                        li.append(m.full_name)
+                    elif m.name:
+                        li.append(m.name)
+                stub[v] = li
+
+        return stub
 
     def export(self,r):
 
@@ -47,41 +111,7 @@ class DB_ToGBL:
         #todo - updated layer_slug_s to be persistent identifier - https://github.com/geoblacklight/geoblacklight/wiki/GeoBlacklight-1.0-Metadata-Elements
         # make unique
         r.resource_id+="-"+str(r.end_point.id)
-        single_dict = {  # dictionary to translate single-value Dublin Core/GBL fields into GBLJson
-            "resource_id": ["layer_slug_s", "dc_identifier_s"],
-            # "Status": ["b1g_status_s"],
-            # "Date Accessioned": ["b1g_dateAccessioned_s"],
-            # "Date Retired": ["b1g_dateRetired_s"],
 
-            # "Accrual Method": ["dct_accrualMethod_s"],
-            "title": ["dc_title_s"],
-            "alt_title": ["dct_alternativeTitle_sm"],# we're only supporting one alterate title but could be '|' separator
-            "description": ["dc_description_s"],
-
-            "year": ["solr_year_i"],
-            # "owner": ["dct_provenance_s"],
-            "format": ["dc_format_s"],
-            "geometry_type": ["layer_geom_type_s"], # replaced  was "type: and "dc_type_sm" as it's more for the the service type
-
-            # "Layer ID": ["layer_id_s"],
-            "thumbnail": ["thumbnail_path_ss"],
-
-            "temporal_coverage": ["dct_temporal_sm"]
-
-        }
-        multiple_dict = {  # dictionary to translate multivalue Dublin Core/GBL fields into GBLJson
-
-            "category": ["dc_subject_sm"],
-            "tag": ["b1g_keyword_sm"],
-
-            "place": ["dct_spatial_sm"],
-            # todo use owner 'full_name' if available
-            "owner": ["dc_creator_sm"],
-            "publisher": ["dc_publisher_sm"],
-
-            "languages": ["dc_language_sm"],
-
-        }
 
         sub_folder = "" # consider setting this to better organize records
 
@@ -103,15 +133,17 @@ class DB_ToGBL:
                   "dc_rights_s": "Public"}  # starting dictionary with set values - could also be "Restricted"
 
         # take all the single dictionary items and map the associated database values to them
-        for sd in single_dict:
-            for v in single_dict[sd]:
+        p_data = self.map_data(r, p_data)
+
+        for sd in self.single_dict:
+            for v in self.single_dict[sd]:
                 val =getattr(r, sd)
                 if val:
                     p_data[v] = str(val)
 
         # now do the multi dictionary values and separate by '|'
-        for md in multiple_dict:
-            for v in multiple_dict[md]:
+        for md in self.multiple_dict:
+            for v in self.multiple_dict[md]:
                 li =[]
                 for m in getattr(r, md).all():
                     # this relies on the fact that 'name' or 'full' be present in each of the model objects
@@ -196,6 +228,8 @@ class DB_ToGBL:
             json.dump(p_data, jsonfile, indent=2)
 
 
+
+
     def generate_child_record(self,l_data,_l,r,is_parent=False):
         """
         Create a child record
@@ -222,8 +256,8 @@ class DB_ToGBL:
             l_data["dct_references_s"] = '{' + (','.join(ref)) + '}'
             print("----------")
 
-
-
+        # map child date to stub record
+        l_data=self.map_data(_l,l_data);
         # update the id
         l_data["layer_slug_s"] = _l.resource_id+"-"+str(r.end_point.id)
         l_data["dc_identifier_s"] = _l.resource_id+"-"+str(r.end_point.id)
@@ -249,6 +283,8 @@ class DB_ToGBL:
             l_data["dc_title_s"] = _l.name
         if hasattr(_l, 'title'):
             l_data["dc_title_s"] = _l.title
+
+
 
         #
 
@@ -283,12 +319,14 @@ class DB_ToGBL:
             #store a direct reference to the parent
             l_data["dc_source_sm"] = r.resource_id
 
+        # Add the date
         date_str_fmt = "%Y-%m-%dT%H:%M:%SZ"
-        if r.created is not None:
-            l_data["dct_issued_s"] = r.created.strftime(date_str_fmt)
-        if r.modified is not None:
-            l_data["dct_issued_s"] = r.modified.strftime(date_str_fmt)
+        if _l.created is not None:
+            l_data["dct_issued_s"] = _l.created.strftime(date_str_fmt)
+        if _l.modified is not None:
+            l_data["dct_issued_s"] = _l.modified.strftime(date_str_fmt)
 
+        print("And the date is....", l_data["dct_issued_s"],r.modified)
 
         return l_data
 
