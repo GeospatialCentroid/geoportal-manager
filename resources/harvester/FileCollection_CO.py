@@ -166,12 +166,12 @@ class FileCollection_CO(FileCollection):
         # loop over the layers
         # and generate the url to the sub service
         layers_path = self.path + self.folder + "/layers"
-        limit =2
-        count =0
+        # limit =2
+        # count =0
         for l in data["layers"]:
-            if count>limit:
-                return
-            count +=1
+            # if count>limit:
+            #     return
+            # count +=1
 
             _id=str(l["id"])
             child_url=parent_data["url"]+"/"+_id+"?f=pjson"
