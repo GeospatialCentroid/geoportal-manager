@@ -119,7 +119,7 @@ class Table_Manager {
     $this.layer_id = _layer_id
     $this.func = func
 
-    if(!$this.sort_col && layer.resource_obj.fields){
+    if(!$this.sort_col && layer.resource_obj.fields && layer.resource_obj.fields?.[0]){
         // use the first col if no sort specified
       this.sort_col =layer.resource_obj.fields[0].name
       this.sort_dir = "ASC"
