@@ -370,6 +370,8 @@ class Filter_Manager {
         $("#result_wrapper .content_right").html(data)
         filter_manager.update_parent_toggle_buttons(".content_right")
         filter_manager.update_toggle_button()
+        //allow use of navigation back but
+        $("#nav").show()
     }
     append_results(data){
         filter_manager.update_results_info(data)
@@ -612,8 +614,9 @@ class Filter_Manager {
             }
              $("#panels").animate({ scrollLeft: pos });
              $("#nav").html(nav_text)
-             $("#nav").show()
+
              $("#search_tab").trigger("click")
+
     }
     go_back(){
         console.log("A generic function to handle the panel movement",this.panel_name)
@@ -631,7 +634,8 @@ class Filter_Manager {
             go_to_panel = "layers"
         }else{
             //trigger a search
-             $("#search_but").trigger("click");
+            console.log("trigger search")
+            // $("#search_but").trigger("click");
              return
         }
         this.slide_position(go_to_panel)
