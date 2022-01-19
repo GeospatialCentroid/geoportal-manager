@@ -28,10 +28,18 @@ class Disclaimer_Manager {
 
   }
   check_status(_resource_id,z,callback){
+
+    if (_resource_id.indexOf("-")==-1){
+        //no end_point specified
+        return true;
+    }
+
     //callback the method to call when the disclaimer is accepted
     // if the status is accepted - return true and load or download the data
     // take the end_point id of the end of the resource id
     var end_point_id=_resource_id.substring(_resource_id.lastIndexOf("-")+1,_resource_id.length);
+
+
     if(typeof(this.disclaimers[end_point_id])=="undefined"){
          //create the store
          this.disclaimers[end_point_id]={"queue":[],"status":""}
