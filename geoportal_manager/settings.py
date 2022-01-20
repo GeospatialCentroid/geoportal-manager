@@ -162,3 +162,6 @@ CKEDITOR_CONFIGS = {
          "removePlugins": "stylesheetparser",
     }
 }
+
+# as some resources may have many children - set the number of fields high enough to handle updating the parent record with all the nested children.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 20000

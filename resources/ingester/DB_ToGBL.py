@@ -207,6 +207,9 @@ class DB_ToGBL:
             # make the parent a child
             p_data = child_docs[0]
             print("Use the child record instead of the parent")
+
+            p_data["solr_type"] = "parent"
+
             if p_data is not None:
                 if "drawing_info" in p_data:
                     p_data["drawing_info"]=json.dumps(p_data["drawing_info"])

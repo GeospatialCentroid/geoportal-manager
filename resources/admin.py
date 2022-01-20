@@ -87,7 +87,7 @@ class Status_LogInline(admin.StackedInline):
 
 class Change_LogInline(admin.StackedInline):
     model = Change_Log
-
+    classes = ['collapse']
     # readonly_fields = ('field_name', "date_", "change_type")
     fieldsets = [
         (None, {'fields': [('field_name', "date", "change_type")]}),
@@ -100,6 +100,7 @@ class Change_LogInline(admin.StackedInline):
 
 class ResourceInline(admin.StackedInline):
     model = Resource
+    classes = ['collapse']
     # fields = ('title','type', 'geometry_type', "format")
     fieldsets = [
         (None, {'fields': ['title']}),

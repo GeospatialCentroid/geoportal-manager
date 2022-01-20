@@ -14,6 +14,8 @@ from os import path
 
 from datetime import datetime
 
+from bs4 import BeautifulSoup
+
 
 class FileCollection:
     '''
@@ -274,3 +276,23 @@ class FileCollection:
                 # print("Except",str(e))
                 pass
         return r
+
+
+    def convert_urls(self,html, prefix):
+        """
+        takes a string and looks for hrefs, for those found if the url is relative, make it absolute by adding the prefix
+        :param html:
+        :param prefix
+        :return:
+        """
+
+        soup = BeautifulSoup(html, "lxml")
+        for a in soup.findAll('a'):
+            print("found url", a['href'])
+            if not a['href'].startswith("http"):
+                print("replace",prefix+a['href'])
+                a['href'] = prefix+a['href']
+                a.replace_with(a)
+
+
+        return str(soup)

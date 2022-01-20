@@ -37,6 +37,8 @@ class Command(BaseCommand):
         parser.add_argument("-e", "--end_point_id", type=int, help="specify an End Point ID")
         parser.add_argument("-r", "--resource_ids", type=str,
                             help="(Optional) If there are one or more resource ids you would like choose to ingest from a known endpoint. Use comma separation.", )
+        parser.add_argument("-j", "--use_existing_json", action='store_true',
+                            help="(Optional) When you simply want to ingest the files in the 'json' folder", )
 
         #todo allow specific collections, file types, etc
         # we might also want to run
@@ -52,6 +54,10 @@ class Command(BaseCommand):
         verbosity = kwargs['verbosity']
         print ("verbosity", kwargs['verbosity']) # defaults to 1
 
+        if kwargs['use_existing_json']:
+            self.publish_json(verbosity)
+            return
+
         # clear the contents of a directory
         if path.exists(directory + "/json"):
             files = glob.glob(directory + "/json/*")
@@ -64,6 +70,7 @@ class Command(BaseCommand):
             print("Retrieving all Resources with status of", kwargs['status'])
 
         if kwargs['resource_ids']:
+            # restring ingest to specific ids
             r_ids=kwargs['resource_ids'].split(",")
             resources=[]
             for r_id in r_ids:
@@ -74,8 +81,10 @@ class Command(BaseCommand):
                 else:
                     resources.append(Resource.objects.get(resource_id=r_id,parent__isnull=True))
         elif kwargs['end_point_id']:
+            # restrict to endpoints with specific status
             resources = Resource.objects.filter(status_type=kwargs['status'],end_point=kwargs['end_point_id'],parent__isnull=True)
         else:
+            # ingest all with a specific status
             resources = Resource.objects.filter(status_type=kwargs['status'],parent__isnull=True)
 
         # check for children
@@ -98,11 +107,7 @@ class Command(BaseCommand):
             "verbosity":verbosity
         })
 
-        # now that the files have been created - PUBLISH!
-        publish_to_gbl.Publish_ToGBL({
-            "path": directory + "/json",
-            "verbosity":verbosity
-        })
+        self.publish_json(verbosity)
 
         # we also need to update the records that have been added to the solr db
         # so long as no_promote is set
@@ -133,4 +138,11 @@ class Command(BaseCommand):
                 for l in r.layers:
                     l.status_type = r.status_type
                     l.save()
+
+    def publish_json(self,verbosity=0):
+        # now that the files have been created - PUBLISH!
+        publish_to_gbl.Publish_ToGBL({
+            "path": directory + "/json",
+            "verbosity": verbosity
+        })
 

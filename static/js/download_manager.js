@@ -136,7 +136,9 @@ class Download_Manager {
                 var resource = layer.resource_obj
 
                 var json_refs = JSON.parse(resource.dct_references_s)
+                var download_link=false
                 for(var j in json_refs){
+                    console.log("Looking through download layers does j==$this.url_type",j,$this.url_type)
                     if (j==$this.url_type){
                        var links = $this.get_download_links(json_refs[j])
                        //check if any of the links match
@@ -144,6 +146,7 @@ class Download_Manager {
                             // check if the extension matches
                             if ($this.get_file_ext(links[l])==file_ext){
                                 //match
+                                download_link = links[l]
                                 $this.open_download_link($this.get_download_link(links[l]),$("#download_bounds_checkbox").is(':checked'))
                             }
 
@@ -152,6 +155,24 @@ class Download_Manager {
 
                     }
                 }
+                if(!download_link){
+                    console.log("No download link found, how did we get here")
+                    console.log("trying brute force approach with first link - need to refine!!!")
+
+                    //$this.open_download_link($this.get_download_link(links[l]),$("#download_bounds_checkbox").is(':checked'))
+                    for(var j in json_refs){
+                        console.log(json_refs[j])
+
+                        var file_ext="geojson"
+                        if ($("#download_bounds_select").val()!=''){
+                             file_ext=$("#download_bounds_select").val()
+                        }
+                        console.log(layer)
+                        var file_name =layer.resource_obj["dc_title_s"]+"."+file_ext
+                        $this.download_file(json_refs[j]+"/query?returnGeometry=true&where=1%3D1&outSR=4326&outFields=*&orderByFields=Shape%20ASC&f="+file_ext,file_name)
+                    }
+                }
+
             }
         })
     }
@@ -292,5 +313,22 @@ class Download_Manager {
     download_complete(elm){
         $("#"+elm).removeClass("progress-bar-striped progress-bar-animated active")
     }
+    // bruteforce download
+    // ref https://stackoverflow.com/questions/4545311/download-a-file-by-jquery-ajax
+     download_file(url,file_name) {
+        var $this = this
+         var req = new XMLHttpRequest();
+         req.open("GET", url, true);
+         req.responseType = "blob";
+         req.onload = function (event) {
+             var blob = req.response;
+             var link=document.createElement('a');
+             link.href=window.URL.createObjectURL(blob);
+             link.download=file_name;
+             link.click();
+             $this.download_complete("download_button")
+         };
 
+         req.send();
+     }
 }
