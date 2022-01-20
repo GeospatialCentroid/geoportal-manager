@@ -76,6 +76,8 @@ class FileCollection_CO(FileCollection):
             _r["id"] = _r["Nid"]
 
             _r["url"] = _r["URL"]
+
+            del _r["URL"]
             if _r["url"].find("https://")==-1:
                 _r["url"]=root_domain+_r["url"]
 
@@ -84,6 +86,7 @@ class FileCollection_CO(FileCollection):
 
             if self.resource_ids:
                 # only load specified resource ids
+
                 for r_id in self.resource_ids:
                     if r_id ==  _r["id"]:
                         print("Loading....", _r["id"])
@@ -117,7 +120,7 @@ class FileCollection_CO(FileCollection):
                 stub["modified"] = int(match[0])
 
             # get an acronym if it exists
-            regex = "\w[A-Z]{2,}"
+            regex = "\w[A-Z]{2,}[A-Za-z]*"
             match = re.findall(regex, data['Layer Description'])
             if len(match) > 0:
                 stub["owner"] = match[0]
@@ -131,9 +134,10 @@ class FileCollection_CO(FileCollection):
         :param parent_data:
         :return:
         """
+        root_domain = self.end_point_url[:self.end_point_url.rindex("/")]
         # put what we have in it's place
         obj=data.copy()
-        obj['description']=parent_data["Layer Description"]
+        obj['description']=self.convert_urls(parent_data["Layer Description"],root_domain)
         obj['title'] = parent_data["Title"]
 
         obj['name'] = ""
@@ -144,7 +148,7 @@ class FileCollection_CO(FileCollection):
         obj["urls"]=parent_data["urls"]
         obj["id"] = parent_data["id"]
 
-        obj["urls"].append({'url_type': "info_page", 'url': self.end_point_url[:self.end_point_url.rindex("/")] })
+        obj["urls"].append({'url_type': "info_page", 'url': root_domain })
 
 
         obj = self.add_details(parent_data, obj)

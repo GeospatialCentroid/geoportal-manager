@@ -809,3 +809,8 @@ body.modal-open {
 }
 
 .description p { display: inline }
+
+#disclaimer_heading{
+   font-size: large;
+   padding: .2rem;
+}

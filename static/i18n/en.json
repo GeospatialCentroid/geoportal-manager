@@ -47,7 +47,8 @@
 		  "dct_issued_s": "Publish Date",
 		  "b1g_keyword_sm": "Keyword",
 		  "layer_geom_type_s": "Data Type",
-		  "dc_format_s": "Format"
+		  "dc_format_s": "Format",
+		  "dc_publisher_sm": "Publisher"
 	  }
 	},
 	"RESULT": {
@@ -94,6 +95,7 @@
 
 	},
 	"DISCLAIMER": {
+		"DISCLAIMER":"Disclaimer",
 		"AGREE": "Agree",
 		"DISAGREE": "Disagree"
 	},

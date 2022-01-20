@@ -24,8 +24,9 @@ fq="&fq=solr_type:parent"
 child_filter="&childFilter={!edismax v=$q.user}"
 fl="&fl=*,[child childFilter=$childFilter  limit=1000]"
 # adding accommodation for child searching
-q= "&q={!parent which=solr_type:parent v=$q.child} OR {!edismax v=$q.user}"
-q_child="&q.child= %2Bsolr_type:child  %2B{!edismax v=$q.user}" # note '+' replaced with %2B
+# note the space in front for '&q= ' this is really important!
+q= "&q= {!parent which=solr_type:parent v=$q.child} OR {!edismax v=$q.user}"
+q_child="&q.child=%2Bsolr_type:child  %2B{!edismax v=$q.user}" # note '+' replaced with %2B
 q_user="&q.user="
 base_search=fq+child_filter+fl+q+q_child+q_user
 
