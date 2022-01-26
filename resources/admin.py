@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.views.decorators.cache import never_cache
 
-from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request
+from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type
 
 from django.utils.safestring import mark_safe
 
@@ -335,3 +335,9 @@ admin_site.register(Tag, TagAdmin)
 class PlaceAdmin(OSMGeoAdmin):
    pass
 admin_site.register(Place, PlaceAdmin)
+
+class URL_TypeAdmin(OSMGeoAdmin):
+    list_display = ('name', 'ref', 'service', '_class', '_method')
+
+admin_site.register(URL_Type,URL_TypeAdmin)
+

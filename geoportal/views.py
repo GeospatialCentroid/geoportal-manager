@@ -7,7 +7,7 @@ from django.template.response import TemplateResponse
 from django.conf import settings
 
 from django.contrib.gis.geos import GEOSGeometry
-from resources.models import Resource,Community_Input,End_Point
+from resources.models import Resource,Community_Input,End_Point,URL_Type
 
 from django.http import JsonResponse
 from django.core import serializers
@@ -161,3 +161,8 @@ def get_disclaimer(request):
    if request.GET.get('e'):
        e = End_Point.objects.get(id=request.GET.get('e'))
        return HttpResponse(e.disclaimer)
+
+def get_services(request):
+   url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class','_method')
+
+   return HttpResponse(json.dumps(list(url_types)), content_type='application/json')

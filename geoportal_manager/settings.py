@@ -98,7 +98,7 @@ DATABASES = {
         'USER': 'geoportal_admin',
         'PASSWORD': GEOPORTAL_DB_PASS,
         'HOST': 'localhost',
-        'PORT': '5433',
+        'PORT': '5432',
     }
 }
 

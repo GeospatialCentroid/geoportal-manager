@@ -35,7 +35,7 @@ class End_Point(models.Model):
     name = models.CharField(max_length=200)
     org_name = models.CharField(max_length=100)
     url = models.CharField(max_length=512)
-    publisher = models.ForeignKey(Publisher, on_delete=models.SET_NULL, null=True, blank=True)
+    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE,default=1)
     End_Point_Type = (
         ('d', 'dcat'),
         ('a', 'arc_gis_rest'),
@@ -304,9 +304,16 @@ class Community_Input(models.Model):
 
 
 class URL_Type(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,unique=True)
+    ref = models.CharField(max_length=150,help_text="The standard for the URL",null=True, blank=True)
+    service = models.BooleanField(help_text="If the url has mappability.",null=True, blank=True)
+    _class = models.CharField(max_length=100,null=True, blank=True,help_text="When mapping, this field directs the web map to use a specific class.")
+    _method = models.CharField(max_length=100,null=True, blank=True,help_text="The method for the class is defined here.")
     def __str__(self):
         return str(self.name)
+
+    class Meta:
+        verbose_name_plural = "URL Types"
 
 class URL_Label(models.Model):
     name = models.CharField(max_length=100)

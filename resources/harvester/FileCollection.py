@@ -260,7 +260,7 @@ class FileCollection:
 
         # and lastly - create the urls  by looping over the ones in the resources
         for u in obj['urls']:
-            # print(u)
+            print("Create the url type:", u)
             #  create the url type
             u_t, _ = URL_Type.objects.get_or_create(name=u['url_type'])
 
