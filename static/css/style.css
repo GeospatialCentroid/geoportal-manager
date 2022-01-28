@@ -797,6 +797,12 @@ position: absolute;
 .modal-dialog{
     overflow-y: initial !important
 }
+#disclaimer {
+    Z-INDEX: 10000001;
+}
+.modal-backdrop {
+    Z-INDEX: 10000000;
+}
 #disclaimer_text{
     height: 400px;
     overflow-y: auto;
@@ -809,3 +815,8 @@ body.modal-open {
 }
 
 .description p { display: inline }
+
+#disclaimer_heading{
+   font-size: large;
+   padding: .2rem;
+}

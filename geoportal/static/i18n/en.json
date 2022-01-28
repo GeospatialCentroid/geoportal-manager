@@ -139,8 +139,12 @@
 	"IDENTIFY": {
 		"NO_INFORMATION": 			"No information available.",
 		"IDENTIFY_SELECT_LAYER":	"Select identify layer:",
-		"ZOOM_TO": 					"Zoom to"
-
+		"ZOOM_TO": 					"Zoom to",
+		"PREVIOUS": "Previous",
+		"NEXT": "Next",
+		"SHOWING_RESULT": "Showing",
+		"OF": "of",
+		"FOUND": "Found"
 	},
 	"TAB_TITLES": {
 		"BROWSE_TAB": 	"Search",

@@ -47,8 +47,7 @@
 		  "dct_issued_s": "Publish Date",
 		  "b1g_keyword_sm": "Keyword",
 		  "layer_geom_type_s": "Data Type",
-		  "dc_format_s": "Format",
-		  "dc_publisher_sm": "Publisher"
+		  "dc_format_s": "Format"
 	  }
 	},
 	"RESULT": {
@@ -140,8 +139,12 @@
 	"IDENTIFY": {
 		"NO_INFORMATION": 			"No information available.",
 		"IDENTIFY_SELECT_LAYER":	"Select identify layer:",
-		"ZOOM_TO": 					"Zoom to"
-
+		"ZOOM_TO": 					"Zoom to",
+		"PREVIOUS": "Previous",
+		"NEXT": "Next",
+		"SHOWING_RESULT": "Showing",
+		"OF": "of",
+		"FOUND": "Found"
 	},
 	"TAB_TITLES": {
 		"BROWSE_TAB": 	"Search",

@@ -57,6 +57,10 @@ class Map_Manager {
     // create a reference to this for use during interaction
     var $this=this
 
+    this.map.on('click', function(e) {
+        $this.map_click_event(e.latlng)
+    });
+
     // specify popup options
     this.popup_options =
     {
@@ -161,14 +165,23 @@ class Map_Manager {
     }
      get_selected_layer(){
         // start with the first layer if not yet set - check to make use the previous selection still exists
+
         if (!this.selected_layer_id || !layer_manager.is_on_map(this.selected_layer_id) ){
-            this.selected_layer_id=layer_manager.layers[0].id
+            if ( layer_manager.layers.length>0){
+                this.selected_layer_id=layer_manager.layers[0].id
+            }else{
+                console.log("No layers for you!")
+                return
+            }
+
         }
 
         return layer_manager.get_layer_obj(this.selected_layer_id);
     }
-    map_click_event(){
+    map_click_event(lat_lng){
+
         var $this=this
+        $this.click_lat_lng=lat_lng
         // identify any feature under where the user clicked
         //start by removing the existing feature
         if (this.highlighted_feature) {
@@ -179,14 +192,25 @@ class Map_Manager {
        var layer = this.get_selected_layer()
         var query_full = layer.layer_obj.query()
        // if the layer is a point - add some wiggle room
+
+        console.log(layer,"is the layer")
       if(layer.type=="esriPMS"){
         query_full=query_full.nearby(this.click_lat_lng, 5)
       }else{
-        query_full=query_full.intersects(this.click_lat_lng)
+          try{
+              query_full=query_full.intersects(this.click_lat_lng)
+          }catch(e){
+            // instead try an alternate identify method
+            $this.try_identify()
+            return
+          }
+
       }
 
       query_full.run(function (error, featureCollection) {
-          if (error) {
+          if (error || featureCollection.features.length==0) {
+
+             $this.try_identify()
             return;
           }
 
@@ -195,15 +219,29 @@ class Map_Manager {
 
 
     }
+    try_identify(){
+        // for dynamic features services - try identify instead
+        var $this=this;
+        var layer = this.get_selected_layer()
+        // todo - we may need to identify by a specific layer by adding  ".layers('visible:0')"
+        layer.layer_obj.identify().on($this.map).at(this.click_lat_lng).run(function (error, featureCollection) {
+               $this.show_popup_details(featureCollection.features)
+        });
+
+    }
     show_popup_details(_features){
-          var $this =this
-         var layer = this.get_selected_layer()
+           var $this =this
+           var layer = this.get_selected_layer()
+
+           if(!layer){
+                return
+           }
            var layer_select_html="<span id='layer_select'>"+ this.show_layer_select(layer.id)+"</span>"
           // make sure at least one feature was identified.
           var  html =layer_select_html
-
+            console.log(_features.length)
           if (_features.length > 0) {
-
+            // Add in next and previous buttons
             // show the feature layer
             this.show_highlight_geo_json(_features[0])
             var props= _features[0].properties
@@ -214,9 +252,7 @@ class Map_Manager {
 
             }
             html+="</table></div>"
-
             html+= "<a href='javascript:map_manager.map_zoom_event()'>"+LANG.IDENTIFY.ZOOM_TO+"</a><br/>"
-
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
@@ -230,8 +266,6 @@ class Map_Manager {
             .on("remove", function () {
                  $this.show_highlight_geo_json()
               });
-            //
-
     }
 
     show_layer_select(_layer_id){

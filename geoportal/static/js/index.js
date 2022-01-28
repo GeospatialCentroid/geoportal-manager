@@ -108,7 +108,9 @@ $( function() {
      {params:params['e'] ,
         lat:36.25408922222581,
         lng: -98.7485718727112,
-        z:3})
+        z:3,
+        limit:100 // max results for identify
+        })
 
      map_manager.init()
      map_manager.init_image_map()

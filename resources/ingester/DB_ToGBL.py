@@ -401,6 +401,8 @@ class DB_ToGBL:
             return 'Point'
         if _type.find('raster')>-1:
             return 'Raster'
+        else :
+            return _type
 
 
     def get_format_type(self,_type):

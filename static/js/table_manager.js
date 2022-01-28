@@ -113,7 +113,16 @@ class Table_Manager {
     var $this=this
 
     var layer = layer_manager.get_layer_obj(_layer_id)
-    var layer_obj =layer.layer_obj
+
+    // when a mapserver is requested for table view need to specify the layer id in question
+    // temporarily look at the first layer todo expand to more more flexible
+    var url= layer.layer_obj.service.options.url
+    if ( url.endsWith("/MapServer/")){
+        url=url+"0/"
+    }
+    var query = L.esri.query({
+      url: url
+    });
 
     //store the layer obj incase we need to rerun without paging
     $this.layer_id = _layer_id
@@ -128,27 +137,27 @@ class Table_Manager {
 
     // passing options
     // https://esri.github.io/esri-leaflet/api-reference/tasks/query.html
-    var query_start = layer_obj.query().where($this.query)
+    var query_base=query.where($this.query);//maintain a base query for getting totals
+    if ($('#table_bounds_checkbox').is(':checked')){
+        // add map bounds
+        query_base=query_base.intersects(layer_manager.map.getBounds())
+    }
+    // get the total number of records from the service layer, make sure to include filters but exclude limits
+    query_base.count(function (error, count,response) {
+        $this.page_count = count
+    });
 
-    var query_full
+    var query_full;
     if (no_page){
-        var query_full = layer_obj.query().where($this.query)
+        var query_full =query_base
     }else{
-        var query_full = layer_obj.query().where($this.query).limit($this.page_rows).offset($this.page_start)
+        var query_full = query_base.limit($this.page_rows).offset($this.page_start)
     }
 
     if(this.sort_col){
         query_full=query_full.orderBy($this.sort_col,$this.sort_dir)
     }
-    if ($('#table_bounds_checkbox').is(':checked')){
-        // add map bounds
-        query_start=query_start.intersects(layer_manager.map.getBounds())
-        query_full=query_full.intersects(layer_manager.map.getBounds())
-    }
-    query_start.count(function (error, response) {$this.page_count = response
-          query_full.run(func);
-        });
-
+    query_full.run(func);
   }
   show_response(error, featureCollection, response){
     var $this=table_manager
