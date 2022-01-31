@@ -101,6 +101,7 @@
     <script type="text/javascript" src="{% static 'plugins/jquery/jquery.datetimepicker.full.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'plugins/jquery/jquery.datetimepicker.css' %}">
 
+    <script type="text/javascript" src="{% static 'plugins/jquery/jquery.cookie.js' %}"></script>
 
     <!--bootstrap-->
      <script src="{% static 'plugins/popper.js' %}"></script>
@@ -331,6 +332,7 @@
 
       </div>
       <div class="modal-footer">
+        <span id="disclaimer_dont_show_again"></span><input  id="disclaimer_dont_show_again_checkbox" type="checkbox" value="">
         <button type="button" class="btn btn-secondary" data-dismiss="modal" id="disclaimer_disagree"></button>
         <button type="button" class="btn btn-primary" id="disclaimer_agree"></button>
       </div>

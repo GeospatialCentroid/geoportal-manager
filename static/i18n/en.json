@@ -96,7 +96,8 @@
 	"DISCLAIMER": {
 		"DISCLAIMER":"Disclaimer",
 		"AGREE": "Agree",
-		"DISAGREE": "Disagree"
+		"DISAGREE": "Disagree",
+		"DONT_SHOW_AGAIN": "Do not show me this again"
 	},
 	"SEARCH": {
 		"RADIO_DATA_LABEL": 		"Data",

@@ -57,7 +57,8 @@ class Disclaimer_Manager {
         this.disclaimers[end_point_id].queue.push({"resource_id":_resource_id,"z":z,"callback":callback})
 
     }
-    if(typeof($.cookie(end_point_id)) !='undefined'){
+    if($.cookie.get(end_point_id) =='accept'){
+    console.log("We've accepted the cookie")
      return true;
 
     }else if (!this.disclaimers[end_point_id]?.html){
@@ -105,7 +106,7 @@ class Disclaimer_Manager {
              $("#disclaimer").modal("hide");
              //check if the checkbox is selected
              if ($('#disclaimer_dont_show_again_checkbox').is(':checked')){
-                $.cookie(end_point_id,'agree');
+                $.cookie.set(end_point_id,'agree');
 
              }
 

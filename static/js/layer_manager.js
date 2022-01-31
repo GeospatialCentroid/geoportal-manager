@@ -682,8 +682,8 @@ class Layer_Manager {
                 selected += "selected"
             }
             var title = this.layers[i].resource_obj.dc_title_s;
-            if(title.length>35){
-                title = title.substring(0,35)+"..."
+            if(title.length>30){
+                title = title.substring(0,30)+"..."
             }
             html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
         }

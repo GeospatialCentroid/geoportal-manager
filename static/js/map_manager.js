@@ -92,7 +92,7 @@ class Map_Manager {
 
      $this=this;
      this.map.on('draw:created', function (e) {
-     console.log("drawn",e)
+        console.log("drawn",e)
         // Do whatever else you need to. (save to db, add to map etc)
          drawnItems.addLayer(e.layer);
     });
@@ -181,37 +181,40 @@ class Map_Manager {
     map_click_event(lat_lng){
 
         var $this=this
-        $this.click_lat_lng=lat_lng
+        if(lat_lng){
+            $this.click_lat_lng=lat_lng
+        }
+
         // identify any feature under where the user clicked
         //start by removing the existing feature
         if (this.highlighted_feature) {
           this.map.removeLayer(this.highlighted_feature);
         }
+        // show popup
+        this.popup_show();
+
         //start by using the first loaded layer
 
-       var layer = this.get_selected_layer()
+        var layer = this.get_selected_layer()
         var query_full = layer.layer_obj.query()
-       // if the layer is a point - add some wiggle room
+        // if the layer is a point - add some wiggle room
+        if(layer.type=="esriPMS"){
+            query_full=query_full.nearby(this.click_lat_lng, 5)
+        }else{
+            query_full=query_full.intersects(this.click_lat_lng)
 
-        console.log(layer,"is the layer")
-      if(layer.type=="esriPMS"){
-        query_full=query_full.nearby(this.click_lat_lng, 5)
-      }else{
-          try{
-              query_full=query_full.intersects(this.click_lat_lng)
-          }catch(e){
-            // instead try an alternate identify method
-            $this.try_identify()
-            return
-          }
+        }
 
-      }
+      query_full.limit(this.limit).run(function (error, featureCollection) {
 
-      query_full.run(function (error, featureCollection) {
+          console.log("feature query run")
           if (error || featureCollection.features.length==0) {
-
-             $this.try_identify()
-            return;
+              try{
+                   $this.try_identify()
+              }catch(e){
+                   $this.show_popup_details(featureCollection.features)
+              }
+              return
           }
 
           $this.show_popup_details(featureCollection.features)
@@ -220,54 +223,98 @@ class Map_Manager {
 
     }
     try_identify(){
+        console.log("identify query run")
         // for dynamic features services - try identify instead
         var $this=this;
         var layer = this.get_selected_layer()
-        // todo - we may need to identify by a specific layer by adding  ".layers('visible:0')"
-        layer.layer_obj.identify().on($this.map).at(this.click_lat_lng).run(function (error, featureCollection) {
-               $this.show_popup_details(featureCollection.features)
-        });
+        try{
+            // todo - we may need to identify by a specific layer by adding  ".layers('visible:0')"
+            layer.layer_obj.identify().simplify($this.map,1).on($this.map).at(this.click_lat_lng).run(function (error, featureCollection) {
+                    console.log("identify query succeeded")
+                   $this.show_popup_details(featureCollection.features)
+            });
+        }catch(e){
+             console.log("identify query error",e)
+            throw "no identify";
+        return
+      }
 
     }
+
     show_popup_details(_features){
+
            var $this =this
            var layer = this.get_selected_layer()
-
+            console.log("show popup details",_features,layer,_features.length)
            if(!layer){
+                this.popup_close()
                 return
            }
            var layer_select_html="<span id='layer_select'>"+ this.show_layer_select(layer.id)+"</span>"
           // make sure at least one feature was identified.
           var  html =layer_select_html
-            console.log(_features.length)
+          $this.features=_features
+
           if (_features.length > 0) {
             // Add in next and previous buttons
             // show the feature layer
-            this.show_highlight_geo_json(_features[0])
-            var props= _features[0].properties
 
-            html += "<div id='popup_scroll'><table>"
-            for (var p in props){
-                html+="<tr><td>"+p+"</td><td>"+props[p]+"</td></tr>"
-
+            if (_features.length>1){
+              var prev_link="<a href='javascript:map_manager.show_popup_details_show_num(-1)' id='popup_prev' style='display:none;'>« "+LANG.IDENTIFY.PREVIOUS+"</a> "
+              var next_link=" <a href='javascript:map_manager.show_popup_details_show_num(1)' id='popup_next' style='display:none;' onclick=''>"+LANG.IDENTIFY.NEXT+" »</a>"
+              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span><br/>"
+              html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span></th><th>"+next_link+"</th></tr></table>"
             }
+
+            html += "<div id='popup_scroll'><table id='props_table'>"
             html+="</table></div>"
             html+= "<a href='javascript:map_manager.map_zoom_event()'>"+LANG.IDENTIFY.ZOOM_TO+"</a><br/>"
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
 
+         this.popup_show()
+           setTimeout(function(){
+               $("#popup_content").html(html)
+                //show the first returned feature
+                if(_features.length > 0){
+                    $this.show_popup_details_show_num()
+                }
 
+           }, 300);
 
-        this.popup= L.popup(this.popup_options)
-            .setLatLng(this.click_lat_lng)
-            .setContent(html)
-            .openOn(this.map)
-            .on("remove", function () {
-                 $this.show_highlight_geo_json()
-              });
+        }
+       show_popup_details_show_num(num){
+        if (!num){
+            // default setting
+            this.result_num=0
+        }else{
+            this.result_num=this.result_num+num
+        }
+
+        this.show_highlight_geo_json(this.features[this.result_num])
+        var props= this.features[this.result_num].properties
+        var html=''
+         for (var p in props){
+              html+="<tr><td>"+p+"</td><td>"+props[p]+"</td></tr>"
+         }
+        $("#props_table").html(html)
+
+        // update the text
+        $("#popup_result_num").html(this.result_num+1)
+        //update the controls
+         if(this.result_num>0){
+            $("#popup_prev").show()
+        }else{
+            $("#popup_prev").hide()
+        }
+
+        if(this.result_num<this.features.length-1){
+            $("#popup_next").show()
+        }else{
+            $("#popup_next").hide()
+        }
     }
-
     show_layer_select(_layer_id){
         var trigger_map_click=false
         // triggered when there is an update
@@ -282,12 +329,7 @@ class Map_Manager {
                 this.selected_layer_id=layer_manager.layers[0].id
                 trigger_map_click = true
             }else{
-                if (this.popup){
-                    this.map.closePopup();
-                    if (this.highlighted_feature) {
-                      this.map.removeLayer(this.highlighted_feature);
-                    }
-                }
+                this.popup_close()
 
                 return
             }
@@ -301,11 +343,30 @@ class Map_Manager {
             this.map_click_event()
 
          }
-
          return html
+     }
+     popup_show(){
+        this.popup_close()
+        var $this=this
+        var html = '<div id="popup_content"><div class="spinner_wrapper" style="text-align:center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div></div></div>'
+        this.popup= L.popup(this.popup_options)
+            .setLatLng(this.click_lat_lng)
+            .setContent(html)
+            .openOn(this.map)
+            .on("remove", function () {
+                 $this.show_highlight_geo_json()
+              });
 
      }
-
+    popup_close(){
+        if (this.popup){
+            this.map.closePopup();
+            if (this.highlighted_feature) {
+              this.map.removeLayer(this.highlighted_feature);
+            }
+        }
+        delete this.popup;
+    }
     //RECT
      show_highlight_rect(bounds){
         // when a researcher hovers over a resource show the bounds on the map
@@ -324,6 +385,7 @@ class Map_Manager {
     }
     // FEATURE
     show_highlight_geo_json(geo_json){
+        //    console.log("show_highlight_geo_json  -- ",geo_json)
         var $this=this
         // when a researcher hovers over a resource show the bounds on the map
         if (typeof(this.highlighted_feature) !="undefined"){
@@ -337,6 +399,7 @@ class Map_Manager {
                 }
             }).addTo(this.map);
         }else{
+
             this.highlighted_feature =  L.geoJSON(geo_json,{
             style: function (feature) {
                 return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
