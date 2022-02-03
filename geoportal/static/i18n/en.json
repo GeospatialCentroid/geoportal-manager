@@ -12,7 +12,6 @@
 		"SCALE":			"Scale",
 		"REFINE_SEARCH":	"Refine search:",
 		"TOPICS": 			"Subject Category",
-		"KEYWORDS": 		"Keywords",
 	  	"DATA_TYPE": 		"Data Type",
 	  	"FORMAT": 		"Format",
 		"NEW_DATA":			"New Data Layers",
@@ -89,7 +88,7 @@
 		"NAME": "Name",
 		"TYPE": "Type",
 		"NUMBER": "Number",
-		"TEXT": "Text",
+		"TEXT": "String",
 		"GEOREFERENCE": "Georeference this Image"
 
 	},
@@ -223,27 +222,37 @@
 	"DATA_TABLE": {
 		"LIMIT":				"Limit to map bounds",
 		"LIMIT_DATE": 			"Limit to date range",
-		"moreQueryHelp":		"More help",
+		"RESET":				"Reset",
+		"QUERY":				"Query",
+		"EXPORT_RESULT":		"Export Result",
+		"AS_XLS":				"...as Excel (.xls)",
+		"AS_CSV":				"...as CSV (.csv)",
+		"AS_SHP":				"...as Shapefile (.shp)",
+		"NO_QUERY_RESULT":		"No query results were found",
+		"QUERY_ERROR":			"There was an error in the query. Please adjust the query and try again.",
+		"EXECUTE": 				"Execute",
+		"QUERY_PANEL_TITLE":	"Custom query",
+		"QUERY_PANEL_TIP":		"Click a field name for use in query statement. Next, select and operator. <b>Use numeric or string values, and wrap strings with single quotes ' '.</b>",
+
+		"MORE_HELP":			"More help",
 		"exportQueryTooltip":	"Export the query results as an Excel (.xls) table",
 		"basicExamples":		"Basic examples",
 		"exportQueryMenuItem": 	"Export Query",
 		"error412":				"non-existant or expired license agreement",
-		"tableData":			"Table Data",
+
 		"selectQueryLayer": 	"Select layer to query",
 		"viewTableButtonLabel": "View",
-		"exportTableMenuItem": 	"Export Result",
-		"makeQueryButtonLabel": "Query",
+
+
 		"viewMenuItem":			"View/Refresh",
 		"queryMenuItem":		"Query",
-		"queryExecute": 		"Execute",
+
 		"title":				"Create a custom query",
 
-		"asXLS":				"...as Excel (.xls)",
-		"asCSV":				"...as CSV (.csv)",
-		"asSHP":				"...as Shapefile (.shp)",
+
 		"loading":				"loading...",
-		"pleaseWait":			"Please wait - loading table",
-		"reset":				"Reset"
+		"pleaseWait":			"Please wait - loading table"
+
 	}
 }
 

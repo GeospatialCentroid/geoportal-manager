@@ -50,6 +50,92 @@ class Table_Manager {
          }
     });
 
+     //set the control values
+    $("#query_button").text(LANG.DATA_TABLE.QUERY)
+    $("#reset_button").text(LANG.DATA_TABLE.RESET)
+    $("#reset_text_button").text(LANG.DATA_TABLE.RESET)
+
+    $("#data_table_export_select option[value='default']").html(LANG.DATA_TABLE.EXPORT_RESULT)
+    $("#data_table_export_select option[value='csv']").text(LANG.DATA_TABLE.AS_CSV)
+    $("#data_table_export_select option[value='xls']").text(LANG.DATA_TABLE.AS_XLS)
+    $("#data_table_export_select option[value='shp']").text(LANG.DATA_TABLE.AS_SHP)
+
+    $('#data_table_export_select').change(
+        function(){
+
+            console.log("trigger export",$(this).val())
+            $("#data_table_export_select").val("default");
+        });
+
+    // setup the query panel
+    $("#table_query_heading").text(LANG.DATA_TABLE.QUERY_PANEL_TITLE)
+    $("#table_query_tip").text(LANG.DATA_TABLE.QUERY_PANEL_TIP)
+
+    $("#table_query_execute").text(LANG.DATA_TABLE.EXECUTE)
+
+
+  }
+  show_query_panel(){
+    //set the query value
+    $("#table_query_text").val( this.query)
+    this.populate_fields()
+    $("#table_query").modal("show");
+  }
+  populate_fields(){
+    //lets load the metadata
+    var int_type=["esriFieldTypeOID","esriFieldTypeSingle","esriFieldTypeDouble"]
+    var layer = layer_manager.get_layer_obj( this.selected_layer_id)
+     var html ="";
+     for(var i in layer.resource_obj.fields){
+        var f =layer.resource_obj.fields[i]
+         var type=LANG.DETAILS.TEXT
+         if(int_type.indexOf(f.type) > -1 ){
+              var type=LANG.DETAILS.NUMBER
+         }
+
+         html +='<a href="#" class="list-group-item list-group-item-action">'+f.name+": "+type+'</a>';
+     }
+
+     //
+      $("#table_query_fields").empty()
+     $("#table_query_fields").html(html)
+     $("#table_query_fields").dblclick(function(){
+        var index = $(this).find(":hover").last().index();
+
+        table_manager.add_query_field(layer.resource_obj.fields[index].alias)
+
+    });
+
+    $("#table_query_operators").click(function(){
+        var index = $(this).find(":hover").last().index();
+        table_manager.add_query_field($("#table_query_operators a:eq("+index+")").text() )
+
+    });
+
+
+  }
+  add_query_field(val){
+     var text = $("#table_query_text").val()
+     if (text=="1=1"){
+        text =""
+     }else{
+        text+=" "
+     }
+     $("#table_query_text").val(text+val)
+     $("#table_query_text").focus();
+  }
+  reset_query_text(){
+   $("#table_query_text").val("1=1")
+  }
+  reset_query(){
+     reset_query_text()
+     this.execute_query()
+  }
+  execute_query(){
+     $("#table_query").modal("hide");
+     this.query= $("#table_query_text").val()
+     this.get_layer_data()
+
   }
   get_layer_data(_layer_id){
      // perform an initial search using the specified layer_id or the previously selected one
@@ -166,6 +252,12 @@ class Table_Manager {
         if (error?.message && error.message=='Pagination is not supported.'){
             $this.get_data( $this.layer_id,$this.func,true)
         }
+        if (error?.message && error.message=='Unable to complete operation.'){
+            $("#"+$this.elm).html(LANG.DATA_TABLE.QUERY_ERROR)
+             $this.page_count=0
+            $this.results = []
+            $this.show_totals()
+        }
         return;
       }
     $this.results = featureCollection.features
@@ -187,7 +279,12 @@ class Table_Manager {
     //the first call to generated the table
     var html= "<table class='fixed_headers'><thead><tr>"
     // loop through the header elements
+    if (_features.length==0){
+        $("#"+this.elm).html(LANG.DATA_TABLE.NO_QUERY_RESULT)
+        return
+    }
     var first_row = _features[0]
+
     for (var p in first_row.properties){
     //todo add domain names (alias) for headers and pass database name to function for sorting
      var sort_icon="<i/>"
