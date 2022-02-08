@@ -178,10 +178,12 @@ class FileCollection_AGO(FileCollection):
         # and generate the url to the sub service
         layers_path = self.path + self.folder + "/layers"
         for l in data["layers"]:
-            _id=str(l["id"])
-            child_url=parent_data["url"]+"/"+_id+"?f=pjson"
-            _file = layers_path+"/"+parent_data['id']+"_"+ _id+"_service.json"
-            self.load_file_call_func(_file, child_url, 'ingest_child_record', parent_data.copy())
+            # make sure there is than 1 child
+            if len(data["layers"]) > 1:
+                _id=str(l["id"])
+                child_url=parent_data["url"]+"/"+_id+"?f=pjson"
+                _file = layers_path+"/"+parent_data['id']+"_"+ _id+"_service.json"
+                self.load_file_call_func(_file, child_url, 'ingest_child_record', parent_data.copy())
 
 
     def ingest_child_record(self, data, parent_data):
