@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.views.decorators.cache import never_cache
-
+from django.contrib.admin import SimpleListFilter
 from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type
 
 from django.utils.safestring import mark_safe
@@ -112,10 +112,27 @@ class ResourceInline(admin.StackedInline):
     show_change_link=True
 
 
+class ParentFilter(admin.SimpleListFilter):
+    title = 'Root Resource'
+    parameter_name = 'is_parent'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('Yes', 'Yes'),
+            ('No', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'Yes':
+            return queryset.filter(parent=None)
+        elif value == 'No':
+            return queryset.exclude(parent=None)
+        return queryset
 
 # @admin.register(Resource)
 class ResourceAdmin(OSMGeoAdmin):
-    list_filter = ('end_point',"type","status_type","owner")
+    list_filter = ('end_point',"type","status_type","owner",ParentFilter)
     search_fields = ('title','alt_title','description','resource_id')
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
@@ -147,6 +164,9 @@ class ResourceAdmin(OSMGeoAdmin):
 
     def child_count(self, obj=None):
         return len(Resource.objects.filter(parent=obj.id))
+
+    def parent_filter(self, obj=None):
+        return obj.parent==None
 
     def get_tags(self, obj=None):
          print(obj.tag.all())
