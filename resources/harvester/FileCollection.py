@@ -150,6 +150,9 @@ class FileCollection:
             format, created = Format.objects.get_or_create(name=obj['format'])
 
         publisher = None
+        # replace the json publisher obj with the name string
+        if 'publisher' in obj and 'name' in obj['publisher']:
+            obj['publisher']= obj['publisher']['name']
         if 'publisher' in obj:
             publisher, created = Publisher.objects.get_or_create(name=obj['publisher'])
 
