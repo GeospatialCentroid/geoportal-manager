@@ -50,6 +50,92 @@ class Table_Manager {
          }
     });
 
+     //set the control values
+    $("#query_button").text(LANG.DATA_TABLE.QUERY)
+    $("#reset_button").text(LANG.DATA_TABLE.RESET)
+    $("#reset_text_button").text(LANG.DATA_TABLE.RESET)
+
+    $("#data_table_export_select option[value='default']").html(LANG.DATA_TABLE.EXPORT_RESULT)
+    $("#data_table_export_select option[value='csv']").text(LANG.DATA_TABLE.AS_CSV)
+    $("#data_table_export_select option[value='xls']").text(LANG.DATA_TABLE.AS_XLS)
+    $("#data_table_export_select option[value='shp']").text(LANG.DATA_TABLE.AS_SHP)
+
+    $('#data_table_export_select').change(
+        function(){
+
+            console.log("trigger export",$(this).val())
+            $("#data_table_export_select").val("default");
+        });
+
+    // setup the query panel
+    $("#table_query_heading").text(LANG.DATA_TABLE.QUERY_PANEL_TITLE)
+    $("#table_query_tip").text(LANG.DATA_TABLE.QUERY_PANEL_TIP)
+
+    $("#table_query_execute").text(LANG.DATA_TABLE.EXECUTE)
+
+
+  }
+  show_query_panel(){
+    //set the query value
+    $("#table_query_text").val( this.query)
+    this.populate_fields()
+    $("#table_query").modal("show");
+  }
+  populate_fields(){
+    //lets load the metadata
+    var int_type=["esriFieldTypeOID","esriFieldTypeSingle","esriFieldTypeDouble"]
+    var layer = layer_manager.get_layer_obj( this.selected_layer_id)
+     var html ="";
+     for(var i in layer.resource_obj.fields){
+        var f =layer.resource_obj.fields[i]
+         var type=LANG.DETAILS.TEXT
+         if(int_type.indexOf(f.type) > -1 ){
+              var type=LANG.DETAILS.NUMBER
+         }
+
+         html +='<a href="#" class="list-group-item list-group-item-action">'+f.name+": "+type+'</a>';
+     }
+
+     //
+      $("#table_query_fields").empty()
+     $("#table_query_fields").html(html)
+     $("#table_query_fields").dblclick(function(){
+        var index = $(this).find(":hover").last().index();
+
+        table_manager.add_query_field(layer.resource_obj.fields[index].alias)
+
+    });
+
+    $("#table_query_operators").click(function(){
+        var index = $(this).find(":hover").last().index();
+        table_manager.add_query_field($("#table_query_operators a:eq("+index+")").text() )
+
+    });
+
+
+  }
+  add_query_field(val){
+     var text = $("#table_query_text").val()
+     if (text=="1=1"){
+        text =""
+     }else{
+        text+=" "
+     }
+     $("#table_query_text").val(text+val)
+     $("#table_query_text").focus();
+  }
+  reset_query_text(){
+   $("#table_query_text").val("1=1")
+  }
+  reset_query(){
+     reset_query_text()
+     this.execute_query()
+  }
+  execute_query(){
+     $("#table_query").modal("hide");
+     this.query= $("#table_query_text").val()
+     this.get_layer_data()
+
   }
   get_layer_data(_layer_id){
      // perform an initial search using the specified layer_id or the previously selected one
@@ -108,14 +194,27 @@ class Table_Manager {
       table_manager.get_layer_data($(elm).val())
 
   }
-  get_data(_layer_id,func){
+  get_data(_layer_id,func,no_page){
    $("#data_table_total .spinner-border").show();
     var $this=this
 
     var layer = layer_manager.get_layer_obj(_layer_id)
-    var layer_obj =layer.layer_obj
 
-    if(!$this.sort_col && layer.resource_obj.fields){
+    // when a mapserver is requested for table view need to specify the layer id in question
+    // temporarily look at the first layer todo expand to more more flexible
+    var url= layer.layer_obj.service.options.url
+    if ( url.endsWith("/MapServer/")){
+        url=url+"0/"
+    }
+    var query = L.esri.query({
+      url: url
+    });
+
+    //store the layer obj incase we need to rerun without paging
+    $this.layer_id = _layer_id
+    $this.func = func
+
+    if(!$this.sort_col && layer.resource_obj.fields && layer.resource_obj.fields?.[0]){
         // use the first col if no sort specified
       this.sort_col =layer.resource_obj.fields[0].name
       this.sort_dir = "ASC"
@@ -124,30 +223,46 @@ class Table_Manager {
 
     // passing options
     // https://esri.github.io/esri-leaflet/api-reference/tasks/query.html
-    var query_start = layer_obj.query().where($this.query)
-    var query_full = layer_obj.query().where($this.query).limit($this.page_rows).offset($this.page_start)
+    var query_base=query.where($this.query);//maintain a base query for getting totals
+    if ($('#table_bounds_checkbox').is(':checked')){
+        // add map bounds
+        query_base=query_base.intersects(layer_manager.map.getBounds())
+    }
+    // get the total number of records from the service layer, make sure to include filters but exclude limits
+    query_base.count(function (error, count,response) {
+        $this.page_count = count
+    });
+
+    var query_full;
+    if (no_page){
+        var query_full =query_base
+    }else{
+        var query_full = query_base.limit($this.page_rows).offset($this.page_start)
+    }
+
     if(this.sort_col){
         query_full=query_full.orderBy($this.sort_col,$this.sort_dir)
     }
-    if ($('#table_bounds_checkbox').is(':checked')){
-        // add map bounds
-        query_start=query_start.intersects(layer_manager.map.getBounds())
-        query_full=query_full.intersects(layer_manager.map.getBounds())
-    }
-    query_start.count(function (error, response) {$this.page_count = response
-          query_full.run(func);
-        });
-
+    query_full.run(func);
   }
   show_response(error, featureCollection, response){
-  var $this=table_manager
-  if (error) {
+    var $this=table_manager
+    if (error) {
         console.log(error);
+        if (error?.message && error.message=='Pagination is not supported.'){
+            $this.get_data( $this.layer_id,$this.func,true)
+        }
+        if (error?.message && error.message=='Unable to complete operation.'){
+            $("#"+$this.elm).html(LANG.DATA_TABLE.QUERY_ERROR)
+             $this.page_count=0
+            $this.results = []
+            $this.show_totals()
+        }
         return;
       }
-      $this.results = featureCollection.features
-      $this.generate_table(featureCollection.features)
-      $this.show_totals()
+    $this.results = featureCollection.features
+    $this.generate_table(featureCollection.features)
+    $this.show_totals()
   }
   append_to_table(error, featureCollection, response){
     var $this=table_manager
@@ -164,7 +279,12 @@ class Table_Manager {
     //the first call to generated the table
     var html= "<table class='fixed_headers'><thead><tr>"
     // loop through the header elements
+    if (_features.length==0){
+        $("#"+this.elm).html(LANG.DATA_TABLE.NO_QUERY_RESULT)
+        return
+    }
     var first_row = _features[0]
+
     for (var p in first_row.properties){
     //todo add domain names (alias) for headers and pass database name to function for sorting
      var sort_icon="<i/>"

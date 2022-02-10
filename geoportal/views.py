@@ -7,7 +7,7 @@ from django.template.response import TemplateResponse
 from django.conf import settings
 
 from django.contrib.gis.geos import GEOSGeometry
-from resources.models import Resource,Community_Input,End_Point
+from resources.models import Resource,Community_Input,End_Point,URL_Type
 
 from django.http import JsonResponse
 from django.core import serializers
@@ -24,8 +24,9 @@ fq="&fq=solr_type:parent"
 child_filter="&childFilter={!edismax v=$q.user}"
 fl="&fl=*,[child childFilter=$childFilter  limit=1000]"
 # adding accommodation for child searching
-q= "&q={!parent which=solr_type:parent v=$q.child} OR {!edismax v=$q.user}"
-q_child="&q.child= %2Bsolr_type:child  %2B{!edismax v=$q.user}" # note '+' replaced with %2B
+# note the space in front for '&q= ' this is really important!
+q= "&q= {!parent which=solr_type:parent v=$q.child} OR {!edismax v=$q.user}"
+q_child="&q.child=%2Bsolr_type:child  %2B{!edismax v=$q.user}" # note '+' replaced with %2B
 q_user="&q.user="
 base_search=fq+child_filter+fl+q+q_child+q_user
 
@@ -160,3 +161,8 @@ def get_disclaimer(request):
    if request.GET.get('e'):
        e = End_Point.objects.get(id=request.GET.get('e'))
        return HttpResponse(e.disclaimer)
+
+def get_services(request):
+   url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class','_method')
+
+   return HttpResponse(json.dumps(list(url_types)), content_type='application/json')

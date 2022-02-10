@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.views.decorators.cache import never_cache
-
-from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request
+from django.contrib.admin import SimpleListFilter
+from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type
 
 from django.utils.safestring import mark_safe
 
@@ -87,7 +87,7 @@ class Status_LogInline(admin.StackedInline):
 
 class Change_LogInline(admin.StackedInline):
     model = Change_Log
-
+    classes = ['collapse']
     # readonly_fields = ('field_name', "date_", "change_type")
     fieldsets = [
         (None, {'fields': [('field_name', "date", "change_type")]}),
@@ -100,6 +100,7 @@ class Change_LogInline(admin.StackedInline):
 
 class ResourceInline(admin.StackedInline):
     model = Resource
+    classes = ['collapse']
     # fields = ('title','type', 'geometry_type', "format")
     fieldsets = [
         (None, {'fields': ['title']}),
@@ -111,10 +112,27 @@ class ResourceInline(admin.StackedInline):
     show_change_link=True
 
 
+class ParentFilter(admin.SimpleListFilter):
+    title = 'Root Resource'
+    parameter_name = 'is_parent'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('Yes', 'Yes'),
+            ('No', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'Yes':
+            return queryset.filter(parent=None)
+        elif value == 'No':
+            return queryset.exclude(parent=None)
+        return queryset
 
 # @admin.register(Resource)
 class ResourceAdmin(OSMGeoAdmin):
-    list_filter = ('end_point',"type","status_type","owner")
+    list_filter = ('end_point',"type","status_type","owner",ParentFilter)
     search_fields = ('title','alt_title','description','resource_id')
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
@@ -146,6 +164,9 @@ class ResourceAdmin(OSMGeoAdmin):
 
     def child_count(self, obj=None):
         return len(Resource.objects.filter(parent=obj.id))
+
+    def parent_filter(self, obj=None):
+        return obj.parent==None
 
     def get_tags(self, obj=None):
          print(obj.tag.all())
@@ -334,3 +355,9 @@ admin_site.register(Tag, TagAdmin)
 class PlaceAdmin(OSMGeoAdmin):
    pass
 admin_site.register(Place, PlaceAdmin)
+
+class URL_TypeAdmin(OSMGeoAdmin):
+    list_display = ('name', 'ref', 'service', '_class', '_method')
+
+admin_site.register(URL_Type,URL_TypeAdmin)
+

@@ -393,12 +393,14 @@ margin-left:-15px;
 #popup_scroll{
     max-height: 240px;
     overflow: auto;
-
-
+}
+#popup_control_table{
+    width:100%;
 }
 .leaflet-popup-content{
     width: 200px;
 }
+
 .leaflet-container{
     background: #cccccc;
 }
@@ -584,6 +586,10 @@ position: absolute;
 .attr_table tbody tr:nth-child(even) {
   background-color: #DDD;
 }
+
+#data_table_wrapper .item {white-space: nowrap;display:inline  }
+
+#data_table_export{display:inline}
 
 
 .date_field {
@@ -797,6 +803,15 @@ position: absolute;
 .modal-dialog{
     overflow-y: initial !important
 }
+#disclaimer {
+    Z-INDEX: 10000001;
+}
+#table_query {
+    Z-INDEX: 10000002;
+}
+.modal-backdrop {
+    Z-INDEX: 10000000;
+}
 #disclaimer_text{
     height: 400px;
     overflow-y: auto;
@@ -809,3 +824,39 @@ body.modal-open {
 }
 
 .description p { display: inline }
+
+#disclaimer_heading{
+   font-size: large;
+   padding: .2rem;
+}
+
+#table_query_fields{
+    max-height: 200px;
+    margin-bottom: 10px;
+    overflow:scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+#table_query_fields .list-group-item {
+    padding: 0.3rem 1.0rem;
+}
+
+#table_query_operators{
+    max-width: 100%;
+    overflow-x:scroll;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+#table_query_operators .list-group-item {
+      padding: 0.3rem 1.0rem;
+      white-space: nowrap
+}
+#table_query_operators .list-group-item:first-child {
+    border-top-left-radius: 0.0rem;
+    border-top-right-radius: 0.0rem;
+}
+#data_table_wrapper .btn {
+    width: auto;
+    height: 27px;
+}

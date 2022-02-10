@@ -5,6 +5,7 @@ var map_manager;
 var layer_manager;
 var table_manager;
 var download_manager;
+var disclaimer_manager;
 if (typeof(params)=="undefined"){
     var params = {}
 }
@@ -99,7 +100,7 @@ $( function() {
     filter_manager = new Filter_Manager({
      base_url:'/fetch_solr?',
      result_url:'/result?',
-     facet_params:'rows=0&facet.mincount=1&facet=on&wt=json&',
+     facet_params:'rows=0&facet.mincount=1&facet=on&wt=json&df=text&',
      params:params['f'],
      })
 
@@ -107,7 +108,9 @@ $( function() {
      {params:params['e'] ,
         lat:36.25408922222581,
         lng: -98.7485718727112,
-        z:3})
+        z:3,
+        limit:100 // max results for identify
+        })
 
      map_manager.init()
      map_manager.init_image_map()
@@ -125,6 +128,8 @@ $( function() {
       })
 
      download_manager= new Download_Manager({url_type:"http://schema.org/downloadUrl"})
+
+     disclaimer_manager= new Disclaimer_Manager({})
 
      filter_manager.init();
 
@@ -208,8 +213,7 @@ function initialize_interface(){
 
          }
     })
-
-
+    disclaimer_manager.init();
     //
     table_manager.init();
 
@@ -229,6 +233,8 @@ function initialize_interface(){
     if ( layer_manager.layers_list){
         filter_manager.load_resource_list(layer_manager.layers_list)
     }
+
+
 
 }
 function init_tabs(){

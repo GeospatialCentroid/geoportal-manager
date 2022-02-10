@@ -18,15 +18,13 @@ class Layer_Manager {
     // manage the
     // keep track of the layers that are added to the map
     this.layers=[]
-    // store a reference to the selected layer - default to first layer added
-    this.service_method =  [{"service":"urn:x-esri:serviceType:ArcGIS#FeatureLayer","class":"esri","method": "featureLayer"},
-                           {"service":"urn:x-esri:serviceType:ArcGIS#TiledMapLayer","class":"esri","method": "tiledMapLayer"},
-                           {"service":"urn:x-esri:serviceType:ArcGIS#DynamicMapLayer","class":"esri","method": "dynamicMapLayer"},
-                           {"service":"urn:x-esri:serviceType:ArcGIS#ImageMapLayer","class":"esri","method": "imageMapLayer"},
-                           {"service":"https://www.ogc.org/standards/wmts","class":"tileLayer","method": ""},
-                           {"service":"http://iiif.io/api/image","class":"tileLayer","method": "iiif"},
-                           {"service":"https://schema.org/ImageObject","class":"distortableImageOverlay","method": ""},
-                           ]
+
+    this.service_method = []
+    $this=this
+    // get the services to determine who to visualize the resources
+    $.getJSON( "/services/", function( json ) {
+        $this.service_method = json
+     });
     //
     if(typeof(this.layers_list)=="undefined"){
         this.layers_list=[]
@@ -37,6 +35,7 @@ class Layer_Manager {
     this.side_by_side= L.control.sideBySide().addTo(this.map);
     this.split_left_layers=[];
     this.split_right_layers=[];
+
     //
     var $this=this;
     // make the map layers sortable
@@ -84,8 +83,16 @@ class Layer_Manager {
     });
 
   }
+
   toggle_layer(_resource_id,z){
+
     console.log("toggle_layer",_resource_id)
+    var $this=layer_manager;
+
+    if(!disclaimer_manager.check_status(_resource_id,z,$this.toggle_layer)){
+         console.log("Accept disclaimer first")
+         return
+    }
     // either add or hide a layer
     var resource = filter_manager.get_resource(_resource_id)
 
@@ -96,16 +103,16 @@ class Layer_Manager {
          return
     }
     try{
-    var json_refs = JSON.parse(resource.dct_references_s)
+        var json_refs = JSON.parse(resource.dct_references_s)
     }catch(e){
         console.log("Error parsing JSON")
         console.log(resource.dct_references_s)
     }
 
-    if(this.is_on_map(_resource_id)){
-        this.remove_feature_layer(_resource_id);
+    if($this.is_on_map(_resource_id)){
+        $this.remove_feature_layer(_resource_id);
         $("#"+_resource_id+"_drag").remove();
-        this.remove_legend(_resource_id);
+        $this.remove_legend(_resource_id);
         filter_manager.update_parent_toggle_buttons(".content_right");
         return
     }
@@ -114,30 +121,29 @@ class Layer_Manager {
     //$.inArray(type,feature_types)>-1
     console.log(resource["drawing_info"])
     if (resource["drawing_info"] && typeof(resource["drawing_info"][0])!="undefined"){
-            var drawing_info = this.convert_text_to_json(resource["drawing_info"][0])
+            var drawing_info = $this.convert_text_to_json(resource["drawing_info"][0])
             resource["drawing_info"]=drawing_info
             // also decode the fields
             if (resource.fields){
                 for(var i=0;i<resource.fields.length;i++){
-                    resource.fields[i] = this.convert_text_to_json(resource.fields[i])
+                    resource.fields[i] = $this.convert_text_to_json(resource.fields[i])
                 }
             }
 
         }
     //find the link in the array of links
-    console.log(json_refs)
     for (var r in json_refs){
             //check if it's an acceptable format
-            for (var i=0;i<this.service_method.length;i++){
-               if (r==this.service_method[i].service){
+            for (var i=0;i<$this.service_method.length;i++){
+               if (r==$this.service_method[i].ref){
 
                     var type =""
                     if (resource?.layer_geom_type_s)
                         type = resource.layer_geom_type_s
                     console.log("And the type is: ",type)
 
-                    this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
-                    this.add_to_map_tab(_resource_id,z);
+                    $this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
+                    $this.add_to_map_tab(_resource_id,z);
                     filter_manager.update_parent_toggle_buttons(".content_right");
                     return
                }
@@ -381,7 +387,7 @@ class Layer_Manager {
 
     get_service_method(r){
         for (var i=0;i<this.service_method.length;i++){
-               if (r==this.service_method[i].service){
+               if (r==this.service_method[i].ref){
                     return this.service_method[i]
                }
         }
@@ -410,7 +416,7 @@ class Layer_Manager {
     var service_method = this.get_service_method(service_type)
 
      //check for a legend
-    if(service_method.method=="tiledMapLayer"){
+    if(service_method._method=="tiledMapLayer" || service_method._method=="dynamicMapLayer" ){
 
         filter_manager.load_json(layer_options.url+'/legend?f=json',layer_manager.create_legend,_resource_id)
         if (layer_options.url.substring(layer_options.url.length-1) =='0'){
@@ -420,7 +426,7 @@ class Layer_Manager {
     }
 
 
-    if (service_method.class=="distortableImageOverlay"){
+    if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
         var corners = filter_manager.get_poly_array(resource["solr_poly_geom"])
         var cs=[]
@@ -432,34 +438,36 @@ class Layer_Manager {
             }
              //shift the last value into the second position to conform with distortableImageOverlay
              cs.splice(1, 0, cs.splice(3, 1)[0]);
-             var layer_obj =  L[service_method.class](url,{
+             var layer_obj =  L[service_method._class](url,{
                 actions:[L.LockAction],mode:"lock",
                 corners: cs,
                     }).addTo(this.map);
 
         }else{
             //we have no coordinates, just show the image in a separate leaflet
-             this.show_image_viewer_layer(L[service_method.class](url))
+             this.show_image_viewer_layer(L[service_method._class](url))
              return
         }
 
 
-    }else if(service_method.method=="iiif"){
+    }else if(service_method._method=="iiif"){
 
-        this.show_image_viewer_layer(L[service_method.class][service_method.method](url))
+        this.show_image_viewer_layer(L[service_method._class][service_method._method](url))
         return
-    }else if(service_method.method==""){
+    }else if(service_method._method==""){
         //todo - get this from the service
         layer_options.maxZoom= 21
 
-        var layer_obj =  L[service_method.class](layer_options.url,layer_options).addTo(this.map);
+        var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
+    }else if(service_method._method.indexOf(".")>-1){
+        var method_parts=service_method._method.split(".")
+        console.log(layer_options)
+        var layer_obj =  L[service_method._class][method_parts[0]][method_parts[1]](layer_options.url).addTo(this.map);
     }else{
         //todo make the adjustment in the metadata
 //        if (resource.layer_geom_type_s=="Point"){
-        var layer_obj =  L[service_method.class][service_method.method](layer_options).addTo(this.map);
+        var layer_obj =  L[service_method._class][service_method._method](layer_options).addTo(this.map);
     }
-
-
 
 
     layer_obj.on('click', function (e) {
@@ -674,8 +682,8 @@ class Layer_Manager {
                 selected += "selected"
             }
             var title = this.layers[i].resource_obj.dc_title_s;
-            if(title.length>35){
-                title = title.substring(0,35)+"..."
+            if(title.length>30){
+                title = title.substring(0,30)+"..."
             }
             html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
         }
@@ -815,8 +823,7 @@ class Layer_Manager {
         }
        html += "</div>"
        $("#legend").append(html)
-       $('#legend').show()
-
+       $('.legend').show()
     }
     remove_legend(_resource_id){
         $("#legend_"+_resource_id).remove()

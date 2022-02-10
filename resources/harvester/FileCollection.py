@@ -14,6 +14,8 @@ from os import path
 
 from datetime import datetime
 
+from bs4 import BeautifulSoup
+
 
 class FileCollection:
     '''
@@ -148,6 +150,9 @@ class FileCollection:
             format, created = Format.objects.get_or_create(name=obj['format'])
 
         publisher = None
+        # replace the json publisher obj with the name string
+        if 'publisher' in obj and 'name' in obj['publisher']:
+            obj['publisher']= obj['publisher']['name']
         if 'publisher' in obj:
             publisher, created = Publisher.objects.get_or_create(name=obj['publisher'])
 
@@ -258,7 +263,7 @@ class FileCollection:
 
         # and lastly - create the urls  by looping over the ones in the resources
         for u in obj['urls']:
-            # print(u)
+            print("Create the url type:", u)
             #  create the url type
             u_t, _ = URL_Type.objects.get_or_create(name=u['url_type'])
 
@@ -274,3 +279,23 @@ class FileCollection:
                 # print("Except",str(e))
                 pass
         return r
+
+
+    def convert_urls(self,html, prefix):
+        """
+        takes a string and looks for hrefs, for those found if the url is relative, make it absolute by adding the prefix
+        :param html:
+        :param prefix
+        :return:
+        """
+
+        soup = BeautifulSoup(html, "lxml")
+        for a in soup.findAll('a'):
+            print("found url", a['href'])
+            if not a['href'].startswith("http"):
+                print("replace",prefix+a['href'])
+                a['href'] = prefix+a['href']
+                a.replace_with(a)
+
+
+        return str(soup)

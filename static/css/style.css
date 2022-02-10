@@ -132,7 +132,7 @@ warning: #ff1b28
 
  }
  #panel_scroll{
-    width:2000px;
+    width:5000px;
     /*height:100%;*/
 
  }
@@ -393,12 +393,14 @@ margin-left:-15px;
 #popup_scroll{
     max-height: 240px;
     overflow: auto;
-
-
+}
+#popup_control_table{
+    width:100%;
 }
 .leaflet-popup-content{
     width: 200px;
 }
+
 .leaflet-container{
     background: #cccccc;
 }
@@ -493,6 +495,12 @@ position: absolute;
  .pub_icon img{
     height: 16px;
 
+ }
+ .pub_icon_med{
+    float: right;
+ }
+ .pub_icon_med img{
+     height: 24px;
  }
 
  #basemap_layer_dropdown li{
@@ -788,3 +796,59 @@ position: absolute;
     border-width: 4px;
   }
 
+.modal-dialog{
+    overflow-y: initial !important
+}
+#disclaimer {
+    Z-INDEX: 10000001;
+}
+#table_query {
+    Z-INDEX: 10000002;
+}
+.modal-backdrop {
+    Z-INDEX: 10000000;
+}
+#disclaimer_text{
+    height: 400px;
+    overflow-y: auto;
+}
+
+
+body.modal-open {
+  height: 100vh;
+  overflow-y: hidden;
+}
+
+.description p { display: inline }
+
+#disclaimer_heading{
+   font-size: large;
+   padding: .2rem;
+}
+
+#table_query_fields{
+    max-height: 200px;
+    margin-bottom: 10px;
+    overflow:scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+#table_query_fields .list-group-item {
+    padding: 0.3rem 1.0rem;
+}
+
+#table_query_operators{
+    max-width: 100%;
+    overflow-x:scroll;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+#table_query_operators .list-group-item {
+      padding: 0.3rem 1.0rem;
+      white-space: nowrap
+}
+#table_query_operators .list-group-item:first-child {
+    border-top-left-radius: 0.0rem;
+    border-top-right-radius: 0.0rem;
+}

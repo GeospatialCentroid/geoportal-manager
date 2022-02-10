@@ -207,6 +207,9 @@ class DB_ToGBL:
             # make the parent a child
             p_data = child_docs[0]
             print("Use the child record instead of the parent")
+
+            p_data["solr_type"] = "parent"
+
             if p_data is not None:
                 if "drawing_info" in p_data:
                     p_data["drawing_info"]=json.dumps(p_data["drawing_info"])
@@ -294,7 +297,7 @@ class DB_ToGBL:
         # todo we should have separate urls (featureserver, metadata, download, etc) for each layer
         if not is_child_record:
 
-            layer_ref = self.get_arcgis_urls(_l,r)
+            layer_ref = self.get_resource_urls(_l,r)
             if self.verbosity > 1:
                 print(layer_ref, "layer_ref")
             if layer_ref is not None:
@@ -331,39 +334,39 @@ class DB_ToGBL:
         return l_data
 
 
-    def get_arcgis_urls(self,l,r):
+    def get_resource_urls(self,l,r):
         layer_ref = []
         for u in r.url_set.all():
-            url_type = str(u.url_type)
 
-        print("url_type:", url_type, self.match_ref(u.url, url_type), str(l["type"]))
-        # if url_type == "base_url":
-        #     # use the layer type instead of 'base_url'
-        #     opt_id = ""
-        if str(l["type"]) != "Raster Layer":
-            opt_id = "/" + str(l["id"])
+            layer_ref.append(self.match_ref(u.url, u))
 
-            layer_ref.append(self.match_ref(u.url + opt_id, str(l["type"])))
-        elif url_type == "info_page":
-            # todo - figure out when we can direct users to + "/" +
-            # looks like ?layer=id if more appropriate
-            url = u.url + "?layer=" + str(l["id"])
-            layer_ref.append(self.match_ref(url, url_type))
-
-            # create Download urls
-            # todo - link these to available options
-
-            d_url = u.url + "_" + str(l["id"])
-            print("get download urls!!!!")
-            layer_ref.append(self.match_ref(
-                "[" + ','.join([d_url + ".zip", d_url + ".csv", d_url + ".kml", d_url + ".geojson"]) + "]",
-                "Download"))
-
-        elif url_type == "metadata":
-            url = u.url + "&layer=" + str(l["id"])
-            layer_ref.append(self.match_ref(url, url_type))
+            # url_type = str(u.url_type)
+        # if str(l["type"]) != "Raster Layer":
+        #     opt_id = "/" + str(l["id"])
+        #
+        #     # layer_ref.append(self.match_ref(u.url + opt_id, str(l["type"])))
+        #     layer_ref.append(self.match_ref(u.url + opt_id, u))
+        # elif url_type == "info_page":
+        #     # todo - figure out when we can direct users to + "/" +
+        #     # looks like ?layer=id if more appropriate
+        #     url = u.url + "?layer=" + str(l["id"])
+        #     layer_ref.append(self.match_ref(url, url_type))
+        #
+        #     # create Download urls
+        #     # todo - link these to available options
+        #
+        #     d_url = u.url + "_" + str(l["id"])
+        #     print("get download urls!!!!")
+        #     layer_ref.append(self.match_ref(
+        #         "[" + ','.join([d_url + ".zip", d_url + ".csv", d_url + ".kml", d_url + ".geojson"]) + "]",
+        #         "Download"))
+        #
+        # elif url_type == "metadata":
+        #     url = u.url + "&layer=" + str(l["id"])
+        #     layer_ref.append(self.match_ref(url, url_type))
 
         print('layer_ref',layer_ref)
+        return layer_ref
 
     ###
     def get_bounds(self,_bounds):
@@ -398,6 +401,8 @@ class DB_ToGBL:
             return 'Point'
         if _type.find('raster')>-1:
             return 'Raster'
+        else :
+            return _type
 
 
     def get_format_type(self,_type):
@@ -430,6 +435,7 @@ class DB_ToGBL:
     def get_refs(self,urls,_type):
         refs=[]
         downloads=[]
+        print("get REFS *")
         for u in urls:
             type = str(u.url_type.name).lower()
 
@@ -437,16 +443,16 @@ class DB_ToGBL:
             #     # substitute the layer type for this
             #     type=_type
 
-            # todo - this should be set via harvest or at least in the admin
-            if str(u.url_type) == "base_url" and "iiif" in u.url:
-                type = "iiif"
+            # # todo - this should be set via harvest or at least in the admin
+            # if str(u.url_type) == "base_url" and "iiif" in u.url:
+            #     type = "iiif"
 
-            ref = self.match_ref(u.url, type)
-
+            ref = self.match_ref(u.url, u.url_type)
+            print("Add the ref is")
             if ref:
                 if type =="download":
                     # check for another download
-                    print()
+
                     download_str= '"url":"'+u.url+'"'
                     if u.url_label:
                           download_str+=',"label":"' + u.url_label.name+'"'
@@ -457,7 +463,7 @@ class DB_ToGBL:
             else:
                 if self.verbosity > 1:
                     print(" not supported yet for type:",u.url_type,_type)
-        print("REFS....")
+
         # check for download
         if len(downloads)>0:
 
@@ -474,49 +480,11 @@ class DB_ToGBL:
         return refs
 
 
-    def match_ref(self, val,type):
+    def match_ref(self, val,u_obj):
+
         if self.verbosity>1:
-            print("match_ref ",type)
-        # match  key:
-        if type =="info_page":
-            return '"http://schema.org/url":"' + val + '"'
-        if type =="download":
-            return '"http://schema.org/downloadUrl":"' + val + '"'
-        if type == "mapserver" :
-            return '"urn:x-esri:serviceType:ArcGIS#DynamicMapLayer":"' + val + '"'
-
-        if type == "feature service" or type =="feature layer":
-            return '"urn:x-esri:serviceType:ArcGIS#FeatureLayer":"' + val + '"'
-        # if type == "base_url":#todo store the type of feature within the url
-        #     return '"urn:x-esri:serviceType:ArcGIS#FeatureLayer":"' + val + '"'
-        if type == "imageserver" :
-            return '"urn:x-esri:serviceType:ArcGIS#ImageMapLayer":"' + val + '"'
-        if type == "map service" or type == "raster layer":#,"TileServer":
-            return '"urn:x-esri:serviceType:ArcGIS#TiledMapLayer":"' + val + '"'
-        if type == "metadata":
-            return '"http://www.isotc211.org/schemas/2005/gmd/":"' + val + '"'
-        if type == "fgdc metadata":
-            return '"http://www.opengis.net/cat/csw/csdgm":"' + val + '"'
-        if type == "wfs":
-            return '"http://www.opengis.net/def/serviceType/ogc/wfs":"' + val + '"'
-        if type == "wms":
-            return '"http://www.opengis.net/def/serviceType/ogc/wms":"' + val + '"'
-        if type == "wcs":
-            return '"http://www.opengis.net/def/serviceType/ogc/wcs":"' + val + '"'
-        if type == "tms":
-            return '"https://www.ogc.org/standards/wmts":"' + val + '"'
-        if type == "html":
-            return '"http://www.w3.org/1999/xhtml":"' + val + '"'
-        if type == "documentation":
-            return  '"http://lccn.loc.gov/sh85035852":"' + val + '"'
-        if type == "iiif":
-            return '"http://iiif.io/api/image":"' + val + '"'
-        if type == "manifest":
-            return '"http://iiif.io/api/presentation#manifest":"' + val + '"'
-        if type == "indexmaps":
-            return '"https://openindexmaps.org":"' + val + '"'
-        if type == "image":
-            return '"https://schema.org/ImageObject":"' + val + '"'
-
+            print("match_ref ",val,u_obj)
+        if u_obj.ref:
+            return '"'+u_obj.ref+'":"' + val + '"'
         else:
-            return None
+            return
