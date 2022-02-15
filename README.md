@@ -83,9 +83,15 @@ from the Terminal enter
 ```touch ~/.bash_profile; open ~/.bash_profile```
 Add the following lines to the open text document,
 changing the text between the single quotes as appropriate.
+
 ```export GEOPORTAL_DB_PASS='YOUR DATABASE PASSWORD'```
+
 ```export SOLR_PASSWORD='YOUR SORL PASSWORD'```
-```export SECRET_KEY='YOUR SECRET Key for Django'```  
+
+```export SECRET_KEY='YOUR SECRET Key for Django'``` 
+
+```export GOOGLE_ANALYTICS_ID='YOUR Google Analytics Measurement ID'``` 
+
 see https://humberto.io/blog/tldr-generate-django-secret-key/ to generate Django Secret Key
 
 Then in the terminal again enter

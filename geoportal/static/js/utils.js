@@ -106,3 +106,7 @@ console_log = (function (methods, undefined) {
 
 		return result; // expose
     })(['error', 'debug', 'info', 'warn']);//--- _log
+
+function track_event(category,action,label,value){
+    ga('send', 'event', category, action,label,value);
+}

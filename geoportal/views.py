@@ -33,6 +33,7 @@ base_search=fq+child_filter+fl+q+q_child+q_user
 def index(request,_LANG=False):
     # for loading relative items dynamically
     args = {'STATIC_URL': settings.STATIC_URL}
+    args = {'GOOGLE_ANALYTICS_ID': settings.GOOGLE_ANALYTICS_ID}
     args["browse_html"] = html_generation.get_browse_html()
 
     # when a filter is set - load the results
