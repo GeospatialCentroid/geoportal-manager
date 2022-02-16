@@ -6,6 +6,7 @@ var layer_manager;
 var table_manager;
 var download_manager;
 var disclaimer_manager;
+var analytics_manager;
 if (typeof(params)=="undefined"){
     var params = {}
 }
@@ -34,6 +35,7 @@ class Load_Manager {
 var load_manager = new Load_Manager(
     {call_back:initialize_interface}
 );
+
 
 $( function() {
 
@@ -115,6 +117,8 @@ $( function() {
      map_manager.init()
      map_manager.init_image_map()
 
+     analytics_manager = new Analytics_Manager();
+
      console.log("The layers are...",params['l'])
 
      layer_manager = new Layer_Manager({
@@ -132,6 +136,8 @@ $( function() {
      disclaimer_manager= new Disclaimer_Manager({})
 
      filter_manager.init();
+
+
 
 
 });
@@ -170,49 +176,10 @@ function initialize_interface(){
         sort_str=usp.get("sort")
     }
     filter_manager.generate_sort(sort_str)
-    //
-    //bound search
     $("[for='filter_bounds_checkbox']").text(LANG.SEARCH.LIMIT)
-    $('#filter_bounds_checkbox').change(
-        function(){
-             filter_manager.update_bounds_search($(this))
-     });
-
-    //date search
     $("#filter_date_to").text(LANG.SEARCH.TO)
-    $('#filter_date_checkbox').change(
-        function(){
-          filter_manager.delay_date_change()
-    });
-
     $("[for='filter_date_checkbox']").text(LANG.SEARCH.LIMIT_DATE)
-    var start =new Date("1900-01-01T00:00:00")
-    var end =new Date();
-    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
-    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
-
-    $("#filter_start_date").change( function() {
-        filter_manager.delay_date_change()
-
-    });
-    $("#filter_end_date").change( function() {
-      filter_manager.delay_date_change()
-    });
-
-    var values = [start.getTime(),end.getTime()]
-    $("#filter_date .filter_slider_box").slider({
-            range: true,
-            min: values[0],
-            max: values[1],
-            values:values,
-            slide: function( event, ui ) {
-
-               $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
-               $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
-               filter_manager.delay_date_change()
-
-         }
-    })
+    //
     disclaimer_manager.init();
     //
     table_manager.init();

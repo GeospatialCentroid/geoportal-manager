@@ -6,6 +6,7 @@ var layer_manager;
 var table_manager;
 var download_manager;
 var disclaimer_manager;
+var analytics_manager;
 if (typeof(params)=="undefined"){
     var params = {}
 }
@@ -34,6 +35,7 @@ class Load_Manager {
 var load_manager = new Load_Manager(
     {call_back:initialize_interface}
 );
+
 
 $( function() {
 
@@ -115,6 +117,8 @@ $( function() {
      map_manager.init()
      map_manager.init_image_map()
 
+     analytics_manager = new Analytics_Manager();
+
      console.log("The layers are...",params['l'])
 
      layer_manager = new Layer_Manager({
@@ -132,6 +136,8 @@ $( function() {
      disclaimer_manager= new Disclaimer_Manager({})
 
      filter_manager.init();
+
+
 
 
 });

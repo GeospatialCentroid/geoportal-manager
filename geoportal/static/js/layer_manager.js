@@ -114,6 +114,8 @@ class Layer_Manager {
         $("#"+_resource_id+"_drag").remove();
         $this.remove_legend(_resource_id);
         filter_manager.update_parent_toggle_buttons(".content_right");
+
+        analytics_manager.track_event("side_bar","remove_layer","layer_id",_resource_id)
         return
     }
 
@@ -138,13 +140,16 @@ class Layer_Manager {
                if (r==$this.service_method[i].ref){
 
                     var type =""
-                    if (resource?.layer_geom_type_s)
+                    if (resource?.layer_geom_type_s){
                         type = resource.layer_geom_type_s
+                    }
                     console.log("And the type is: ",type)
 
                     $this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
                     $this.add_to_map_tab(_resource_id,z);
                     filter_manager.update_parent_toggle_buttons(".content_right");
+
+                    analytics_manager.track_event("side_bar","add_layer","layer_id",_resource_id)
                     return
                }
 
@@ -224,10 +229,11 @@ class Layer_Manager {
 
   }
   show_details(_resource_id){
-   var resource =  this.get_layer_obj(_resource_id).resource_obj
+    var resource =  this.get_layer_obj(_resource_id).resource_obj
 
     filter_manager.show_details(_resource_id,resource)
 
+    analytics_manager.track_event("side_bar","show_details","layer_id",_resource_id)
   }
   get_slit_cell_control(_id){
     return '<table class="split_table"><tr><td class="split_left split_cell" onclick="layer_manager.split_map(this,\''+_id+'\',\'left\')"></td><td class="split_middle"></td><td class="split_right split_cell" onclick="layer_manager.split_map(this,\''+_id+'\',\'right\')"></td></tr></table>'
@@ -297,6 +303,7 @@ class Layer_Manager {
     //and show/hide the control
     this.toggle_split_control()
 
+    analytics_manager.track_event("map_tab","split_view","layer_id",_resource_id)
   }
   toggle_split_control(){
     if (this.split_right_layers.length>0 || this.split_left_layers.length>0 ){
@@ -322,7 +329,7 @@ class Layer_Manager {
             var temp_obj = {}
             temp_obj[_attr]=hexcolor
             layer.layer_obj.setStyle(temp_obj)
-
+            analytics_manager.track_event("map_tab","change_"+_attr,"layer_id",_id)
         })
         // make sure the panel shows-up on top
         $("#"+elm_id).next().next().css({"z-index": 10001});
@@ -346,7 +353,7 @@ class Layer_Manager {
                 var id = $(this).attr('id')
                 var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
-                      console.log(layer)
+//                      console.log(layer)
                      if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms"){
                         layer.layer_obj.setOpacity(ui.value/100)
                      }else{
@@ -356,6 +363,7 @@ class Layer_Manager {
                       })
 
                      }
+                     analytics_manager.track_event("map_tab","transparency_slider","layer_id",_id,3)
               }
 
          })
@@ -668,6 +676,7 @@ class Layer_Manager {
   show_table_data(_layer_id){
     //todo check if we already have a table object
     table_manager.get_layer_data(_layer_id)
+    analytics_manager.track_event("map_tab","show_table","layer_id",_layer_id)
 
   }
 

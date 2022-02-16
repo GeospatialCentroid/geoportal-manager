@@ -73,7 +73,19 @@ class Table_Manager {
 
     $("#table_query_execute").text(LANG.DATA_TABLE.EXECUTE)
 
+     $("#table_query_fields").click(function(){
+        var index = $(this).find(":hover").last().index();
+        var layer = layer_manager.get_layer_obj( $this.selected_layer_id)
+        table_manager.add_query_field(layer.resource_obj.fields[index].alias)
 
+    });
+
+    $("#table_query_operators").click(function(){
+        var index = $(this).find(":hover").last().index();
+
+        table_manager.add_query_field($("#table_query_operators a:eq("+index+")").text() )
+
+    });
   }
   show_query_panel(){
     //set the query value
@@ -97,20 +109,9 @@ class Table_Manager {
      }
 
      //
-      $("#table_query_fields").empty()
+
      $("#table_query_fields").html(html)
-     $("#table_query_fields").dblclick(function(){
-        var index = $(this).find(":hover").last().index();
 
-        table_manager.add_query_field(layer.resource_obj.fields[index].alias)
-
-    });
-
-    $("#table_query_operators").click(function(){
-        var index = $(this).find(":hover").last().index();
-        table_manager.add_query_field($("#table_query_operators a:eq("+index+")").text() )
-
-    });
 
 
   }
@@ -128,7 +129,7 @@ class Table_Manager {
    $("#table_query_text").val("1=1")
   }
   reset_query(){
-     reset_query_text()
+     this.reset_query_text()
      this.execute_query()
   }
   execute_query(){
@@ -223,7 +224,8 @@ class Table_Manager {
 
     // passing options
     // https://esri.github.io/esri-leaflet/api-reference/tasks/query.html
-    var query_base=query.where($this.query);//maintain a base query for getting totals
+    var query_text=$this.query.replaceAll('"',"'")
+    var query_base=query.where(query_text);//maintain a base query for getting totals
     if ($('#table_bounds_checkbox').is(':checked')){
         // add map bounds
         query_base=query_base.intersects(layer_manager.map.getBounds())

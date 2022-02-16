@@ -297,6 +297,7 @@ class Layer_Manager {
     //and show/hide the control
     this.toggle_split_control()
 
+    analytics_manager.track_event("map_tab","split_view","layer_id",_resource_id)
   }
   toggle_split_control(){
     if (this.split_right_layers.length>0 || this.split_left_layers.length>0 ){
@@ -322,7 +323,7 @@ class Layer_Manager {
             var temp_obj = {}
             temp_obj[_attr]=hexcolor
             layer.layer_obj.setStyle(temp_obj)
-
+            analytics_manager.track_event("map_tab","change_"+_attr,"layer_id",_id)
         })
         // make sure the panel shows-up on top
         $("#"+elm_id).next().next().css({"z-index": 10001});
@@ -346,7 +347,7 @@ class Layer_Manager {
                 var id = $(this).attr('id')
                 var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
-                      console.log(layer)
+//                      console.log(layer)
                      if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms"){
                         layer.layer_obj.setOpacity(ui.value/100)
                      }else{
@@ -356,6 +357,7 @@ class Layer_Manager {
                       })
 
                      }
+                     analytics_manager.track_event("map_tab","transparency_slider","layer_id",_id,3)
               }
 
          })
@@ -668,6 +670,7 @@ class Layer_Manager {
   show_table_data(_layer_id){
     //todo check if we already have a table object
     table_manager.get_layer_data(_layer_id)
+    analytics_manager.track_event("map_tab","show_table","layer_id",_layer_id)
 
   }
 

@@ -36,6 +36,8 @@ class Table_Manager {
     $('#table_bounds_checkbox').change(
         function(){
             $this.get_layer_data()
+
+            analytics_manager.track_event("table","filter_bounds_"+$('#table_bounds_checkbox').is(':checked'),"layer_id",$this.selected_layer_id)
         });
     // detect scroll bottom
     $("#"+this.elm).scroll( function(e) {
@@ -45,7 +47,7 @@ class Table_Manager {
                 // load the next page
                  $this.page_start+=$this.page_rows;//start where we left off
                  $this.get_data($this.selected_layer_id,$this.append_to_table)
-
+                 analytics_manager.track_event("table","scroll_load_start_"+$this.page_start,"layer_id",$this.selected_layer_id)
             }
          }
     });
@@ -65,6 +67,7 @@ class Table_Manager {
 
             console.log("trigger export",$(this).val())
             $("#data_table_export_select").val("default");
+            analytics_manager.track_event("table","export_data_"+$(this).val(),"layer_id",$this.selected_layer_id)
         });
 
     // setup the query panel
@@ -112,8 +115,6 @@ class Table_Manager {
 
      $("#table_query_fields").html(html)
 
-
-
   }
   add_query_field(val){
      var text = $("#table_query_text").val()
@@ -129,14 +130,14 @@ class Table_Manager {
    $("#table_query_text").val("1=1")
   }
   reset_query(){
-     reset_query_text()
+     this.reset_query_text()
      this.execute_query()
   }
   execute_query(){
      $("#table_query").modal("hide");
      this.query= $("#table_query_text").val()
      this.get_layer_data()
-
+     analytics_manager.track_event("table","custom_query_"+this.query,"layer_id",this.selected_layer_id)
   }
   get_layer_data(_layer_id){
      // perform an initial search using the specified layer_id or the previously selected one
@@ -224,7 +225,8 @@ class Table_Manager {
 
     // passing options
     // https://esri.github.io/esri-leaflet/api-reference/tasks/query.html
-    var query_base=query.where($this.query);//maintain a base query for getting totals
+    var query_text=$this.query.replaceAll('"',"'")
+    var query_base=query.where(query_text);//maintain a base query for getting totals
     if ($('#table_bounds_checkbox').is(':checked')){
         // add map bounds
         query_base=query_base.intersects(layer_manager.map.getBounds())
@@ -331,6 +333,8 @@ class Table_Manager {
     //take the currently selected layer and the id to make a selection
     var feature = this.get_feature(_id)
     map_manager.map_zoom_event(L.geoJSON(feature.geometry).getBounds())
+
+    analytics_manager.track_event("table","zoom_feature_"+_id,"layer_id",this.selected_layer_id)
   }
 
   sort(elm,col){
@@ -348,6 +352,7 @@ class Table_Manager {
     this.page_start=0;
     this.get_layer_data()
 
+    analytics_manager.track_event("table","sort_"+col+"_"+direction,"layer_id",this.selected_layer_id)
   }
   get_sort_icon(direction){
     var icon = "up"
@@ -376,14 +381,14 @@ class Table_Manager {
         $("#data_table_total .spinner-border").hide();
   }
   close(){
-     this.elm_wrap.hide();
-     delete this.sort_col;
-     $( window ).trigger("resize");
-     if (map_manager.highlighted_feature) {
-      $(".fixed_headers tr").removeClass('highlight');
-      // remove the map highlight
-      map_manager.map.removeLayer(map_manager.highlighted_feature);
+    this.elm_wrap.hide();
+    delete this.sort_col;
+    $( window ).trigger("resize");
+    if (map_manager.highlighted_feature) {
+        $(".fixed_headers tr").removeClass('highlight');
+        // remove the map highlight
+        map_manager.map.removeLayer(map_manager.highlighted_feature);
     }
+    analytics_manager.track_event("table","close_table","layer_id",this.selected_layer_id)
   }
-
 }

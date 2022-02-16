@@ -232,7 +232,7 @@
 		"QUERY_ERROR":			"There was an error in the query. Please adjust the query and try again.",
 		"EXECUTE": 				"Execute",
 		"QUERY_PANEL_TITLE":	"Custom query",
-		"QUERY_PANEL_TIP":		"Click a field name for use in query statement. Next, select and operator. <b>Use numeric or string values, and wrap strings with single quotes ' '.</b>",
+		"QUERY_PANEL_TIP":		"Click a field name for use in query statement. Next, select and operator. Use numeric or string values, and wrap strings quotes.",
 
 		"MORE_HELP":			"More help",
 		"exportQueryTooltip":	"Export the query results as an Excel (.xls) table",
