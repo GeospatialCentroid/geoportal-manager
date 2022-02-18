@@ -43,12 +43,13 @@ class Map_Manager {
     this.map = L.map('map',options).setView([this.lat, this.lng], this.z);
 
 
-    L.control.locate().addTo(this.map);
+    L.control.locate({"flyTo":true,"initialZoomLevel":19}).addTo(this.map);
 
     const provider = new window.GeoSearch.OpenStreetMapProvider();
     const searchControl = new window.GeoSearch.GeoSearchControl({
         provider: provider,
-          retainZoomLevel: true,
+          retainZoomLevel: false,
+          autoComplete: true,
           keepResults:true,
            searchLabel: 'Enter address',//todo translate this
     });
@@ -190,12 +191,18 @@ class Map_Manager {
         if (this.highlighted_feature) {
           this.map.removeLayer(this.highlighted_feature);
         }
-        // show popup
+
+
+        analytics_manager.track_event("web_map","click","layer_id",this.get_selected_layer()?.id)
+        //start by using the first loaded layer
+        var layer = this.get_selected_layer()
+        if (!layer){
+
+            return
+        }
+         // show popup
         this.popup_show();
 
-        //start by using the first loaded layer
-
-        var layer = this.get_selected_layer()
         var query_full = layer.layer_obj.query()
         // if the layer is a point - add some wiggle room
         if(layer.type=="esriPMS"){
@@ -205,7 +212,7 @@ class Map_Manager {
 
         }
 
-      query_full.limit(this.limit).run(function (error, featureCollection) {
+        query_full.limit(this.limit).run(function (error, featureCollection) {
 
           console.log("feature query run")
           if (error || featureCollection.features.length==0) {
@@ -273,7 +280,7 @@ class Map_Manager {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
 
-         this.popup_show()
+//         this.popup_show()
            setTimeout(function(){
                $("#popup_content").html(html)
                 //show the first returned feature
@@ -346,7 +353,8 @@ class Map_Manager {
          return html
      }
      popup_show(){
-        this.popup_close()
+     console.log("show popup")
+//        this.popup_close()
         var $this=this
         var html = '<div id="popup_content"><div class="spinner_wrapper" style="text-align:center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div></div></div>'
         this.popup= L.popup(this.popup_options)
@@ -359,6 +367,7 @@ class Map_Manager {
 
      }
     popup_close(){
+        console.log("close popup")
         if (this.popup){
             this.map.closePopup();
             if (this.highlighted_feature) {

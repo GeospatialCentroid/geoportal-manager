@@ -68,6 +68,7 @@ class Filter_Manager {
     })
     $("#search_but").click(function(){
         filter_manager.add_filter(false,$("#search").val())
+        analytics_manager.track_event("search","filter","text",$("#search").val())
     })
 
     $("#search").is(":focus")
@@ -100,6 +101,47 @@ class Filter_Manager {
             }
          }
     });
+
+     //bound search
+    $('#filter_bounds_checkbox').change(
+        function(){
+             filter_manager.update_bounds_search($(this))
+        }
+    );
+
+    //date search
+    $('#filter_date_checkbox').change(
+        function(){
+          filter_manager.delay_date_change();
+        }
+    );
+    var start =new Date("1900-01-01T00:00:00")
+    var end =new Date();
+    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
+    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
+
+    $("#filter_start_date").change( function() {
+        filter_manager.delay_date_change()
+
+    });
+    $("#filter_end_date").change( function() {
+      filter_manager.delay_date_change()
+    });
+
+    var values = [start.getTime(),end.getTime()]
+    $("#filter_date .filter_slider_box").slider({
+            range: true,
+            min: values[0],
+            max: values[1],
+            values:values,
+            slide: function( event, ui ) {
+
+               $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
+               $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
+               filter_manager.delay_date_change()
+
+         }
+    })
   }
   bounds_change_handler(){
 
@@ -241,6 +283,7 @@ class Filter_Manager {
             for (var o in LANG.SEARCH.SORT_OPTIONS){
                 if($this.val()==o){
                      filter_manager.sort_str=LANG.SEARCH.SORT_OPTIONS[o].search
+                     analytics_manager.track_event("search","sort","by",$this.val())
                      break
                 }
             }
@@ -674,6 +717,7 @@ class Filter_Manager {
         var text = id
         if (LANG.FACET.FACET_FIELD[id]){
             text=LANG.FACET.FACET_FIELD[id]
+            analytics_manager.track_event("search","filter","facet",text)
         }
         if (text ==false){
             text = LANG.SEARCH.CHIP_SUBMIT_BUT_LABEL
