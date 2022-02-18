@@ -32,6 +32,13 @@ function componentToHex(c) {
     return hex.length == 1 ? "0" + hex : hex;
 }
 
+function clip_text(text,limit){
+    if(text.length>limit){
+        text="<div title='"+text+"'>"+text.substring(0,limit)+"...</div>"
+    }
+    return text
+}
+
 //set via url params
 var DEBUGMODE=false
 console_log = (function (methods, undefined) {

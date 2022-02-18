@@ -313,7 +313,17 @@ class Table_Manager {
         var id=0
         html+="<tr onclick='table_manager.highlight_feature(this,\""+_rows[i].id+"\")' ondblclick='table_manager.zoom_feature(this,\""+_rows[i].id+"\")'>"
         for (var p in _rows[i].properties){
-              html+="<td>"+_rows[i].properties[p]+"</td>"
+              var text = _rows[i].properties[p]
+
+              if(typeof text === 'string'){
+
+                if(text.startsWith("http")){
+                 text="<a href='"+text+"' target='_blank'>"+text+"</a>"
+                }
+                text = clip_text(text,50)
+
+              }
+              html+="<td>"+text+"</td>"
         }
         html+="</tr>"
     }

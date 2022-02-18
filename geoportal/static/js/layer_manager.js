@@ -691,9 +691,7 @@ class Layer_Manager {
                 selected += "selected"
             }
             var title = this.layers[i].resource_obj.dc_title_s;
-            if(title.length>30){
-                title = title.substring(0,30)+"..."
-            }
+            title = clip_text(title,30)
             html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
         }
         html+="<select>"
@@ -815,9 +813,7 @@ class Layer_Manager {
         for (var i=0;i<data['layers'].length;i++){
             var l = data['layers'][i]
             var layer_name=l.layerName
-            if(layer_name.length>15){
-                layer_name=layer_name.substring(0,15)+"..."
-            }
+            layer_name = clip_text(layer_name,15)
             html += '<span class="legend_title">'+layer_name+'</span>'
 
             for (var j=0;j<l['legend'].length;j++){
