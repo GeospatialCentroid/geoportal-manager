@@ -10,6 +10,7 @@ from .FileParser import FileParser
 
 class FileParser_ARC(FileParser):
     def __init__(self,props):
+        print("FileParser_ARC init!")
         for p in props:
             setattr(self,p, props[p])
 
@@ -113,12 +114,25 @@ class FileParser_ARC(FileParser):
 
         resource["bounding_box"] = None
         # reformat extent
-        if 'extent' in resource:
-            spatial_reference = False
-            if "spatialReference" in resource:
-                spatial_reference=resource["spatialReference"]
+        extent=None
+        spatial_reference = False
 
-            resource["bounding_box"] = utils.get_extent(resource['extent'],spatial_reference)
+
+
+        if 'extent' in resource:
+            extent = resource["extent"]
+
+        if "spatialReference" in resource:
+            spatial_reference = resource["spatialReference"]
+
+        if 'fullExtent' in resource:
+            extent = resource["fullExtent"]
+            if "spatialReference" in extent:
+                spatial_reference = extent["spatialReference"]
+
+        if extent:
+            resource["bounding_box"] = utils.get_extent(extent,spatial_reference)
+
         if 'spatial' in resource:
             resource["bounding_box"]=resource["spatial"].split(",")
 

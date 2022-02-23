@@ -147,7 +147,7 @@ class Analytics_Manager {
             }
         }
         if (trigger){
-            console.log("trigger",category, action,label,value)
+            console_log("trigger",category, action,label,value)
 
             gtag('event', action, {
               'event_category': category,

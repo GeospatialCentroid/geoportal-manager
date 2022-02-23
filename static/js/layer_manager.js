@@ -478,15 +478,15 @@ class Layer_Manager {
     }
 
 
-    layer_obj.on('click', function (e) {
-//        console.log("you clicked a layer",_resource_id,e)
-//        console.log(e.layer.feature.properties)
-
-        map_manager.selected_layer_id=_resource_id
-
-        map_manager.click_lat_lng = e.latlng
-        map_manager.show_popup_details([e.layer.feature])
-    });
+//    layer_obj.on('click', function (e) {
+////        console.log("you clicked a layer",_resource_id,e)
+////        console.log(e.layer.feature.properties)
+//
+//        map_manager.selected_layer_id=_resource_id
+//
+//        map_manager.click_lat_lng = e.latlng
+//        map_manager.show_popup_details([e.layer.feature])
+//    });
 
 
     //todo keep reference, update button on load

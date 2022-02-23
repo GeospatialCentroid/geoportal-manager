@@ -573,16 +573,18 @@ class Filter_Manager {
                 return ""
         }
     }
+    get_bounds(_solr_geom){
+        var b = this.get_bound_array(_solr_geom)
+        var nw = L.latLng(b[2],b[0])
+        var se =  L.latLng(b[3],b[1])
 
+        return L.latLngBounds(L.latLng(nw), L.latLng(se))
+
+    }
 
     zoom_layer(_solr_geom){
-            var b = this.get_bound_array(_solr_geom)
-             var nw = L.latLng(b[2],b[0])
-             var se =  L.latLng(b[3],b[1])
-
-             var bounds = L.latLngBounds(L.latLng(nw), L.latLng(se))
-
-            map_manager.zoom_rect(L.latLngBounds(L.latLng(nw), L.latLng(se)))
+        this.get_bounds(_solr_geom)
+        map_manager.zoom_rect( this.get_bounds(_solr_geom))
     }
     get_bound_array(geom){
         return geom.substring(9,geom.length-1).split(",")

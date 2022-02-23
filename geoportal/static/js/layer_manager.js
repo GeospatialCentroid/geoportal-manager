@@ -354,7 +354,7 @@ class Layer_Manager {
                 var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
 //                      console.log(layer)
-                     if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms"){
+                     if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
                         layer.layer_obj.setOpacity(ui.value/100)
                      }else{
                         layer.layer_obj.setStyle({
@@ -459,33 +459,38 @@ class Layer_Manager {
 
 
     }else if(service_method._method=="iiif"){
-
         this.show_image_viewer_layer(L[service_method._class][service_method._method](url))
         return
     }else if(service_method._method==""){
         //todo - get this from the service
         layer_options.maxZoom= 21
-
         var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
     }else if(service_method._method.indexOf(".")>-1){
         var method_parts=service_method._method.split(".")
         console.log(layer_options)
         var layer_obj =  L[service_method._class][method_parts[0]][method_parts[1]](layer_options.url).addTo(this.map);
+
     }else{
         //todo make the adjustment in the metadata
 //        if (resource.layer_geom_type_s=="Point"){
-        var layer_obj =  L[service_method._class][service_method._method](layer_options).addTo(this.map);
+        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.solr_geom)).addTo(this.map);
     }
 
 
-    layer_obj.on('click', function (e) {
-//        console.log("you clicked a layer",_resource_id,e)
-//        console.log(e.layer.feature.properties)
+    try{
+        layer_obj.setBounds(filter_manager.get_bounds(resource.solr_geom))
+        console.log("Success",resource)
+    }catch(e){
+        console.log(e)
+    }
 
+    layer_obj.on('click', function (e) {
         map_manager.selected_layer_id=_resource_id
 
         map_manager.click_lat_lng = e.latlng
+        map_manager.popup_show();
         map_manager.show_popup_details([e.layer.feature])
+
     });
 
 
@@ -556,6 +561,9 @@ class Layer_Manager {
       var layer_options ={
         url: url,
         pane:_resource_id,
+        // to enable cursor and click events on raster images
+        interactive:true,
+        bubblingMouseEvents: false
       }
       var type;
       var symbol;
@@ -761,8 +769,7 @@ class Layer_Manager {
         //solr stores the json structure of nested elements as a smi usable string
         // convert the string to json for use!
         // returns a usable json object
-//        console.log("-----------------")
-//        console.log(text)
+
         var reg = new RegExp(/(\w+)=([^\s|\[|,|\{|\}]+)/, 'gi');// get words between { and =
         text=text.replace(reg,'"$1"="$2"')
 

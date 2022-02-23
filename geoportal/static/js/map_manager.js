@@ -59,7 +59,9 @@ class Map_Manager {
     var $this=this
 
     this.map.on('click', function(e) {
-        $this.map_click_event(e.latlng)
+          console.log("WEB MAP CLICK!")
+          $this.map_click_event(e.latlng)
+
     });
 
     // specify popup options
@@ -165,11 +167,10 @@ class Map_Manager {
 
     }
      get_selected_layer(){
-        // start with the first layer if not yet set - check to make use the previous selection still exists
-
+        // start with the last layer (top) if not yet set - check to make use the previous selection still exists
         if (!this.selected_layer_id || !layer_manager.is_on_map(this.selected_layer_id) ){
             if ( layer_manager.layers.length>0){
-                this.selected_layer_id=layer_manager.layers[0].id
+                this.selected_layer_id=layer_manager.layers[layer_manager.layers.length-1].id
             }else{
                 console.log("No layers for you!")
                 return
@@ -179,7 +180,7 @@ class Map_Manager {
 
         return layer_manager.get_layer_obj(this.selected_layer_id);
     }
-    map_click_event(lat_lng){
+    map_click_event(lat_lng,no_page){
 
         var $this=this
         if(lat_lng){
@@ -203,45 +204,63 @@ class Map_Manager {
          // show popup
         this.popup_show();
 
-        var query_full = layer.layer_obj.query()
+        var query_base = layer.layer_obj.query()
         // if the layer is a point - add some wiggle room
         if(layer.type=="esriPMS"){
-            query_full=query_full.nearby(this.click_lat_lng, 5)
+            query_full=query_base.nearby(this.click_lat_lng, 5)
         }else{
-            query_full=query_full.intersects(this.click_lat_lng)
+            query_full=query_base.intersects(this.click_lat_lng)
 
         }
-
-        query_full.limit(this.limit).run(function (error, featureCollection) {
+        if (no_page){
+            var query_full =query_base
+        }else{
+            var query_full = query_base.limit(this.limit)
+        }
+        query_full.run(function (error, featureCollection) {
 
           console.log("feature query run")
-          if (error || featureCollection.features.length==0) {
-              try{
-                   $this.try_identify()
-              }catch(e){
-                   $this.show_popup_details(featureCollection.features)
+          if (error || featureCollection?.features.length==0) {
+              console.log("feature query error", error)
+              if (error?.message && error.message=='Pagination is not supported.'){
+                  $this.map_click_event(false,true)
+
+              }else{
+                   try{
+                       $this.try_identify()
+                  }catch(e){
+                         console.log("Error:",e)
+    //                     $this.show_popup_details()
+                  }
+
               }
-              return
+
+
+          }else{
+              console.log("MADE it with the feature query")
+              $this.show_popup_details(featureCollection.features)
           }
 
-          $this.show_popup_details(featureCollection.features)
-         })
+         });
 
 
     }
+
     try_identify(){
-        console.log("identify query run")
+
         // for dynamic features services - try identify instead
         var $this=this;
         var layer = this.get_selected_layer()
+        console.log("identify query run",layer)
         try{
             // todo - we may need to identify by a specific layer by adding  ".layers('visible:0')"
             layer.layer_obj.identify().simplify($this.map,1).on($this.map).at(this.click_lat_lng).run(function (error, featureCollection) {
                     console.log("identify query succeeded")
-                   $this.show_popup_details(featureCollection.features)
+                   $this.show_popup_details(featureCollection?.features)
             });
         }catch(e){
              console.log("identify query error",e)
+              $this.show_popup_details()
             throw "no identify";
         return
       }
@@ -252,7 +271,7 @@ class Map_Manager {
 
            var $this =this
            var layer = this.get_selected_layer()
-            console.log("show popup details",_features,layer,_features.length)
+            console.log("show popup details",_features,layer,_features?.length)
            if(!layer){
                 this.popup_close()
                 return
@@ -262,7 +281,7 @@ class Map_Manager {
           var  html =layer_select_html
           $this.features=_features
 
-          if (_features.length > 0) {
+          if (typeof(_features)!="undefined" && _features.length > 0) {
             // Add in next and previous buttons
             // show the feature layer
 
@@ -284,7 +303,10 @@ class Map_Manager {
            setTimeout(function(){
                $("#popup_content").html(html)
                 //show the first returned feature
-                if(_features.length > 0){
+
+                $this.features =  _features
+                if(typeof(_features)!="undefined" && _features?.length > 0){
+                    console.log( $this.features,"Delayed")
                     $this.show_popup_details_show_num()
                 }
 
@@ -298,6 +320,8 @@ class Map_Manager {
         }else{
             this.result_num=this.result_num+num
         }
+        console.log(this.features, "show_popup_details_show_num" )
+
 
         this.show_highlight_geo_json(this.features[this.result_num])
         var props= this.features[this.result_num].properties
@@ -353,10 +377,10 @@ class Map_Manager {
          return html
      }
      popup_show(){
-     console.log("show popup")
-//        this.popup_close()
+
         var $this=this
         var html = '<div id="popup_content"><div class="spinner_wrapper" style="text-align:center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div></div></div>'
+
         this.popup= L.popup(this.popup_options)
             .setLatLng(this.click_lat_lng)
             .setContent(html)
@@ -385,6 +409,7 @@ class Map_Manager {
 
         this.highlighted_rect = L.rectangle(bounds, {color: "blue", weight: 2,fillColor:"blue",zIndex:1000}).addTo(this.map);
 
+
     }
     hide_highlight_rect(){
         if (typeof(this.highlighted_rect) !="undefined"){
@@ -408,14 +433,13 @@ class Map_Manager {
                 }
             }).addTo(this.map);
         }else{
-
             this.highlighted_feature =  L.geoJSON(geo_json,{
-            style: function (feature) {
-                return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
-            }
-            }).addTo(this.map);
-        }
+                    style: function (feature) {
+                        return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
+                    }
+                    }).addTo(this.map);
 
+        }
 
     }
 
