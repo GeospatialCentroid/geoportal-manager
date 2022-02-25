@@ -391,7 +391,7 @@ margin-left:-15px;
     overflow: auto;
 }
 #popup_scroll{
-    max-height: 240px;
+    max-height: 205px;
     overflow: auto;
 }
 #popup_control_table{
@@ -859,4 +859,9 @@ body.modal-open {
 #data_table_wrapper .btn {
     width: auto;
     height: 27px;
+}
+
+.disabled_link {
+  pointer-events: none;
+  color:#ccc !important;
 }

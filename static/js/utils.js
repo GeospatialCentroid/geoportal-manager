@@ -32,11 +32,18 @@ function componentToHex(c) {
     return hex.length == 1 ? "0" + hex : hex;
 }
 
-function clip_text(text,limit){
-    if(text.length>limit){
-        text="<div title='"+text+"'>"+text.substring(0,limit)+"...</div>"
+String.prototype.clip_text=function(limit){
+    if(this.length>limit){
+       return "<div title='"+this+"'>"+this.substring(0,limit)+"...</div>"
     }
-    return text
+    return this
+}
+String.prototype.hyper_text=function(){
+    console.log(this,"hyper_text------")
+    if(this.startsWith("http")){
+        return "<a href='"+this+"' target='_blank'>"+this+"</a>"
+    }
+    return this
 }
 
 //set via url params
@@ -147,7 +154,7 @@ class Analytics_Manager {
             }
         }
         if (trigger){
-            console.log("trigger",category, action,label,value)
+            console_log("trigger",category, action,label,value)
 
             gtag('event', action, {
               'event_category': category,

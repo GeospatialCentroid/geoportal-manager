@@ -95,7 +95,7 @@ $( function() {
 
     }
 
-    console.log(params)
+    console_log("index params",params)
 
 
     // setup the filter manager to handle faceting and other functions
@@ -119,7 +119,7 @@ $( function() {
 
      analytics_manager = new Analytics_Manager();
 
-     console.log("The layers are...",params['l'])
+     console_log("The layers are...",params['l'])
 
      layer_manager = new Layer_Manager({
         map:map_manager.map,
@@ -148,7 +148,7 @@ function load_language(properties){
     }else{
         console_log("This language is not yet implemented",properties.language)
     }
-    console.log(properties.language,lang_file_name)
+    console_log(properties.language,lang_file_name)
 
     $.ajax({
             type: "GET",
@@ -160,8 +160,8 @@ function load_language(properties){
                 console_log("lang loaded")
             },
             error: function (xhr, ajaxOptions, thrownError) {
-                console.log(xhr.status);
-                console.log(thrownError);
+                console_log(xhr.status);
+                console_log(thrownError);
 //                var err = eval("Language Error Loading(" + xhr.responseText + ")");
                 alert(err.Message);
               }
@@ -225,7 +225,7 @@ function init_tabs(){
 
     // click the tab and slide to the panel as appropriate
     if( !$.isEmptyObject(usp) && usp.get("t")){
-          console.log("tab",usp.get("t"))
+        console_log("tab",usp.get("t"))
         var tab_parts = usp.get("t").split("/")
 
         // move to the set search panel

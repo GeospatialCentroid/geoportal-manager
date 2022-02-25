@@ -391,7 +391,7 @@ margin-left:-15px;
     overflow: auto;
 }
 #popup_scroll{
-    max-height: 240px;
+    max-height: 205px;
     overflow: auto;
 }
 #popup_control_table{
@@ -586,6 +586,10 @@ position: absolute;
 .attr_table tbody tr:nth-child(even) {
   background-color: #DDD;
 }
+
+#data_table_wrapper .item {white-space: nowrap;display:inline  }
+
+#data_table_export{display:inline}
 
 
 .date_field {
@@ -851,4 +855,13 @@ body.modal-open {
 #table_query_operators .list-group-item:first-child {
     border-top-left-radius: 0.0rem;
     border-top-right-radius: 0.0rem;
+}
+#data_table_wrapper .btn {
+    width: auto;
+    height: 27px;
+}
+
+.disabled_link {
+  pointer-events: none;
+  color:#ccc !important;
 }

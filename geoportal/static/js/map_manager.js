@@ -19,7 +19,6 @@ class Map_Manager {
     }
     this.click_lat_lng
     //look at the url params to see if they exist and should be used instead
-     console.log("looking for params ", this.params)
     if (this.params){
         if (this.params.hasOwnProperty('z')){
             this.z = Number(this.params['z'])
@@ -33,7 +32,7 @@ class Map_Manager {
     }else{
         this.params={}
     }
-    console.log("And the params are ...", this.params)
+    console_log("Map_Manager params are:", this.params)
 
     this.highlighted_feature
     this.highlighted_rect
@@ -59,7 +58,6 @@ class Map_Manager {
     var $this=this
 
     this.map.on('click', function(e) {
-          console.log("WEB MAP CLICK!")
           $this.map_click_event(e.latlng)
 
     });
@@ -75,7 +73,7 @@ class Map_Manager {
 
 
   this.map.on('load', function(){
-    console.log("loaded map!!")
+    console_log("loaded map!!")
   })
 
     L.control.ruler({position: 'topleft',}).addTo(this.map);
@@ -95,9 +93,9 @@ class Map_Manager {
 
      $this=this;
      this.map.on('draw:created', function (e) {
-        console.log("drawn",e)
+        console_log("drawn",e)
         // Do whatever else you need to. (save to db, add to map etc)
-         drawnItems.addLayer(e.layer);
+        drawnItems.addLayer(e.layer);
     });
 
   }
@@ -172,7 +170,7 @@ class Map_Manager {
             if ( layer_manager.layers.length>0){
                 this.selected_layer_id=layer_manager.layers[layer_manager.layers.length-1].id
             }else{
-                console.log("No layers for you!")
+                console_log("No layers for you!")
                 return
             }
 
@@ -219,9 +217,8 @@ class Map_Manager {
         }
         query_full.run(function (error, featureCollection) {
 
-          console.log("feature query run")
           if (error || featureCollection?.features.length==0) {
-              console.log("feature query error", error)
+              console_log("feature query error", error)
               if (error?.message && error.message=='Pagination is not supported.'){
                   $this.map_click_event(false,true)
 
@@ -229,18 +226,15 @@ class Map_Manager {
                    try{
                        $this.try_identify()
                   }catch(e){
-                         console.log("Error:",e)
-    //                     $this.show_popup_details()
+                         console_log("Error:",e)
                   }
 
               }
 
 
           }else{
-              console.log("MADE it with the feature query")
               $this.show_popup_details(featureCollection.features)
           }
-
          });
 
 
@@ -251,15 +245,15 @@ class Map_Manager {
         // for dynamic features services - try identify instead
         var $this=this;
         var layer = this.get_selected_layer()
-        console.log("identify query run",layer)
+
         try{
             // todo - we may need to identify by a specific layer by adding  ".layers('visible:0')"
             layer.layer_obj.identify().simplify($this.map,1).on($this.map).at(this.click_lat_lng).run(function (error, featureCollection) {
-                    console.log("identify query succeeded")
+
                    $this.show_popup_details(featureCollection?.features)
             });
         }catch(e){
-             console.log("identify query error",e)
+              console_log("identify query error",e)
               $this.show_popup_details()
             throw "no identify";
         return
@@ -271,7 +265,6 @@ class Map_Manager {
 
            var $this =this
            var layer = this.get_selected_layer()
-            console.log("show popup details",_features,layer,_features?.length)
            if(!layer){
                 this.popup_close()
                 return
@@ -286,8 +279,8 @@ class Map_Manager {
             // show the feature layer
 
             if (_features.length>1){
-              var prev_link="<a href='javascript:map_manager.show_popup_details_show_num(-1)' id='popup_prev' style='display:none;'>« "+LANG.IDENTIFY.PREVIOUS+"</a> "
-              var next_link=" <a href='javascript:map_manager.show_popup_details_show_num(1)' id='popup_next' style='display:none;' onclick=''>"+LANG.IDENTIFY.NEXT+" »</a>"
+              var prev_link="<a href='javascript:map_manager.show_popup_details_show_num(-1)' id='popup_prev' class='disabled_link'>« "+LANG.IDENTIFY.PREVIOUS+"</a> "
+              var next_link=" <a href='javascript:map_manager.show_popup_details_show_num(1)' id='popup_next' class='disabled_link' onclick=''>"+LANG.IDENTIFY.NEXT+" »</a>"
               html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span><br/>"
               html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span></th><th>"+next_link+"</th></tr></table>"
             }
@@ -298,15 +291,13 @@ class Map_Manager {
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
-
-//         this.popup_show()
            setTimeout(function(){
                $("#popup_content").html(html)
                 //show the first returned feature
 
                 $this.features =  _features
                 if(typeof(_features)!="undefined" && _features?.length > 0){
-                    console.log( $this.features,"Delayed")
+                    console_log( $this.features,"Delayed")
                     $this.show_popup_details_show_num()
                 }
 
@@ -320,14 +311,13 @@ class Map_Manager {
         }else{
             this.result_num=this.result_num+num
         }
-        console.log(this.features, "show_popup_details_show_num" )
-
 
         this.show_highlight_geo_json(this.features[this.result_num])
         var props= this.features[this.result_num].properties
         var html=''
          for (var p in props){
-              html+="<tr><td>"+p+"</td><td>"+props[p]+"</td></tr>"
+            var val = props[p].hyper_text()
+            html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
          }
         $("#props_table").html(html)
 
@@ -335,15 +325,15 @@ class Map_Manager {
         $("#popup_result_num").html(this.result_num+1)
         //update the controls
          if(this.result_num>0){
-            $("#popup_prev").show()
+            $("#popup_prev").removeClass("disabled_link")
         }else{
-            $("#popup_prev").hide()
+            $("#popup_prev").addClass("disabled_link")
         }
 
         if(this.result_num<this.features.length-1){
-            $("#popup_next").show()
+            $("#popup_next").removeClass("disabled_link")
         }else{
-            $("#popup_next").hide()
+            $("#popup_next").addClass("disabled_link")
         }
     }
     show_layer_select(_layer_id){
@@ -391,7 +381,6 @@ class Map_Manager {
 
      }
     popup_close(){
-        console.log("close popup")
         if (this.popup){
             this.map.closePopup();
             if (this.highlighted_feature) {
@@ -419,7 +408,6 @@ class Map_Manager {
     }
     // FEATURE
     show_highlight_geo_json(geo_json){
-        //    console.log("show_highlight_geo_json  -- ",geo_json)
         var $this=this
         // when a researcher hovers over a resource show the bounds on the map
         if (typeof(this.highlighted_feature) !="undefined"){
@@ -438,7 +426,6 @@ class Map_Manager {
                         return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
                     }
                     }).addTo(this.map);
-
         }
 
     }

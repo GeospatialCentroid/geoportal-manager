@@ -316,11 +316,9 @@ class Table_Manager {
               var text = _rows[i].properties[p]
 
               if(typeof text === 'string'){
-
-                if(text.startsWith("http")){
-                 text="<a href='"+text+"' target='_blank'>"+text+"</a>"
-                }
-                text = clip_text(text,50)
+                text = text.hyper_text()
+                console.log(text," hyper_text")
+                text = text.clip_text(50)
 
               }
               html+="<td>"+text+"</td>"

@@ -32,11 +32,18 @@ function componentToHex(c) {
     return hex.length == 1 ? "0" + hex : hex;
 }
 
-function clip_text(text,limit){
-    if(text.length>limit){
-        text="<div title='"+text+"'>"+text.substring(0,limit)+"...</div>"
+String.prototype.clip_text=function(limit){
+    if(this.length>limit){
+       return "<div title='"+this.toString()+"'>"+this.substring(0,limit)+"...</div>"
     }
-    return text
+    return this
+}
+String.prototype.hyper_text=function(){
+
+    if(this.startsWith("http")){
+        return "<a href='"+this.toString()+"' target='_blank'>"+this.toString()+"</a>"
+    }
+    return this
 }
 
 //set via url params

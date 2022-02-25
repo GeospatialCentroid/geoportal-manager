@@ -86,11 +86,11 @@ class Layer_Manager {
 
   toggle_layer(_resource_id,z){
 
-    console.log("toggle_layer",_resource_id)
+    console_log("toggle_layer",_resource_id)
     var $this=layer_manager;
 
     if(!disclaimer_manager.check_status(_resource_id,z,$this.toggle_layer)){
-         console.log("Accept disclaimer first")
+         console_log("Accept disclaimer first")
          return
     }
     // either add or hide a layer
@@ -99,14 +99,14 @@ class Layer_Manager {
     if(!resource){
          // we need to load the resource information
          filter_manager.load_json(filter_manager.base_url+"q=dc_identifier_s:"+_resource_id,filter_manager.loaded_resource,_resource_id);
-         console.log("try again!!!")
+         console_log("try again!!!")
          return
     }
     try{
         var json_refs = JSON.parse(resource.dct_references_s)
     }catch(e){
-        console.log("Error parsing JSON")
-        console.log(resource.dct_references_s)
+        console_log("Error parsing JSON")
+        console_log(resource.dct_references_s)
     }
 
     if($this.is_on_map(_resource_id)){
@@ -121,7 +121,7 @@ class Layer_Manager {
 
 
     //$.inArray(type,feature_types)>-1
-    console.log(resource["drawing_info"])
+    console_log("toggle_layer",resource["drawing_info"])
     if (resource["drawing_info"] && typeof(resource["drawing_info"][0])!="undefined"){
             var drawing_info = $this.convert_text_to_json(resource["drawing_info"][0])
             resource["drawing_info"]=drawing_info
@@ -143,7 +143,7 @@ class Layer_Manager {
                     if (resource?.layer_geom_type_s){
                         type = resource.layer_geom_type_s
                     }
-                    console.log("And the type is: ",type)
+                    console_log("And the type is: ",type)
 
                     $this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
                     $this.add_to_map_tab(_resource_id,z);
@@ -155,17 +155,15 @@ class Layer_Manager {
 
             }
         }
-        console.log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
+        console_log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
 
   }
     add_to_map_tab(_resource_id,_z){
         var $this = this;
         // use this.layers[] for reference since filter_manager can change with filter response.
-        //        console.log(this.layers)
         var layer = this.get_layer_obj(_resource_id)
         if (!layer){
-
-            console.log("No layer to show")
+            console_log("No layer to show")
             return
         }
         var resource = layer.resource_obj
@@ -353,8 +351,7 @@ class Layer_Manager {
                 var id = $(this).attr('id')
                 var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
-//                      console.log(layer)
-                     if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms"){
+                     if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
                         layer.layer_obj.setOpacity(ui.value/100)
                      }else{
                         layer.layer_obj.setStyle({
@@ -403,8 +400,7 @@ class Layer_Manager {
 
   add_layer(_resource_id,url,_drawing_info,_z,service_type,_type){
 
-
-    console.log("Adding",_resource_id,url,_drawing_info,_z,service_type)
+    console_log("Adding",_resource_id,url,_drawing_info,_z,service_type)
     var $this=this
     var update_url=false
     // create layer at pane
@@ -459,34 +455,37 @@ class Layer_Manager {
 
 
     }else if(service_method._method=="iiif"){
-
         this.show_image_viewer_layer(L[service_method._class][service_method._method](url))
         return
     }else if(service_method._method==""){
         //todo - get this from the service
         layer_options.maxZoom= 21
-
         var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
     }else if(service_method._method.indexOf(".")>-1){
         var method_parts=service_method._method.split(".")
-        console.log(layer_options)
         var layer_obj =  L[service_method._class][method_parts[0]][method_parts[1]](layer_options.url).addTo(this.map);
+
     }else{
-        //todo make the adjustment in the metadata
-//        if (resource.layer_geom_type_s=="Point"){
-        var layer_obj =  L[service_method._class][service_method._method](layer_options).addTo(this.map);
+
+        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.solr_geom)).addTo(this.map);
     }
 
 
-//    layer_obj.on('click', function (e) {
-////        console.log("you clicked a layer",_resource_id,e)
-////        console.log(e.layer.feature.properties)
-//
-//        map_manager.selected_layer_id=_resource_id
-//
-//        map_manager.click_lat_lng = e.latlng
-//        map_manager.show_popup_details([e.layer.feature])
-//    });
+    try{
+        layer_obj.setBounds(filter_manager.get_bounds(resource.solr_geom))
+        console_log("Success",resource)
+    }catch(e){
+        console_log(e)
+    }
+
+    layer_obj.on('click', function (e) {
+        map_manager.selected_layer_id=_resource_id
+
+        map_manager.click_lat_lng = e.latlng
+        map_manager.popup_show();
+        map_manager.show_popup_details([e.layer.feature])
+
+    });
 
 
     //todo keep reference, update button on load
@@ -496,8 +495,8 @@ class Layer_Manager {
         if(_drawing_info.renderer?.symbol){
             type=_drawing_info.renderer.symbol.type
         }else{
-            console.log("We don't know what this is!!!")
-            console.log(_drawing_info)
+            console_log("We don't know what this is!!!")
+            console_log(_drawing_info)
         }
 
      }
@@ -541,7 +540,6 @@ class Layer_Manager {
 
          // remove existing layers
          map_manager.image_map.eachLayer(function (layer) {
-                console.log(layer)
                 if (typeof(layer._corner)=="undefined"){
                     layer.remove();
                 }
@@ -556,12 +554,15 @@ class Layer_Manager {
       var layer_options ={
         url: url,
         pane:_resource_id,
+        // to enable cursor and click events on raster images
+        interactive:true,
+        bubblingMouseEvents: false
       }
       var type;
       var symbol;
       var renderer_type
       if (_drawing_info){
-            console.log("_drawing_info",_drawing_info)
+            console_log("_drawing_info",_drawing_info)
           if(_drawing_info.renderer?.symbol){
              symbol = _drawing_info.renderer.symbol
              type = symbol.type
@@ -574,8 +575,6 @@ class Layer_Manager {
             }
 
           }
-            console.log("*****************")
-            console.log(_drawing_info)
           if (_drawing_info && symbol){
             if(renderer_type=="simple"){
               if(symbol.outline || (type == "esriSLS" && symbol.color)){
@@ -691,7 +690,7 @@ class Layer_Manager {
                 selected += "selected"
             }
             var title = this.layers[i].resource_obj.dc_title_s;
-            title = clip_text(title,30)
+            title.clip_text(30)
             html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
         }
         html+="<select>"
@@ -761,8 +760,7 @@ class Layer_Manager {
         //solr stores the json structure of nested elements as a smi usable string
         // convert the string to json for use!
         // returns a usable json object
-//        console.log("-----------------")
-//        console.log(text)
+
         var reg = new RegExp(/(\w+)=([^\s|\[|,|\{|\}]+)/, 'gi');// get words between { and =
         text=text.replace(reg,'"$1"="$2"')
 
@@ -783,8 +781,8 @@ class Layer_Manager {
         try {
             return JSON.parse(text)
         } catch(e) {
-           console.log("error",e)
-           console.log(text)
+           console_log("error",e)
+           console_log(text)
         }
 
 
@@ -813,7 +811,7 @@ class Layer_Manager {
         for (var i=0;i<data['layers'].length;i++){
             var l = data['layers'][i]
             var layer_name=l.layerName
-            layer_name = clip_text(layer_name,15)
+            layer_name.clip_text(15)
             html += '<span class="legend_title">'+layer_name+'</span>'
 
             for (var j=0;j<l['legend'].length;j++){

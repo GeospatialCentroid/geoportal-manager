@@ -216,7 +216,7 @@ class Filter_Manager {
                     var err = eval("(" + xhr.responseText + ")");
                     alert(err.Message);
                 }catch(e){
-                    console.log("ERROR",xhr)
+                    console_log("ERROR",xhr)
                 }
 
             }
@@ -323,7 +323,7 @@ class Filter_Manager {
                    if(typeof(translate[list[i]])!='undefined'){
                         title =translate[list[i]]['title']
                     }else{
-                        console.log("no translation for", list[i])
+                        console_log("no translation for", list[i])
                     }
                 }
 
@@ -348,7 +348,7 @@ class Filter_Manager {
 
     set_filters(){
         // when filter url parameters exist - show them and filter
-         console.log("set_filters",this.params )
+        console_log("set_filters",this.params )
         if(this.params){
 
             for(var i =0; i<= this.params.length;i++){
@@ -469,7 +469,7 @@ class Filter_Manager {
     get_layers(_resource_id){
         //get all the filtered children of the parent
         //   $.get(this.result_url+"q=path:"+_resource_id+".layer&rows="+1000,this.show_sublayer_details)
-        console.log(filter_manager.filters)
+        console_log(filter_manager.filters)
         var filters_copy = JSON.parse(JSON.stringify(filter_manager.filters));
         filters_copy.push(["path",String(_resource_id)+".layer"])
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
@@ -569,7 +569,7 @@ class Filter_Manager {
               case 'http://schema.org/downloadUrl':
                     return "download"
               default:
-                console.log("Unassigned ref type",_ref)
+                console_log("Unassigned ref type",_ref)
                 return ""
         }
     }
@@ -624,8 +624,8 @@ class Filter_Manager {
             }
          }
 
-         console.log("unable to locate resource :(",_resource_id)
-         console.log( this.all_results)
+         console_log("unable to locate resource :(",_resource_id)
+         console_log( this.all_results)
 
     }
 
@@ -664,7 +664,7 @@ class Filter_Manager {
 
     }
     go_back(){
-        console.log("A generic function to handle the panel movement",this.panel_name)
+
         // based on the panel position choose the movement
         var go_to_panel=""
         if(this.panel_name == 'results'){
@@ -679,7 +679,6 @@ class Filter_Manager {
             go_to_panel = "layers"
         }else{
             //trigger a search
-            console.log("trigger search")
             // $("#search_but").trigger("click");
              return
         }
@@ -692,7 +691,7 @@ class Filter_Manager {
         save_params()
     }
     add_filter(id,value,reset,no_filter){
-        console.log("Check the filters:",this.filters)
+        console_log("Check the filters:",this.filters)
         //if the facet filter is from the browse screen reset the lot
         if (reset){
             this.reset()
@@ -734,8 +733,6 @@ class Filter_Manager {
         // now that we've adjusted the height of the search area - update the height of the results area
         $('#side_header').trigger("resize");
 
-        console.log("the filters are:",this.filters)
-
         if (!no_filter){
              this.filter()
         }
@@ -763,7 +760,7 @@ class Filter_Manager {
         return false
     }
     remove_filter_index(elm){
-        console.log("remove_filter_index",elm, $(elm).parent().index())
+        console_log("remove_filter_index",elm, $(elm).parent().index())
         //
         //check if the filter being removed in linked to a checkbox
         var filter_name=this.filters[$(elm).parent().index()][0]
