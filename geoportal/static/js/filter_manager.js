@@ -79,6 +79,18 @@ class Filter_Manager {
              $("#search_but").trigger("click")
         }
     })
+    // prevent special characters in search
+    //https://stackoverflow.com/questions/895659/how-do-i-block-or-restrict-special-characters-from-input-fields-with-jquery
+    $("#search").on('input', function() {
+      var c = this.selectionStart,
+          r = /[^a-z0-9\s\+\-\"\']/gi,
+          v = $(this).val();
+      if(r.test(v)) {
+        $(this).val(v.replace(r, ''));
+        c--;
+      }
+      this.setSelectionRange(c, c);
+    });
     //
 
     // detect scroll bottom
@@ -370,14 +382,14 @@ class Filter_Manager {
         this.slide_position("results");
         this.page_start=0;
         $("#result_wrapper").scrollTop(0)
-        var filter_str = this.get_filter_str()
+
         $("#result_total .spinner-border").show();
-//        // show only parents but search within both parent and children
-//        this.fq_str="{!parent which='solr_type:parent'}"
-//        +"&fq="+this.fq_str
+
         var results_url=this.result_url+"f="+rison.encode_array(filter_manager.filters)+"&rows="+this.page_rows+"&start="+this.page_start+"&sort="+this.sort_str
         $.get(results_url,this.show_results)
         //update the facets on the first search requests.
+
+        var filter_str = this.get_filter_str()
         var facet_url=this.base_url+this.facet_params+filter_str
         this.load_json(facet_url,this.update_facets)
 
@@ -396,7 +408,7 @@ class Filter_Manager {
                 f_id=''
             }
             if (f[1]!=''){
-                filter_str_array.push(f_id+f[1])
+                filter_str_array.push(f_id+f[1].replaceAll("'","\\'"))
             }
 
          }
