@@ -316,7 +316,7 @@ class Map_Manager {
         var props= this.features[this.result_num].properties
         var html=''
          for (var p in props){
-            var val = props[p].hyper_text()
+            var val = String(props[p]).hyper_text()
             html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
          }
         $("#props_table").html(html)

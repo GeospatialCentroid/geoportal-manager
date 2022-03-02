@@ -317,7 +317,6 @@ class Table_Manager {
 
               if(typeof text === 'string'){
                 text = text.hyper_text()
-                console.log(text," hyper_text")
                 text = text.clip_text(50)
 
               }
