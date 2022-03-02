@@ -3,16 +3,14 @@ from . import views
 
 import re
 
-from resources.models import Resource,End_Point
+from resources.models import Resource,End_Point,URL_Type
 
 def get_lang(_LANG):
     if not _LANG:
         _LANG = 'en'
     return json.load(open('static/i18n/' + _LANG + '.json'))  # deserializes it
 
-
-def get_ref_link(_json_refs,_type):
-    # look for a download link
+def clean_json(_json_refs):
     if type(_json_refs) is dict:
         json_refs = _json_refs
     else:
@@ -21,6 +19,11 @@ def get_ref_link(_json_refs,_type):
 
         except:
             json_refs =None
+    return json_refs
+
+def get_ref_link(_json_refs,_type):
+    # look for a download link
+    json_refs = clean_json(_json_refs)
 
     if json_refs:
 
@@ -41,7 +44,19 @@ def get_ref_link(_json_refs,_type):
         return None
 
 
+def get_service_link(_json_refs):
 
+    json_refs = clean_json(_json_refs)
+    if json_refs:
+        url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class', '_method')
+
+        for j in json_refs:
+            for u in url_types:
+
+                if u["ref"]==j:
+                    return True
+
+    return False
 
 
 def get_ref_type(_ref):
@@ -57,6 +72,7 @@ def get_ref_type(_ref):
         return ""
 
 def get_toggle_but_html(resource,LANG):
+
     add_func = "layer_manager.toggle_layer"
 
     add_txt = LANG["RESULT"]["ADD"]
@@ -83,6 +99,12 @@ def get_toggle_but_html(resource,LANG):
     # extra_class= "active"
     if (add_txt!=LANG["RESULT"]["REMOVE"]):
         extra_class=""
+
+    if(add_txt == LANG["RESULT"]["ADD"]):
+        # check for add link
+
+        if "dct_references_s" in resource and not get_service_link(resource["dct_references_s"]):
+            return ""
 
     return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr='" + ",".join( child_arr) + "' onclick='" + add_func + "(\"" + resource["dc_identifier_s"] + "\")'>" + add_txt + "</button>"
 

@@ -158,10 +158,9 @@ def get_results_html(request,_LANG=False):
     for i in range(len(data["response"]["docs"])):
         index_number=i+int(data["response"]["start"])+1
         resource=data["response"]["docs"][i]
-        solr_geom=""
+
         if "solr_geom" in resource:
-            solr_geom = resource["solr_geom"]
-        html+="<li class='list-group-item' onmouseenter='filter_manager.show_bounds_str(\""+solr_geom+"\")' onmouseleave='filter_manager.hide_bounds()' >"
+            html+="<li class='list-group-item' onmouseenter='filter_manager.show_bounds_str(\""+resource["solr_geom"]+"\")' onmouseleave='filter_manager.hide_bounds()' >"
         html += get_resource_header_html(resource,LANG,str(index_number)+". ")
         html+= get_resource_button_html(resource,LANG)
         html+= " "+get_resource_icon(resource)
@@ -234,14 +233,11 @@ def get_resource_button_html(resource,LANG,no_details=False):
     # generate the html for navigating the resources
     html=""
     download_link = utils.get_ref_link(resource,"download")
-    solr_geom = ""
-    if "solr_geom" in resource:
-        solr_geom= resource["solr_geom"]
 
     html += utils.get_toggle_but_html(resource,LANG)
 
-    if solr_geom:
-        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+solr_geom+"\")'>"+LANG["RESULT"]["ZOOM"]+"</button>"
+    if "solr_geom" in resource:
+        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+resource["solr_geom"]+"\")'>"+LANG["RESULT"]["ZOOM"]+"</button>"
 
     if download_link:
       html +="<button type='button' class='btn btn-primary' onclick='window.open(\""+download_link+"\")'>"+LANG["DOWNLOAD"]["DOWNLOAD_BUT"]+"</button>"

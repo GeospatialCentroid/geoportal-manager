@@ -118,16 +118,19 @@ class FileCollection_CDM(FileCollection):
             #generate urls for all children
             root_path = self.open_prefix+data['thumbnailUri'][:data['thumbnailUri'].index("/id/")+4]
 
-            for index, p in enumerate(data['objectInfo']["page"]):
+            #make sure there are more than 1 pages
+            if isinstance(data['objectInfo']["page"], list):
+                for index, p in enumerate(data['objectInfo']["page"]):
 
-                # todo get the parent id
-                # create a child resource with only new information - the ingest should take the parent info and combine it with the child
-                parent_id = parent_obj["itemId"]
-                item_id = p["pageptr"]
-                _file = layers_path + "/" + parent_id + "_sub_"+item_id+".json"
-                _url = root_path+item_id
-                # todo - decide if we want to save the 3  metadata files
-                self.load_file_call_func(_file, _url, 'check_sub_sub_loaded', parent)
+                    # todo get the parent id
+                    # create a child resource with only new information - the ingest should take the parent info and combine it with the child
+                    parent_id = parent_obj["itemId"]
+                    item_id = p["pageptr"]
+                    _file = layers_path + "/" + parent_id + "_sub_"+item_id+".json"
+                    _url = root_path+item_id
+                    # todo - decide if we want to save the 3  metadata files
+                    print("About to load child url",_url)
+                    self.load_file_call_func(_file, _url, 'check_sub_sub_loaded', parent)
 
 
     def check_sub_sub_loaded(self,data, parent_obj):

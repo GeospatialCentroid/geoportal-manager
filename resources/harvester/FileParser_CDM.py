@@ -106,6 +106,9 @@ class FileParser_CDM(FileParser):
 
         resource['year'] =  resource['date']
 
+        if isinstance( resource['year'] , str):
+            resource['year']=None
+
 
         #########
         
