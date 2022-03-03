@@ -230,6 +230,7 @@ function init_tabs(){
 
         // move to the set search panel
         if(tab_parts.length>1){
+            $("#nav").show()
             filter_manager.slide_position(tab_parts[1])
         }
         if(tab_parts.length>2){

@@ -739,7 +739,7 @@ class Filter_Manager {
         }
         //shorten the date
          //todo map the text to use translated value
-         this.show_filter_selection(id,text+": "+value,this.filters)
+         this.show_filter_selection(id,text+": "+value.clip_text(30),this.filters)
          save_params()
 
         // now that we've adjusted the height of the search area - update the height of the results area
@@ -757,6 +757,7 @@ class Filter_Manager {
         // add a close button
         text+="<a class='fa fa-times btn chip_x' onclick='filter_manager.remove_filter_index(this)'></a>"
         //create a list of selected filters to easily keep track
+        console.log()
         var html="<div class='chip blue' >"+text+"</div>"
 
         $("#filter_box").append(html)

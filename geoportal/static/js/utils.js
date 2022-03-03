@@ -34,7 +34,7 @@ function componentToHex(c) {
 
 String.prototype.clip_text=function(limit){
     if(this.length>limit){
-       return "<div title='"+this.toString()+"'>"+this.substring(0,limit)+"...</div>"
+       return "<div class='d-inline' title='"+this.toString()+"'>"+this.substring(0,limit)+"...</div>"
     }
     return this
 }
