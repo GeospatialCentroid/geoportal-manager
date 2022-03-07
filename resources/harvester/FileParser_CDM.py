@@ -134,7 +134,10 @@ class FileParser_CDM(FileParser):
                resource["format"] = "PDF"
 
         if resource['filetype'] != "cpd":
-            resource["urls"].append({'url_type': "iiif", 'url': self.open_prefix + child_obj["iiifInfoUri"]})
+            url=child_obj["iiifInfoUri"]
+            if not url.startswith("http"):
+                url = self.open_prefix + url
+            resource["urls"].append({'url_type': "iiif", 'url': url })
             resource["type"] = "iiif"
             resource["format"] = "JPEG"
 
@@ -148,7 +151,17 @@ class FileParser_CDM(FileParser):
             # for compound artifacts we need to load the child information
             # take the 'objectInfo'>'page' items and the 'pageptr' id. Append this to current url address
             # https://fchc.contentdm.oclc.org/digital/api/singleitem/collection/hm/id/1405
-            resource["urls"].append({'url_type': "image", 'url': self.open_prefix + child_obj["imageUri"]})
+
+            url = child_obj["imageUri"]
+            if not url.startswith("http"):
+                url = self.open_prefix + url
+            resource["urls"].append({'url_type': "image", 'url': url})
+
+            if "iiifInfoUri" in child_obj:
+                url = child_obj["iiifInfoUri"]
+                if not url.startswith("http"):
+                    url = self.open_prefix + url
+                resource["urls"].append({'url_type': "iiif", 'url': url})
 
 
 

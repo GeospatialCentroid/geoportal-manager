@@ -106,7 +106,7 @@ def get_toggle_but_html(resource,LANG):
         if "dct_references_s" in resource and not get_service_link(resource["dct_references_s"]):
             return ""
 
-    return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr='" + ",".join( child_arr) + "' onclick='" + add_func + "(\"" + resource["dc_identifier_s"] + "\")'>" + add_txt + "</button>"
+    return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr=\"" + ",".join( child_arr) + "\" onclick=\"" + add_func + "(\'" + resource["dc_identifier_s"] + "\')\">" + add_txt + "</button>"
 
 def get_child_array(children):
     """
@@ -128,7 +128,7 @@ def get_count_text(resource,LANG):
 
 
 def get_details_but_html(resource,LANG):
-    return "<button type='button' class='btn btn-primary' href='"+get_catelog_url(resource)+"' onclick='filter_manager.show_details(\"" + resource["dc_identifier_s"] + "\")'>" + \
+    return "<button type='button' class='btn btn-primary' href='"+get_catelog_url(resource)+"' onclick=\"filter_manager.show_details(\'" + resource["dc_identifier_s"] + "\')\">" + \
            LANG["RESULT"]["DETAILS"] + "</button>"
 
 def get_catelog_link_html(resource,LANG):

@@ -159,8 +159,12 @@ def get_results_html(request,_LANG=False):
         index_number=i+int(data["response"]["start"])+1
         resource=data["response"]["docs"][i]
 
+        html += "<li class='list-group-item' "
+
         if "solr_geom" in resource:
-            html+="<li class='list-group-item' onmouseenter='filter_manager.show_bounds_str(\""+resource["solr_geom"]+"\")' onmouseleave='filter_manager.hide_bounds()' >"
+            html+=" onmouseenter='filter_manager.show_bounds_str(\"" + resource["solr_geom"] + "\")'"
+
+        html +=  " onmouseleave='filter_manager.hide_bounds()' >"
         html += get_resource_header_html(resource,LANG,str(index_number)+". ")
         html+= get_resource_button_html(resource,LANG)
         html+= " "+get_resource_icon(resource)
