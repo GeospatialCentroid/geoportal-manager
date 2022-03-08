@@ -46,7 +46,7 @@ class Disclaimer_Manager {
          this.disclaimers[end_point_id]={"queue":[],"status":""}
     }
     //Add to the queue - multiple resources may want to display when the disclaimer is finally accepted
-    //todo check that a resource_id isn't already part of the que
+    //todo check that a resource_id isn't already part of the queue
     var in_queue=false
     for (var i =0 ; i<this.disclaimers[end_point_id].queue.length;i++){
         if( this.disclaimers[end_point_id].queue[i].resource_id==_resource_id){
@@ -60,8 +60,8 @@ class Disclaimer_Manager {
     if(typeof($.cookie(end_point_id)) !='undefined'){
      return true;
 
-    }else if (!this.disclaimers[end_point_id]?.html){
-        //first time load the disclaimer
+    }else if (!this.disclaimers[end_point_id]?.html && this.disclaimers[end_point_id].html!="" ){
+         //first time load the disclaimer
          this.load_disclaimer("/disclaimer/?e="+end_point_id,disclaimer_manager.show_disclaimer,end_point_id);
     }else if(this.disclaimers[end_point_id].status!="a" && this.disclaimers[end_point_id]?.html){
         // no accepted but has html
@@ -119,6 +119,7 @@ class Disclaimer_Manager {
     // when the researcher clicks accept we need to know what disclaimer was accepted and show all the queued layers
     this.disclaimers[end_point_id].status="a"
     for(var i=0;i<this.disclaimers[end_point_id].queue.length;i++){
+        console.log(this.disclaimers)
         console.log("We have acceptance for",end_point_id, "load", this.disclaimers[end_point_id].queue[i])
         this.disclaimers[end_point_id].queue[i].callback( this.disclaimers[end_point_id].queue[i].resource_id, this.disclaimers[end_point_id].queue[i].z)
     }
