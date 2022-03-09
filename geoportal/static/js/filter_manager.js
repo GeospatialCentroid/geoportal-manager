@@ -556,7 +556,7 @@ class Filter_Manager {
                                 label = url.substring(url.indexOf('.') + 1).toUpperCase()
                             }
                             if (label && url){
-                                html += "<option value='" + url + "'>" +label+ "</option>"
+                                html += "<option value='" + url + "'>" +label.clip_text(6)+ "</option>"
                             }
                         }
                         html += "</select>"
@@ -586,12 +586,15 @@ class Filter_Manager {
         }
     }
     get_bounds(_solr_geom){
+
+     if (typeof(_solr_geom) !="undefined"){
+
         var b = this.get_bound_array(_solr_geom)
         var nw = L.latLng(b[2],b[0])
         var se =  L.latLng(b[3],b[1])
 
         return L.latLngBounds(L.latLng(nw), L.latLng(se))
-
+        }
     }
 
     zoom_layer(_solr_geom){
@@ -599,7 +602,9 @@ class Filter_Manager {
         map_manager.zoom_rect( this.get_bounds(_solr_geom))
     }
     get_bound_array(geom){
+     if (typeof(geom) !="undefined"){
         return geom.substring(9,geom.length-1).split(",")
+        }
     }
     get_poly_array(geom){
         if (typeof(geom) =="undefined"){
