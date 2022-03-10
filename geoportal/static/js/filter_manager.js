@@ -518,7 +518,11 @@ class Filter_Manager {
          }
 
           $(panel_id).load( "/details/"+_resource_id, function() {
-                 $( window ).trigger("resize");
+
+
+                 setTimeout(function(){
+                  $( window ).trigger("resize");
+                 },500)
                  filter_manager.slide_position(pos_id);
                  // update the details toggle button
                 filter_manager.update_parent_toggle_buttons(panel_id)

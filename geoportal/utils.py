@@ -80,7 +80,7 @@ def get_toggle_but_html(resource,LANG):
 
     child_arr=[]
     # take the embedded _childDocuments_ and show those children
-    print("the resource is .......",resource)
+
     if "_childDocuments_" in resource and len(resource["_childDocuments_"]) > 0:
         # get dynamic add text - get all the ids for use in determining if on map
         child_arr = get_child_array(resource["_childDocuments_"])
