@@ -432,6 +432,7 @@ class Layer_Manager {
     console.log(service_method._class,"service_method._class")
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
+        console.log("CHECK the CORNERS",resource["solr_poly_geom"],filter_manager.get_poly_array(resource["solr_poly_geom"]))
         var corners = filter_manager.get_poly_array(resource["solr_poly_geom"])
         var cs=[]
         if (corners){
@@ -443,13 +444,13 @@ class Layer_Manager {
              //shift the last value into the second position to conform with distortableImageOverlay
              cs.splice(1, 0, cs.splice(3, 1)[0]);
              var layer_obj =  L[service_method._class](url,{
-                actions:[],mode:"lock",
+                actions:[L.LockAction],mode:"lock",
                 corners: cs,
                     }).addTo(this.map);
 
         }else{
             //we have no coordinates, just show the image in a separate leaflet
-             this.show_image_viewer_layer(L[service_method._class](url,{ actions:[],mode:"lock",}))
+             this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",}))
              return
         }
 

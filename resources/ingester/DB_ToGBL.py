@@ -158,6 +158,9 @@ class DB_ToGBL:
             p_data["solr_geom"] = self.get_bounds(r.bounding_box)
             p_data["b1g_centroid_ss"] = str(",".join(list(map(str,r.bounding_box.centroid.coords))))
             p_data["geom_area"] =r.bounding_box.area
+            #required to store the corners for image placement
+            p_data["solr_poly_geom"] = self.get_poly(r.bounding_box)
+
 
         # store the list of references for injection
         ref = self.get_refs(r.url_set.all(), str(r.type))
@@ -304,10 +307,10 @@ class DB_ToGBL:
                 l_data["dct_references_s"] = '{' + (','.join(layer_ref)) + '}'
 
         # get a more accurate bounds for the layer
-
+        print("bounding_box----------",self.get_bounds(_l.bounding_box))
         if hasattr(_l, "bounding_box") and hasattr(_l.bounding_box,'extent'):
             l_data["solr_geom"] = self.get_bounds(_l.bounding_box)
-            # lets also save a polygon representing the points fos image overlays.
+            # lets also save a polygon representing the points for image overlays.
             l_data["solr_poly_geom"] = self.get_poly(_l.bounding_box)
             print(l_data["solr_poly_geom"])
 
