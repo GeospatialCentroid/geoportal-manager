@@ -479,10 +479,14 @@ class Filter_Manager {
 
     }
     get_layers(_resource_id){
-        //get all the filtered children of the parent
-        //   $.get(this.result_url+"q=path:"+_resource_id+".layer&rows="+1000,this.show_sublayer_details)
-        console_log(filter_manager.filters)
-        var filters_copy = JSON.parse(JSON.stringify(filter_manager.filters));
+        // start with no filters
+        var filters_copy = []
+        // when the search is performed from the details page of the parent record - show all the children
+        //otherwise get all the filtered children of the parent
+        if(this.panel_name!="details"){
+         filters_copy = JSON.parse(JSON.stringify(filter_manager.filters));
+        }
+
         filters_copy.push(["path",String(_resource_id)+".layer"])
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
         $.get(results_url,this.show_sublayer_details)
