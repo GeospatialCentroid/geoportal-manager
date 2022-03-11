@@ -201,11 +201,8 @@ def get_filter_str(filter_arr):
         if f[0] == "path":
             has_parent_path=True
 
-        print("the array ", filter_str_array)
-
     # restrict suppressed
     filter_str_array.append("suppressed_b:False")
-    #return "json={query:'" + " AND ".join(filter_str_array) + "'}"
 
     return " AND ".join(filter_str_array),has_parent_path
 

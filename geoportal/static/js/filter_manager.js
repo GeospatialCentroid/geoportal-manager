@@ -157,7 +157,7 @@ class Filter_Manager {
   }
   bounds_change_handler(){
 
-        // when the map bounds changes and the serach tab is visiable
+        // when the map bounds changes and the search tab is visible
         if ($('#filter_bounds_checkbox').is(':checked') && "search_tab"==$("#tabs").find(".active").attr("id")){
          this.update_bounds_search()
          this.filter()
@@ -478,19 +478,26 @@ class Filter_Manager {
         }
 
     }
-    get_layers(_resource_id){
+    get_layers(_resource_id,elm){
+
+        // either get all the children or just the filtered one
         // start with no filters
-        var filters_copy = []
+         var filters_copy = [["path",String(_resource_id)+".layer"]]; // make suret he parent path is present so the search returns the children
         // when the search is performed from the details page of the parent record - show all the children
         //otherwise get all the filtered children of the parent
-        if(this.panel_name!="details"){
-         filters_copy = JSON.parse(JSON.stringify(filter_manager.filters));
-        }
+       if(this.panel_name!="details"){
 
-        filters_copy.push(["path",String(_resource_id)+".layer"])
+            var children =$(elm).attr("data-child_arr").split(",")
+            var temp_array=[]
+            for(var c in children){
+
+                 temp_array.push("dc_identifier_s:"+String(children[c]))
+
+            }
+             filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
+        }
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
         $.get(results_url,this.show_sublayer_details)
-
     }
 
     show_sublayer_details(layers_html,_resource_id){

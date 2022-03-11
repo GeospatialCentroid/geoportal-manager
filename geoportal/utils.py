@@ -106,7 +106,7 @@ def get_toggle_but_html(resource,LANG):
         if "dct_references_s" in resource and not get_service_link(resource["dct_references_s"]):
             return ""
 
-    return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr=\"" + ",".join( child_arr) + "\" onclick=\"" + add_func + "(\'" + resource["dc_identifier_s"] + "\')\">" + add_txt + "</button>"
+    return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr=\"" + ",".join( child_arr) + "\" onclick=\"" + add_func + "(\'" + resource["dc_identifier_s"] + "\',this)\">" + add_txt + "</button>"
 
 def get_child_array(children):
     """
