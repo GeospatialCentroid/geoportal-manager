@@ -30,14 +30,15 @@ class Geo_Reference_Manager {
 
 
         this.add_image_control();
-        var sliderControl = L.control.sliderControl({
+        var slider_control = L.control.sliderControl({
           position: "topright",
           parent:this
         });
 
-        this.map.addControl(sliderControl);
+        this.map.addControl(slider_control);
 
-        sliderControl.startSlider();
+        slider_control.startSlider();
+
 
         this.add_save_control()
         this.init_image()
@@ -55,10 +56,10 @@ class Geo_Reference_Manager {
          $this.trigger_resize()
     }
     trigger_resize(){
-     var window_width= $(window).width()
-                // account for right border
-                $( "#map" ).width(window_width-$("#image_map").width()-3)
-                this.map.invalidateSize()
+        var window_width= $(window).width()
+        // account for right border
+        $( "#map" ).width(window_width-$("#image_map").width()-3)
+        this.map.invalidateSize()
     }
     get_tile_corners(){
         // when
@@ -143,14 +144,15 @@ class Geo_Reference_Manager {
             corners=false
         }
          this.distortable_img = L.distortableImageOverlay(this["img"],
-         {actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.OpacityAction, L.LockAction],
+         {actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.LockAction],
          corners: corners,
          }).addTo(this.map);
 
          //show the save button
          $(".leaflet-save-but").show();
 
-          console.log(this.distortable_img,"$this.distortable_img")
+         $(".slider").show()
+         $(".ui-slider-handle").css({"left":"100%"})
 
 
     }
@@ -159,6 +161,7 @@ class Geo_Reference_Manager {
         this.distortable_img=false
 
          $(".leaflet-save-but").hide()
+         $(".slider").hide()
    }
 
     init_image(){
@@ -168,16 +171,18 @@ class Geo_Reference_Manager {
           center: [0, 0],
           zoom: 3,
           crs: L.CRS.Simple
-        });
+        })
+        this.add_load_control();
 
         this.image_map._resetView(this.image_map.getCenter(), this.image_map.getZoom());
         this._img = L.distortableImageOverlay(this["img"],{mode: 'lock',actions: [],suppressToolbar: true,editable:false}).addTo(this.image_map);
 
-        this._img.on('load', function (e) {
-         //todo turn off loading icon
 
-            console.log("hide loader")
+
+        this._img.on('load', function (e) {
+            $(".leaflet-spinner").hide();
         });
+
     }
     add_image_control(){
          var $this = this;
@@ -268,8 +273,28 @@ class Geo_Reference_Manager {
         }
 
         L.control.save_but({ position: 'bottomleft' }).addTo(this.map);
+    }
+     add_load_control(){
+        var $this = this;
+        L.Control.save_but = L.Control.extend({
+            onAdd: function(map) {
+              this._container = L.DomUtil.create('div', '');
+              this._container.classList.add('leaflet-spinner');
+               this._container.classList.add('spinner-border');
+                this._container.classList.add('spinner-border-sm');
 
+              L.DomEvent.disableClickPropagation(this._container);
 
+              this._defaultCursor = this._map._container.style.cursor;
+
+              return  this._container;
+            }
+        });
+        L.control.save_but = function(opts) {
+            return new L.Control.save_but(opts);
+        }
+
+        L.control.save_but({ position: 'bottomleft' }).addTo(this.image_map);
     }
     save_corners(corners){
         var $this=this

@@ -451,12 +451,16 @@ class Layer_Manager {
         }else{
             //we have no coordinates, just show the image in a separate leaflet
              this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",}))
+              map_manager.image_map.attributionControl._attributions = {};
+              map_manager.image_map.attributionControl.addAttribution(resource["dc_title_s"]);
              return
         }
 
 
     }else if(service_method._method=="iiif"){
         this.show_image_viewer_layer(L[service_method._class][service_method._method](url))
+         map_manager.image_map.attributionControl._attributions = {};
+         map_manager.image_map.attributionControl.addAttribution(resource["dc_title_s"]);
         return
     }else if(service_method._method==""){
         //todo - get this from the service
@@ -540,14 +544,22 @@ class Layer_Manager {
         map_manager.update_map_size()
 
          // remove existing layers
-         map_manager.image_map.eachLayer(function (layer) {
+         try{
+            map_manager.image_map.eachLayer(function (layer) {
                 if (typeof(layer._corner)=="undefined"){
                     layer.remove();
                 }
-         });
+            });
+         }catch(e){
+            console.log(e)
 
+         }
+
+         $(".leaflet-spinner").show();
          setTimeout(function(){
-             _layer.addTo(map_manager.image_map)
+             _layer.addTo(map_manager.image_map);
+             _layer.on("load",function() {  $(".leaflet-spinner").hide(); });
+
          },500);
 
   }

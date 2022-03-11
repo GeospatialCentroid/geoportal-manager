@@ -631,6 +631,10 @@ position: absolute;
     background-size: 24px 24px;
 }
 
+.leaflet-spinner{
+    color:black;
+}
+
 /*split control*/
 .split_table{
     height:24px;

@@ -508,6 +508,7 @@ class Map_Manager {
 
         this.image_map._resetView(this.image_map.getCenter(), this.image_map.getZoom());
         this.add_close_control()
+        this.add_load_control()
 
         //add resize control
         var $this=this
@@ -549,6 +550,28 @@ class Map_Manager {
         }
 
         L.control.save_but({ position: 'topright' }).addTo(this.image_map);
+    }
+     add_load_control(){
+        var $this = this;
+        L.Control.save_but = L.Control.extend({
+            onAdd: function(map) {
+              this._container = L.DomUtil.create('div', '');
+              this._container.classList.add('leaflet-spinner');
+               this._container.classList.add('spinner-border');
+                this._container.classList.add('spinner-border-sm');
+
+              L.DomEvent.disableClickPropagation(this._container);
+
+              this._defaultCursor = this._map._container.style.cursor;
+
+              return  this._container;
+            }
+        });
+        L.control.save_but = function(opts) {
+            return new L.Control.save_but(opts);
+        }
+
+        L.control.save_but({ position: 'bottomleft' }).addTo(this.image_map);
     }
 
     add_legend(){
