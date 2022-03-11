@@ -21,6 +21,7 @@ urlpatterns = [
     # path('admin/delete/', views.resource_admin_delete_page, name='delete_page'),
     path('disclaimer/', views.get_disclaimer, name='get_disclaimer'),
     path('services/', views.get_services, name='get_services'),
+    path('suggest/', views.get_suggest, name='get_suggest'),
 
 ]
 

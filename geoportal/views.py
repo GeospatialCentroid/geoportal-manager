@@ -167,3 +167,12 @@ def get_services(request):
    url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class','_method')
 
    return HttpResponse(json.dumps(list(url_types)), content_type='application/json')
+
+def get_suggest(request):
+    if request.GET.get('q'):
+        _url = settings.SOLR_URL
+        print(_url + "suggest?suggest.q=" + request.GET.get('q'))
+        suggest = urllib.request.urlopen(_url + "suggest?suggest.q=" + request.GET.get('q'))
+        data= json.load(suggest)
+        suggestions=data["suggest"]["mySuggester"][request.GET.get('q')]["suggestions"]
+        return HttpResponse(json.dumps(suggestions, cls=DjangoJSONEncoder), content_type='application/json')

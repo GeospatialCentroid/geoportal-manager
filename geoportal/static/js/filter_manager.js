@@ -92,7 +92,21 @@ class Filter_Manager {
       this.setSelectionRange(c, c);
     });
     //
-
+   $("#search").autocomplete({
+     source: function(request, response) {
+         $.get('/suggest', { q: request.term }, function(data) {
+           response($.map( data, function( item ) {
+                return {
+                    label: item.term,
+                    value: item.term
+                }
+            }));
+        })},
+      minLength: 2,
+      select: function( event, ui ) {
+         $("#search_but").trigger("click")
+      }
+    });
     // detect scroll bottom
     $("#result_wrapper").scroll( function(e) {
          if (Math.round($(this).scrollTop() + $(this).innerHeight()) >= $(this)[0].scrollHeight-1){
