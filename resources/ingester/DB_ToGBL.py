@@ -307,7 +307,7 @@ class DB_ToGBL:
                 l_data["dct_references_s"] = '{' + (','.join(layer_ref)) + '}'
 
         # get a more accurate bounds for the layer
-        print("bounding_box----------",self.get_bounds(_l.bounding_box))
+
         if hasattr(_l, "bounding_box") and hasattr(_l.bounding_box,'extent'):
             l_data["solr_geom"] = self.get_bounds(_l.bounding_box)
             # lets also save a polygon representing the points for image overlays.

@@ -143,25 +143,26 @@ class FileParser_CDM(FileParser):
 
         resource["geometry_type"] = "Raster"
 
-        if resource['filetype'] != "cpd" or r==None:
-            # singleitems have images - parents do not - we have 3 cases - upper level no children and children have images
-            # todo - investigate further about image for compound files - current just support jp2 and tif
-            # e.g https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
-            # we have https://fchc.contentdm.oclc.org/digital/api/singleitem/image/hm/1434/default.jpg
-            # for compound artifacts we need to load the child information
-            # take the 'objectInfo'>'page' items and the 'pageptr' id. Append this to current url address
-            # https://fchc.contentdm.oclc.org/digital/api/singleitem/collection/hm/id/1405
 
-            url = child_obj["imageUri"]
+        # if resource['filetype'] != "cpd" or r==None:
+        #     # singleitems have images - parents do not - we have 3 cases - upper level no children and children have images
+        #     # todo - investigate further about image for compound files - current just support jp2 and tif
+        #     # e.g https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
+        #     # we have https://fchc.contentdm.oclc.org/digital/api/singleitem/image/hm/1434/default.jpg
+        #     # for compound artifacts we need to load the child information
+        #     # take the 'objectInfo'>'page' items and the 'pageptr' id. Append this to current url address
+        #     # https://fchc.contentdm.oclc.org/digital/api/singleitem/collection/hm/id/1405
+
+        url = child_obj["imageUri"]
+        if not url.startswith("http"):
+            url = self.open_prefix + url
+        resource["urls"].append({'url_type': "image", 'url': url})
+
+        if "iiifInfoUri" in child_obj:
+            url = child_obj["iiifInfoUri"]
             if not url.startswith("http"):
                 url = self.open_prefix + url
-            resource["urls"].append({'url_type': "image", 'url': url})
-
-            if "iiifInfoUri" in child_obj:
-                url = child_obj["iiifInfoUri"]
-                if not url.startswith("http"):
-                    url = self.open_prefix + url
-                resource["urls"].append({'url_type': "iiif", 'url': url})
+            resource["urls"].append({'url_type': "iiif", 'url': url})
 
 
 

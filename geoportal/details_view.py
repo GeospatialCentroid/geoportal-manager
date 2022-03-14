@@ -78,25 +78,22 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         link="/geo_reference?id="+str(d['dc_identifier_s'])+"&img="+image_link+"&lng=-98.74&lat=36.25&z=8"
         args['georeference_link_html']='<a href="'+link+'" target="_blank">'+ args['LANG']["DETAILS"]["GEOREFERENCE"]+'</a><br/><br/>'
 
-    # generate the download links
-    args['download_link_html'] = None
 
-    download_link = utils.get_ref_link(d['dct_references_s'],"download")
 
     # get the add button
     args['toggle_but_html'] = utils.get_toggle_but_html(d,args['LANG'])
 
+    # generate the download links
+    args['download_link_html'] = None
+    print(d['dct_references_s'])
+    download_link = utils.get_ref_link(d['dct_references_s'], "download")
     if download_link:
-
-        if len(download_link) == 1:
-            # todo - call this through download method to support esri bundling of download
-            html = '<button type="button" class="btn btn-primary" onclick="window.open(\'' + download_link[0] + '\')">' + \
-                   args['LANG']["DOWNLOAD"]["DOWNLOAD_BUT"] + '</button>'
-        else:
+        print(download_link, type(download_link), "download_link")
+        if  isinstance(download_link, list) and len(download_link) > 1:
             html = "<select class='form-control btn btn-primary' onchange='download_manager.download_select(this)'>"
             html += "<option selected value='0'>" + args['LANG']["DOWNLOAD"]["DOWNLOAD_BUT"] + "</option>"
 
-            print(download_link,type(download_link),"download_link")
+
             for l in download_link:
                 if 'url' in l:
                     url = l["url"]
@@ -105,13 +102,19 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
                 label = None
                 if 'label' in l:
-                    label=l["label"]
-                elif url.find(".")>-1:
+                    label = l["label"]
+                elif url.find(".") > -1:
                     label = url[url.rindex('.') + 1:].upper()
 
-                if label is not None and url is not None :
-                    html += "<option value='" + url + "'>" +label+ "</option>"
+                if label is not None and url is not None:
+                    html += "<option value='" + url + "'>" + label + "</option>"
             html += "</select>"
+        else:
+            if isinstance(download_link, list):
+                download_link = download_link[0]
+            # todo - call this through download method to support esri bundling of download
+            html = '<button type="button" class="btn btn-primary" onclick="window.open(\'' + download_link + '\')">' + \
+                   args['LANG']["DOWNLOAD"]["DOWNLOAD_BUT"] + '</button>'
         args['download_link_html'] = html
 
     # create nav

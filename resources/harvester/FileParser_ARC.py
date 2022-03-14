@@ -172,13 +172,16 @@ class FileParser_ARC(FileParser):
             # we are working with a child object which has all the urls
             if "landingPage" in resource:
                 resource["info_page"] = resource['landingPage']
-            # loop over the distributions
 
+            # loop over the distributions
             if "distribution" in resource:
                 for d in resource['distribution']:
                     if d["title"] in file_collection.api_types:
                         # store the base url
-                        resource["urls"].append({'url_type': resource["type"], 'url': d["accessURL"]})
+                        r_type = resource["type"]
+                        if r_type == "Raster Layer":
+                            r_type = "map service"
+                        resource["urls"].append({'url_type': r_type, 'url': d["accessURL"]})
                         # # set the type while we're at it
                         # resource["type"] = "Dataset|Service"
                     elif "mediaType" in d and d["mediaType"] == "text/html":

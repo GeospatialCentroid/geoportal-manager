@@ -36,8 +36,8 @@ def get_ref_link(_json_refs,_type):
                     if type(json_refs[j]) is not list and json_refs[j].find("[")>-1:
                         return json_refs[j].replace('[', '').replace(']', '').split(",")
                     elif type(json_refs[j]) is list:
-
-                        return json_refs[j][0]['url']
+                        # we have a list - consider adjustment for conformance
+                        return json_refs[j]
                     else:
                         return json_refs[j]
     else:
