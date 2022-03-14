@@ -204,7 +204,7 @@ class Layer_Manager {
         if (typeof(o.fillColor)!="undefined"){
          html += "<div class='color_box'><input type='text' id='"+id+"_fill_color' value='"+o.fillColor+"'/><br/><label for='"+id+"_fill_color' >"+LANG.MAP.Fill_COLOR+"</label></div>"
         }
-        if (layer.type !="esriPMS"){
+        if (! $.inArray(layer.type,["esriPMS","esriSMS"])){
             html+=this.get_slit_cell_control(id)
         }
 
