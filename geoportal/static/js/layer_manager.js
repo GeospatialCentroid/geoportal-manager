@@ -327,7 +327,21 @@ class Layer_Manager {
             var temp_obj = {}
             temp_obj[_attr]=hexcolor
             layer.layer_obj.setStyle(temp_obj)
+
+            //make exception for markers
+            if(layer.type=="esriSMS"){
+
+                if(_attr=="fillColor"){
+                    $("._marker_class"+_id).css({"background-color":hexcolor})
+                }else{
+                    $("._marker_class"+_id).css({"border-color":hexcolor})
+                }
+
+
+            }
             analytics_manager.track_event("map_tab","change_"+_attr,"layer_id",_id)
+
+
         })
         // make sure the panel shows-up on top
         $("#"+elm_id).next().next().css({"z-index": 10001});
@@ -346,21 +360,23 @@ class Layer_Manager {
             value:value,
             range: "min",
             slide: function( event, ui ) {
-
-                var ext ="_slider"
-                var id = $(this).attr('id')
-                var _id= id.substring(0,id.length-ext.length)
+                 var ext ="_slider"
+                 var id = $(this).attr('id')
+                 var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
-                     if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
-                        layer.layer_obj.setOpacity(ui.value/100)
-                     }else{
-                        layer.layer_obj.setStyle({
-                        opacity: ui.value/100,
-                        fillOpacity: ui.value/100
-                      })
+                 var val =ui.value/100
+                 if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
+                    layer.layer_obj.setOpacity(val)
+                 }else if(layer.type=="esriSMS"){
+                       $("._marker_class"+_id).css({"opacity":val})
+                 }else{
+                    layer.layer_obj.setStyle({
+                    opacity: val,
+                    fillOpacity: val
+                  })
 
-                     }
-                     analytics_manager.track_event("map_tab","transparency_slider","layer_id",_id,3)
+                 }
+                 analytics_manager.track_event("map_tab","transparency_slider","layer_id",_id,3)
               }
 
          })
