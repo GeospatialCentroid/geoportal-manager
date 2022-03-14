@@ -611,7 +611,7 @@ class Layer_Manager {
 
              // in the case of polygons the renderer.symbol.color refers to fill
              if(symbol.color && type != "esriSLS"){
-                 var color_arr=symbol.color
+                     var color_arr=symbol.color
                      layer_options.fillColor = rgbToHex(color_arr[0], color_arr[1], color_arr[2])
                      layer_options.fillOpacity = 255/Number(color_arr[2])
 
@@ -619,12 +619,10 @@ class Layer_Manager {
                         layer_options.fill=false
                      }
                 }
-                // we are dealing with a simple somethings
-                //TEST - to see about creating  custom points
+                // we are dealing with markers
                 var resource_marker_class = "_marker_class"+_resource_id
 
-                //todo add controls to make this class editable
-                $("<style type='text/css'> ."+resource_marker_class+"{ border: 1px solid #FFFFFF; background-color:rgba(0, 120, 168, 1);} </style>").appendTo("head");
+                $("<style type='text/css'> ."+resource_marker_class+"{ border: "+layer_options.weight+"px solid "+layer_options.color+"; background-color:"+layer_options.fillColor+";} </style>").appendTo("head");
 
                 layer_options.pointToLayer = function (geojson, latlng) {
                   return L.marker(latlng, {

@@ -83,7 +83,7 @@ class Filter_Manager {
     //https://stackoverflow.com/questions/895659/how-do-i-block-or-restrict-special-characters-from-input-fields-with-jquery
     $("#search").on('input', function() {
       var c = this.selectionStart,
-          r = /[^a-z0-9\s\+\-\"\']/gi,
+          r = /[^a-z0-9\s\+\-\"\'\_]/gi,
           v = $(this).val();
       if(r.test(v)) {
         $(this).val(v.replace(r, ''));
