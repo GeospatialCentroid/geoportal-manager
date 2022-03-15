@@ -112,6 +112,8 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         else:
             if isinstance(download_link, list):
                 download_link = download_link[0]
+            if isinstance(download_link, dict):
+                download_link = download_link['url']
             # todo - call this through download method to support esri bundling of download
             html = '<button type="button" class="btn btn-primary" onclick="window.open(\'' + download_link + '\')">' + \
                    args['LANG']["DOWNLOAD"]["DOWNLOAD_BUT"] + '</button>'
