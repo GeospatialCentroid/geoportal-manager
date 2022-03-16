@@ -25,6 +25,7 @@ html, body, .map{
     background-position: center;
     background-size: 24px 24px;
     background-color:#fff;
+    cursor:pointer;
 }
 .leaflet-save-but {
     background-image: url(../../images/icons/save-regular.svg);
@@ -97,4 +98,17 @@ p { margin-bottom: 1em; }
 }
 .slider{
     display:none;
+}
+
+.leaflet-crop{
+    display:inline-block;
+    font-size: 20px;
+    line-height: 30px;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    vertical-align: bottom;
+}
+.enabled{
+    background-color:#ccc;
 }

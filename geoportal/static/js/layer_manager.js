@@ -465,7 +465,7 @@ class Layer_Manager {
             //we have no coordinates, just show the image in a separate leaflet
              this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",}))
               map_manager.image_map.attributionControl._attributions = {};
-              map_manager.image_map.attributionControl.addAttribution(resource["dc_title_s"]);
+              map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
              return
         }
 
@@ -473,7 +473,7 @@ class Layer_Manager {
     }else if(service_method._method=="iiif"){
         this.show_image_viewer_layer(L[service_method._class][service_method._method](url))
          map_manager.image_map.attributionControl._attributions = {};
-         map_manager.image_map.attributionControl.addAttribution(resource["dc_title_s"]);
+         map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
         return
     }else if(service_method._method==""){
         //todo - get this from the service
@@ -550,6 +550,11 @@ class Layer_Manager {
     });
 
     this.layer_list_change();
+  }
+  get_attribution(resource){
+
+   return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["layer_slug_s"]+"')\" >"+resource["dc_title_s"]+"</a>"
+
   }
   show_image_viewer_layer(_layer){
         $("#image_map").width("75%")

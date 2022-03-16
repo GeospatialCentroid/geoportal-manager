@@ -29,7 +29,6 @@ def get_ref_link(_json_refs,_type):
 
         for j in json_refs:
             ref = get_ref_type(j)
-
             if ref == _type:
                     # not list and type(json_refs[j]) is not dict
                     # print("get_ref_link found",_type,type(json_refs[j]),json_refs[j])
@@ -68,6 +67,8 @@ def get_ref_type(_ref):
         return "download"
     elif _ref == 'https://schema.org/ImageObject':
         return "image"
+    elif _ref == 'http://iiif.io/api/image':
+        return "iiif"
     else:
         return ""
 

@@ -73,9 +73,11 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
     # allow users to georeference_link_html
     image_link=utils.get_ref_link(d['dct_references_s'],'image')
     if image_link and 'solr_geom' not in d:
-
+        iiif_link = utils.get_ref_link(d['dct_references_s'], 'iiif')
         # https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
         link="/geo_reference?id="+str(d['dc_identifier_s'])+"&img="+image_link+"&lng=-98.74&lat=36.25&z=8"
+        if iiif_link:
+            link+="&iiif="+iiif_link
         args['georeference_link_html']='<a href="'+link+'" target="_blank">'+ args['LANG']["DETAILS"]["GEOREFERENCE"]+'</a><br/><br/>'
 
 
