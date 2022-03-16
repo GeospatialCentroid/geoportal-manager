@@ -547,11 +547,14 @@ class Filter_Manager {
                  filter_manager.slide_position(pos_id);
                  // update the details toggle button
                 filter_manager.update_parent_toggle_buttons(panel_id)
-                $(this).find(".page_nav").hide()
+
 
                 if(DEBUGMODE){
-                    var link ="/admin/"+_resource_id
-                     $(panel_id).append("<br/><a href='"+link+"' target='_blank'>Admin - View Solr Record</a>")
+
+                     $(panel_id).append("<br/><a href='/admin/"+_resource_id+"' target='_blank'>Admin - View Solr Record</a>")
+                     $(panel_id).append("<br/><a href='/admin/resources/resource/?q="+_resource_id.substring(0,_resource_id.lastIndexOf("_"))+"' target='_blank'>Admin - Curate Record</a>")
+                }else{
+                     $(this).find(".page_nav").hide()
                 }
 
             });

@@ -160,14 +160,16 @@ def get_results_html(request,_LANG=False):
         resource=data["response"]["docs"][i]
 
         html += "<li class='list-group-item' "
-
         if "solr_geom" in resource:
             html+=" onmouseenter='filter_manager.show_bounds_str(\"" + resource["solr_geom"] + "\")'"
-
         html +=  " onmouseleave='filter_manager.hide_bounds()' >"
+
+        if 'thumbnail_path_ss' in resource:
+            html += "<div class='item_thumb_small'><img src="+resource["thumbnail_path_ss"]+"></div>"
+
         html += get_resource_header_html(resource,LANG,str(index_number)+". ")
-        html+= get_resource_button_html(resource,LANG)
-        html+= " "+get_resource_icon(resource)
+        html += get_resource_button_html(resource,LANG)
+        html += " "+get_resource_icon(resource)
         html += " " + utils.get_publisher_icon(resource,end_points)
         html += " " + utils.get_access_icon(resource)
         html+="</li>"

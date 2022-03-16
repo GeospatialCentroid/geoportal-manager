@@ -181,11 +181,8 @@ class Layer_Manager {
         var html = "<li class='ui-state-default drag_li' id='"+id+"_drag'>"
         html+="<div class='grip'><i class='fas fa-grip-vertical'></i></div>"
         html +="<div class='item_title font-weight-bold'>"+title+"</span></div>"
-        console_log(layer.layer_obj.options)
-        console_log(layer.type)
-        if (layer.type !="esriPMS"){
-            html += this.get_slider_html(id)
-        }
+
+         html += this.get_slider_html(id)
         //
         html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
         //
@@ -219,11 +216,7 @@ class Layer_Manager {
         this.make_color_palette(id+'_line_color',"color")
         this.make_color_palette(id+'_fill_color',"fillColor")
 
-        if (layer.type !="esriPMS"){
-            // markers not able to be made transparent
-            this.make_slider(id+'_slider',100)
-        }
-
+        this.make_slider(id+'_slider',100)
 
   }
   show_details(_resource_id){
@@ -329,18 +322,18 @@ class Layer_Manager {
             layer.layer_obj.setStyle(temp_obj)
 
             //make exception for markers
-            if(layer.type=="esriSMS"){
-
+            if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
+                //update existing and new markers
                 if(_attr=="fillColor"){
                     $("._marker_class"+_id).css({"background-color":hexcolor})
+                    $("<style type='text/css'> ._marker_class"+_id+"{ background-color:"+hexcolor+";} </style>").appendTo("head");
                 }else{
                     $("._marker_class"+_id).css({"border-color":hexcolor})
+                     $("<style type='text/css'> ._marker_class"+_id+"{border-color:"+hexcolor+";} </style>").appendTo("head");
                 }
-
 
             }
             analytics_manager.track_event("map_tab","change_"+_attr,"layer_id",_id)
-
 
         })
         // make sure the panel shows-up on top
@@ -367,7 +360,7 @@ class Layer_Manager {
                  var val =ui.value/100
                  if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
                     layer.layer_obj.setOpacity(val)
-                 }else if(layer.type=="esriSMS"){
+                 }else if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
                        $("._marker_class"+_id).css({"opacity":val})
                  }else{
                     layer.layer_obj.setStyle({
@@ -438,11 +431,15 @@ class Layer_Manager {
      //check for a legend
     if(service_method._method=="tiledMapLayer" || service_method._method=="dynamicMapLayer" ){
 
-        filter_manager.load_json(layer_options.url+'/legend?f=json',layer_manager.create_legend,_resource_id)
+        // if the last character is a 0
         if (layer_options.url.substring(layer_options.url.length-1) =='0'){
             layer_options.url=layer_options.url.substring(0,layer_options.url.length-1)
         }
-
+        // might need a forward slash
+        if (layer_options.url.substring(layer_options.url.length-1) !='/'){
+            layer_options.url+="/"
+        }
+        filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
 
     console.log(service_method._class,"service_method._class")
@@ -637,6 +634,12 @@ class Layer_Manager {
                 }
                 // we are dealing with markers
                 var resource_marker_class = "_marker_class"+_resource_id
+                if(typeof(layer_options.color)=="undefined"){
+                    layer_options.color="#ffffff"
+                }
+                 if(typeof(layer_options.fillColor)=="undefined"){
+                    layer_options.fillColor="#0290ce"
+                }
 
                 $("<style type='text/css'> ."+resource_marker_class+"{ border: "+layer_options.weight+"px solid "+layer_options.color+"; background-color:"+layer_options.fillColor+";} </style>").appendTo("head");
 

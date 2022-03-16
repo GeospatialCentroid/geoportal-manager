@@ -367,6 +367,19 @@ margin-left:-15px;
  border: solid grey 1px;
 }
 
+.item_thumb_small {
+    position: relative;
+    float: right;
+    top: 0px;
+    display: inline-block;
+    margin: 5px;
+    width:50px;
+    height:auto;
+}
+.item_thumb_small img{
+     width:100%;
+     border: solid grey 1px;
+}
 
  .chip {
       display: inline-block;
@@ -703,6 +716,8 @@ position: absolute;
     width:150px;
     cursor: default;
     padding:5px;
+    max-height:200px;
+    overflow: auto;
 }
 
 

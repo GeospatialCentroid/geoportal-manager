@@ -55,7 +55,14 @@ $( function() {
             filter_manager.update_parent_toggle_buttons(".content_right")
             filter_manager.update_parent_toggle_buttons("#details_panel")
             filter_manager.update_toggle_button()
-            $("#document .page_nav").hide()
+            if(! DEBUGMODE){
+                $("#document .page_nav").hide()
+            }else{
+                //append d=1, so that debug mode remains
+                $("#document .page_nav a").each(function() {
+                   $(this).attr("href",  $(this).attr("href") + '&d=1');
+                });
+            }
     },500)
         //update the height of the results area when a change occurs
         $('#side_header').bind('resize', function(){
