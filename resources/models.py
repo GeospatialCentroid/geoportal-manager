@@ -233,9 +233,13 @@ class Resource(models.Model):
         print("we are saving!!! by:",user)
         if self.has_changed:
             for f in self.changed_fields:
+                need_to_track=True
                 print("a change has been made",f,self.get_field_diff(f))
                 d1=str(self.get_field_diff(f)[0])
                 d2=str(self.get_field_diff(f)[1])
+                print(d1,"VS",d2)
+                #make sure a change has been made
+                # if d1 !=None :
                 limit =250
                 change_type='a'
                 if user and user =='c':
@@ -243,21 +247,31 @@ class Resource(models.Model):
                     change_type='c'
                 elif user:
                     change_type='u'
-                Change_Log.objects.get_or_create(
-                    change_type=change_type,
-                    community_input=community_input,
-                    resource=self,
-                    field_name=f,
-                    # truncate really long values
-                    old=(d1[:limit-2] + '..') if len(d1) > limit else d1,
-                    new = (d2[:limit - 2] + '..') if len(d2) > limit else d2
-                )
-                #if the field is status - create a status log record
-                if f =="status_type":
-                    Status_Log.objects.get_or_create(
+
+                # the boundary box changes slightly when saved - lets skip if we're in the admin
+                if f == "bounding_box" and change_type=='u':
+                    need_to_track=False
+
+                #skip if going from None to ''
+                if d2 == "None" and d1=='':
+                    need_to_track=False
+
+                if need_to_track:
+                    Change_Log.objects.get_or_create(
+                        change_type=change_type,
+                        community_input=community_input,
                         resource=self,
-                        status_desc="From: "+d1+" to: "+d2
+                        field_name=f,
+                        # truncate really long values
+                        old=(d1[:limit-2] + '..') if len(d1) > limit else d1,
+                        new = (d2[:limit - 2] + '..') if len(d2) > limit else d2
                     )
+                    #if the field is status - create a status log record
+                    if f =="status_type":
+                        Status_Log.objects.get_or_create(
+                            resource=self,
+                            status_desc="From: "+d1+" to: "+d2
+                        )
 
 
         super(Resource, self).save(*args, **kwargs)
