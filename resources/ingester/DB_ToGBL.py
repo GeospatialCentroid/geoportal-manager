@@ -127,7 +127,7 @@ class DB_ToGBL:
         # create a parent container "p_data" to store the details
         #todo - make the rights more flexible
 
-        p_data = {"gbl_mdVersion_s": "1.0",
+        p_data = {"gbl_mdVersion_s": "Aardvark",
                   "gbl_mdModified_dt": datetime.now().strftime(date_str_fmt),
                   "dct_issued_s": pub_date,
                   "dct_accessRights_s": "Public"}  # starting dictionary with set values - could also be "Restricted"
@@ -157,7 +157,7 @@ class DB_ToGBL:
         if r.bounding_box:
             p_data["dcat_bbox"] = self.get_bounds(r.bounding_box)
             #todo resolve error Solr Error: Solr responded with an error (HTTP 400): [Reason: ERROR: [doc=87-6] Error adding field 'dcat_centroid'='-105.5665780808026,40.63192715262816' msg=Unable to parse shape given formats "lat,lon", "x y" or as WKT because java.text.ParseException: Unknown Shape definition [-105.5665780808026,40.63192715262816]]
-            # p_data["dcat_centroid"] = str(",".join(list(map(str,r.bounding_box.centroid.coords))))
+            p_data["dcat_centroid"] = str(" ".join(list(map(str,r.bounding_box.centroid.coords))))
             p_data["geom_area"] =r.bounding_box.area
             #required to store the corners for image placement
             p_data["locn_geometry"] = self.get_poly(r.bounding_box)

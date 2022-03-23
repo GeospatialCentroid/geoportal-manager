@@ -617,11 +617,11 @@ class Filter_Manager {
                 return ""
         }
     }
-    get_bounds(_locn_geometry){
+    get_bounds(geom){
 
-     if (typeof(_locn_geometry) !="undefined"){
+     if (typeof(geom) !="undefined"){
 
-        var b = this.get_bound_array(_locn_geometry)
+        var b = this.get_bound_array(geom)
         var nw = L.latLng(b[2],b[0])
         var se =  L.latLng(b[3],b[1])
 
@@ -629,13 +629,30 @@ class Filter_Manager {
         }
     }
 
-    zoom_layer(_locn_geometry){
-        this.get_bounds(_locn_geometry)
-        map_manager.zoom_rect( this.get_bounds(_locn_geometry))
+    zoom_layer(geom){
+        this.get_bounds(geom)
+        map_manager.zoom_rect( this.get_bounds(geom))
     }
     get_bound_array(geom){
-     if (typeof(geom) !="undefined"){
-        return geom.substring(9,geom.length-1).split(",")
+        if (typeof(geom) !="undefined"){
+            //check if we're dealing with an envalop or polygon
+            if (geom.indexOf("POLYGON")>-1){
+                var corners = filter_manager.get_poly_array(geom)
+                var cs=[]
+                for(var i =0;i<4;i++){
+                    var c = corners[i].split(" ")
+                    // not values come in as lng lat
+                    cs.push(L.latLng(c[1],c[0]))
+                }
+                var bounds = L.latLngBounds(cs).toBBoxString().split(",")
+                //shift the 2nd and 3rd value to conform
+                bounds.splice(1, 0, bounds.splice(2, 1)[0]);
+
+                return bounds
+
+            }else{
+                 return geom.substring(9,geom.length-1).split(",")
+            }
         }
     }
     get_poly_array(geom){
@@ -648,14 +665,14 @@ class Filter_Manager {
     show_bounds(_resource_id){
         var resource = this.get_resource(_resource_id)
         // parse the envelope - remove beginning and end
-        if(resource?.locn_geometry){
-             show_bounds_str(resource.locn_geometry)
+        if(resource?.dcat_bbox){
+             show_bounds_str(resource.dcat_bbox)
         }
 
     }
-    show_bounds_str(locn_geometry){
-        if (locn_geometry){
-            var b = this.get_bound_array(locn_geometry)
+    show_bounds_str(dcat_bbox){
+        if (dcat_bbox){
+            var b = this.get_bound_array(dcat_bbox)
             map_manager.show_highlight_rect([[b[2],b[0]],[b[3],b[1]]])
         }
     }
@@ -814,8 +831,8 @@ class Filter_Manager {
         //
         //check if the filter being removed in linked to a checkbox
         var filter_name=this.filters[$(elm).parent().index()][0]
-        if ($.inArray(filter_name,["locn_geometry","dct_issued_s"])>-1){
-            if(filter_name=="locn_geometry"){
+        if ($.inArray(filter_name,["dcat_bbox","dct_issued_s"])>-1){
+            if(filter_name=="dcat_bbox"){
                 $('#filter_bounds_checkbox').prop('checked', false);
             }else if(filter_name=="dct_issued_s"){
                  $('#filter_date_checkbox').prop('checked', false);

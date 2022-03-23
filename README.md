@@ -206,6 +206,8 @@ Other Arguments
 -r is for reference ids to target for ingestion
 Note: Be sure to include a status value so child records can be retrieved too ;)
 
+-j when you simply want to ingest the files in the 'json' folder
+
 ###### Deletion from Solr
 With the 'remove staging' (or 'ns') flag set in the django admin,
 calling the following will remove all these flagged records from solr

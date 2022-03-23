@@ -165,7 +165,7 @@ def get_results_html(request,_LANG=False):
 
         html += "<li class='list-group-item' "
         if "locn_geometry" in resource:
-            html+=" onmouseenter='filter_manager.show_bounds_str(\"" + resource["locn_geometry"] + "\")'"
+            html+=" onmouseenter='filter_manager.show_bounds_str(\"" + resource["dcat_bbox"] + "\")'"
         html +=  " onmouseleave='filter_manager.hide_bounds()' >"
 
         if 'thumbnail_path_ss' in resource:
@@ -243,8 +243,8 @@ def get_resource_button_html(resource,LANG,no_details=False):
 
     html += utils.get_toggle_but_html(resource,LANG)
 
-    if "locn_geometry" in resource:
-        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+resource["locn_geometry"]+"\")'>"+LANG["RESULT"]["ZOOM"]+"</button>"
+    if "dcat_bbox" in resource:
+        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+resource["dcat_bbox"]+"\")'>"+LANG["RESULT"]["ZOOM"]+"</button>"
 
     if download_link:
       html +="<button type='button' class='btn btn-primary' onclick='window.open(\""+download_link+"\")'>"+LANG["DOWNLOAD"]["DOWNLOAD_BUT"]+"</button>"

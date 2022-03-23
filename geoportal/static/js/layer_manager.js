@@ -133,30 +133,47 @@ class Layer_Manager {
             }
 
         }
-    //find the link in the array of links
-    for (var r in json_refs){
-            //check if it's an acceptable format
-            for (var i=0;i<$this.service_method.length;i++){
-               if (r==$this.service_method[i].ref){
+        //find the link in the array of links
+         var usable_links=[]
+            for (var r in json_refs){
+                //check if it's an acceptable format
+                for (var i=0;i<$this.service_method.length;i++){
+                   if (r==$this.service_method[i].ref){
+                        usable_links.push(r)
+                   }
 
-                    var type =""
-                    if (resource?.gbl_resourceType_sm){
-                        type = resource.gbl_resourceType_sm
-                    }
-                    console_log("And the type is: ",type)
+                }
+            }
 
-                    $this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
-                    $this.add_to_map_tab(_resource_id,z);
-                    filter_manager.update_parent_toggle_buttons(".content_right");
+        if ( usable_links.length>0){
+            var type =""
+            if (resource?.gbl_resourceType_sm){
+                type = resource.gbl_resourceType_sm
+              }
+              var priority = $this.get_priority(usable_links)
 
-                    analytics_manager.track_event("side_bar","add_layer","layer_id",_resource_id)
-                    return
-               }
+            $this.add_layer(_resource_id,json_refs[priority],resource["drawing_info"],z,priority,type)
 
+            $this.add_to_map_tab(_resource_id,z);
+            filter_manager.update_parent_toggle_buttons(".content_right");
+
+            analytics_manager.track_event("side_bar","add_layer","layer_id",_resource_id)
+        }else{
+            console_log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
+        }
+  }
+  get_priority(usable_links){
+        //pick the best one - for now just image before iiif since we can map images
+        var link_priority=["https://schema.org/ImageObject","http://iiif.io/api/image"]
+        for(var p in link_priority){
+            for (var l in usable_links){
+            console.log("compare ",usable_links[l],link_priority[p])
+                if (usable_links[l]==link_priority[p]){
+                    return usable_links[l]
+                }
             }
         }
-        console_log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
-
+        return usable_links[0]
   }
     add_to_map_tab(_resource_id,_z){
         var $this = this;
@@ -175,7 +192,7 @@ class Layer_Manager {
             title = title.substring(0,title_limit)+"..."
         }
         var download_link = filter_manager.get_download_link(resource)
-        var locn_geometry = resource.locn_geometry
+        var dcat_bbox = resource.dcat_bbox
         var add_func = "toggle_layer"
         var add_txt=LANG.RESULT.REMOVE
         var html = "<li class='ui-state-default drag_li' id='"+id+"_drag'>"
@@ -186,7 +203,7 @@ class Layer_Manager {
         //
         html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
         //
-        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+locn_geometry+"\")'>"+LANG.RESULT.ZOOM+"</button>"
+        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+dcat_bbox+"\")'>"+LANG.RESULT.ZOOM+"</button>"
         if(download_link){
               html +=download_link;
          }
@@ -442,11 +459,9 @@ class Layer_Manager {
         filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
 
-    console.log(service_method._class,"service_method._class")
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
-        console.log("CHECK the CORNERS",resource["solr_poly_geom"],filter_manager.get_poly_array(resource["solr_poly_geom"]))
-        var corners = filter_manager.get_poly_array(resource["solr_poly_geom"])
+        var corners = filter_manager.get_poly_array(resource["locn_geometry"])
         var cs=[]
         if (corners){
             for(var i =0;i<4;i++){
@@ -485,12 +500,12 @@ class Layer_Manager {
 
     }else{
 
-        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
+        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.geom_area)).addTo(this.map);
     }
 
 
     try{
-        layer_obj.setBounds(filter_manager.get_bounds(resource.locn_geometry))
+        layer_obj.setBounds(filter_manager.get_bounds(resource.geom_area))
         console_log("Success",resource)
     }catch(e){
         console_log(e)
