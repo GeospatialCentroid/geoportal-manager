@@ -157,11 +157,11 @@ class Filter_Manager {
         if ($('#filter_bounds_checkbox').is(':checked')){
             var b =layer_manager.map.getBounds()
             //search lower-left corner as the start of the range and the upper-right corner as the end of the range
-            filter_manager.add_filter("solr_geom","["+b._southWest.lat.toFixed(3)+","+b._southWest.lng.toFixed(3)+" TO "+b._northEast.lat.toFixed(3)+","+b._northEast.lng.toFixed(3)+"]")
+            filter_manager.add_filter("locn_geometry","["+b._southWest.lat.toFixed(3)+","+b._southWest.lng.toFixed(3)+" TO "+b._northEast.lat.toFixed(3)+","+b._northEast.lng.toFixed(3)+"]")
 
         }else{
            //Remove bound filter
-           this.remove_and_update_filters('solr_geom')
+           this.remove_and_update_filters('locn_geometry')
         }
     }
     remove_and_update_filters(_id){
@@ -228,7 +228,7 @@ class Filter_Manager {
         this.load_list=_list
         for (var i =0;i<this.load_list.length;i++){
            var obj = this.load_list[i]
-           this.load_json(this.base_url+"q=dc_identifier_s:"+obj.id,this.show_layer);
+           this.load_json(this.base_url+"q=dct_identifier_sm:"+obj.id,this.show_layer);
         }
     }
     show_layer(layers_data){
@@ -340,9 +340,9 @@ class Filter_Manager {
      update_facets(data){
         var $this=filter_manager
         var html = LANG.FACET.REFINE_SEARCH
-        html+= $this.get_list_group_html(LANG.FACET.TOPICS,data.facet_counts.facet_fields.dc_subject_sm,"dc_subject_sm", LANG.FACET.CATEGORIES,true)
+        html+= $this.get_list_group_html(LANG.FACET.TOPICS,data.facet_counts.facet_fields.dct_subject_sm,"dct_subject_sm", LANG.FACET.CATEGORIES,true)
         html+= $this.get_list_group_html(LANG.FACET.PLACE,data.facet_counts.facet_fields.dct_spatial_sm,'dct_spatial_sm')
-        html+= $this.get_list_group_html(LANG.FACET.AUTHOR,data.facet_counts.facet_fields.dc_creator_sm,"dc_creator_sm")
+        html+= $this.get_list_group_html(LANG.FACET.AUTHOR,data.facet_counts.facet_fields.dct_creator_sm,"dct_creator_sm")
         $("#result_wrapper .content_left").html(html)
      }
 
@@ -404,7 +404,7 @@ class Filter_Manager {
          //restrict to parent results
         var fq="&fq={!parent which='solr_type:parent'}"
         // restrict suppressed
-        //filter_str_array.push("suppressed_b:False")
+        //filter_str_array.push("gbl_suppressed_b:False")
 
          return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
     }
@@ -573,8 +573,8 @@ class Filter_Manager {
                 return ""
         }
     }
-    get_bounds(_solr_geom){
-        var b = this.get_bound_array(_solr_geom)
+    get_bounds(_locn_geometry){
+        var b = this.get_bound_array(_locn_geometry)
         var nw = L.latLng(b[2],b[0])
         var se =  L.latLng(b[3],b[1])
 
@@ -582,9 +582,9 @@ class Filter_Manager {
 
     }
 
-    zoom_layer(_solr_geom){
-        this.get_bounds(_solr_geom)
-        map_manager.zoom_rect( this.get_bounds(_solr_geom))
+    zoom_layer(_locn_geometry){
+        this.get_bounds(_locn_geometry)
+        map_manager.zoom_rect( this.get_bounds(_locn_geometry))
     }
     get_bound_array(geom){
         return geom.substring(9,geom.length-1).split(",")
@@ -599,14 +599,14 @@ class Filter_Manager {
     show_bounds(_resource_id){
         var resource = this.get_resource(_resource_id)
         // parse the envelope - remove beginning and end
-        if(resource?.solr_geom){
-             show_bounds_str(resource.solr_geom)
+        if(resource?.locn_geometry){
+             show_bounds_str(resource.locn_geometry)
         }
 
     }
-    show_bounds_str(solr_geom){
-        if (solr_geom){
-            var b = this.get_bound_array(solr_geom)
+    show_bounds_str(locn_geometry){
+        if (locn_geometry){
+            var b = this.get_bound_array(locn_geometry)
             map_manager.show_highlight_rect([[b[2],b[0]],[b[3],b[1]]])
         }
     }
@@ -619,7 +619,7 @@ class Filter_Manager {
 
         for (var i=0;i<this.all_results.length;i++){
             var obj = this.all_results[i];
-            if (obj.dc_identifier_s==_resource_id){
+            if (obj.dct_identifier_sm==_resource_id){
                 return obj
             }
          }
@@ -698,7 +698,7 @@ class Filter_Manager {
             this.reset()
         }
         // remove the filter if it doesn't make sense to have more than one ( i.e main search)
-        var single_filters = [false,"solr_geom","dct_issued_s"]
+        var single_filters = [false,"locn_geometry","dct_issued_s"]
          for (var i =0;i<this.filters.length;i++){
                  if ($.inArray(id, single_filters)>-1){
                     if(this.filters[i][0]==id){
@@ -767,8 +767,8 @@ class Filter_Manager {
         //
         //check if the filter being removed in linked to a checkbox
         var filter_name=this.filters[$(elm).parent().index()][0]
-        if ($.inArray(filter_name,["solr_geom","dct_issued_s"])>-1){
-            if(filter_name=="solr_geom"){
+        if ($.inArray(filter_name,["locn_geometry","dct_issued_s"])>-1){
+            if(filter_name=="locn_geometry"){
                 $('#filter_bounds_checkbox').prop('checked', false);
             }else if(filter_name=="dct_issued_s"){
                  $('#filter_date_checkbox').prop('checked', false);

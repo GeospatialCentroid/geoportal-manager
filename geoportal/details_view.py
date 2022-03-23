@@ -24,30 +24,30 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     d = result_data['response']['docs'][0]
 
-    args['resource_id'] = d['dc_identifier_s']
+    args['resource_id'] = d['dct_identifier_sm']
     if is_sub:
-        args['sub_title'] = d['dc_title_s']
+        args['sub_title'] = d['dct_title_s']
     else:
-        args['title'] = d['dc_title_s']
+        args['title'] = d['dct_title_s']
 
     args['desc'] = ""
-    if 'dc_description_s' in d:
-        args['desc'] = d['dc_description_s']
+    if 'dct_description_s' in d:
+        args['desc'] = d['dct_description_s']
 
     args['thumb'] = ""
     if 'thumbnail_path_ss' in d:
         args['thumb'] = d['thumbnail_path_ss']
 
     args['producer_html'] = ""
-    if "dc_creator_sm" in d:
+    if "dct_creator_sm" in d:
         l = []
-        for c in d['dc_creator_sm']:
-            l.append(get_filter_link('dc_creator_sm',c,False,True))
+        for c in d['dct_creator_sm']:
+            l.append(get_filter_link('dct_creator_sm',c,False,True))
         args['producer_html'] = ", ".join(l)
-        args['producer'] = ", ".join(d['dc_creator_sm'])
+        args['producer'] = ", ".join(d['dct_creator_sm'])
 
-    if 'solr_geom' in d:
-        args['bbox'] = d['solr_geom']
+    if 'locn_geometry' in d:
+        args['bbox'] = d['locn_geometry']
 
     args['publisher_html'] = ""
     args['publisher'] = ""
@@ -57,25 +57,25 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         args['published'] = datetime.strptime(d['dct_issued_s'], '%Y-%m-%dT%H:%M:%SZ')
 
 
-    if 'dc_publisher_sm' in d:
+    if 'dct_publisher_sm' in d:
         l = []
-        args['publisher'] = ", ".join(d['dc_publisher_sm'])
-        for c in d['dc_publisher_sm']:
-            l.append(get_filter_link('dc_publisher_sm', c,False,True))
+        args['publisher'] = ", ".join(d['dct_publisher_sm'])
+        for c in d['dct_publisher_sm']:
+            l.append(get_filter_link('dct_publisher_sm', c,False,True))
 
         args['publisher_html'] = ", ".join(l)
 
     args['type'] = ""
-    if 'layer_geom_type_s' in d:
-        args['type'] = get_filter_link('layer_geom_type_s', d['layer_geom_type_s'],False,True)
+    if 'gbl_resourceType_sm' in d:
+        args['type'] = get_filter_link('gbl_resourceType_sm', d['gbl_resourceType_sm'],False,True)
 
 
     # allow users to georeference_link_html
     image_link=utils.get_ref_link(d['dct_references_s'],'image')
-    if image_link and 'solr_geom' not in d:
+    if image_link and 'locn_geometry' not in d:
         iiif_link = utils.get_ref_link(d['dct_references_s'], 'iiif')
         # https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
-        link="/geo_reference?id="+str(d['dc_identifier_s'])+"&img="+image_link+"&lng=-98.74&lat=36.25&z=8"
+        link="/geo_reference?id="+str(d['dct_identifier_sm'])+"&img="+image_link+"&lng=-98.74&lat=36.25&z=8"
         if iiif_link:
             link+="&iiif="+iiif_link
         args['georeference_link_html']='<a href="'+link+'" target="_blank">'+ args['LANG']["DETAILS"]["GEOREFERENCE"]+'</a><br/><br/>'
@@ -123,19 +123,19 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     # create nav
     # if we have the item count don't worry about it.
-    all_records = views.get_solr_data("q=*:*&fl=layer_slug_s&rows=1421747930")
+    all_records = views.get_solr_data("q=*:*&fl=id&rows=1421747930")
     if all_records is not None:
         # find out where we're at
         ds = all_records['response']['docs']
         args['num_found'] = all_records['response']['numFound']
         for i in range(len(ds)):
-            if ds[i]['layer_slug_s'] == str(args["resource_id"]):
+            if ds[i]['id'] == str(args["resource_id"]):
                 if i>0:
-                    prev_resource_data = utils.get_reference_data(ds[i - 1]['layer_slug_s'])
+                    prev_resource_data = utils.get_reference_data(ds[i - 1]['id'])
                     args['prev_resource_url'] = utils.get_catelog_url(prev_resource_data['response']['docs'][0])
                 if i <  args['num_found'] and len(ds)>i+1:
                     # load the resource to generate the appropriate link
-                    next_resource_data= utils.get_reference_data(ds[i + 1]['layer_slug_s'])
+                    next_resource_data= utils.get_reference_data(ds[i + 1]['id'])
                     args['next_resource_url'] = utils.get_catelog_url(next_resource_data['response']['docs'][0])
 
                 args['cur_num'] = i+1
@@ -157,8 +157,8 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         args['attribute_html'] += utils.get_fields_html(d["fields"], args['LANG'])
 
     args['format'] = ""
-    if "dc_format_s" in d:
-        args['format'] =d["dc_format_s"]
+    if "dct_format_s" in d:
+        args['format'] =d["dct_format_s"]
 
     if base_url:
         args['get_catelog_html'] = base_url+ args['get_catelog_html']
@@ -170,6 +170,10 @@ def get_filter_link(facet,val,replace=False,no_class=False):
     css_class = "list-group-item d-flex justify-content-between align-items-center lil_pad"
     if no_class:
         css_class=""
+    # todo support multiple
+    if type(val) == list:
+        val= val[0]
+
     return "<a onclick=\"filter_manager.add_filter('"+facet+"','"+val+"',"+str(replace).lower()+")\" href = \"javascript: void(0)\" class =\""+css_class+"\">"+val+"</a>"
 
 

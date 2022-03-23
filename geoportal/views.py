@@ -41,7 +41,7 @@ def index(request,_LANG=False):
         args["result_html"] = html_generation.get_results_html(request, _LANG)
     else:
         # when no filter simply access first page of results
-        # args["result_html"] = html_generation.get_results_html("json = {query: 'suppressed_b:False'}", _LANG)
+        # args["result_html"] = html_generation.get_results_html("json = {query: 'gbl_suppressed_b:False'}", _LANG)
         # Added parent filter
         print("pre--base_search------",base_search)
         args["result_html"] = html_generation.get_results_html(base_search.replace(" ","%20")+"*:*", _LANG)
@@ -63,9 +63,9 @@ def index(request,_LANG=False):
                     for a in sub_args:
                         args[a] = sub_args[a]
 
-                if len(result_data['response']['docs'])>0 and "dc_source_sm" in result_data['response']['docs'][0] and parts[1]=="sub_details":
+                if len(result_data['response']['docs'])>0 and "dct_source_sm" in result_data['response']['docs'][0] and parts[1]=="sub_details":
                     # load the sub records
-                    args["sub_result_html"] = html_generation.get_results_html("q=path:"+result_data['response']['docs'][0]["dc_source_sm"][0]+".layer&rows=1000", _LANG=False)
+                    args["sub_result_html"] = html_generation.get_results_html("q=path:"+result_data['response']['docs'][0]["dct_source_sm"][0]+".layer&rows=1000", _LANG=False)
 
     start=10
     if request.GET.get('start'):
@@ -117,7 +117,7 @@ def resource_admin_page(request,resource_id):
     # for loading relative items dynamically
     args = {'STATIC_URL': settings.STATIC_URL}
 
-    args["data"]= get_solr_data("q=dc_identifier_s:" + str(resource_id))
+    args["data"]= get_solr_data("q=dct_identifier_sm:" + str(resource_id))
 
     return JsonResponse( args["data"])
 

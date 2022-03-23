@@ -168,7 +168,7 @@ class Download_Manager {
                              file_ext=$("#download_bounds_select").val()
                         }
                         console.log(layer)
-                        var file_name =layer.resource_obj["dc_title_s"]+"."+file_ext
+                        var file_name =layer.resource_obj["dct_title_s"]+"."+file_ext
                         $this.download_file(json_refs[j]+"/query?returnGeometry=true&where=1%3D1&outSR=4326&outFields=*&orderByFields=Shape%20ASC&f="+file_ext,file_name)
                     }
                 }
@@ -195,7 +195,7 @@ class Download_Manager {
            for(var i =0;i<layer_manager.layers.length;i++){
                var obj = layer_manager.layers[i]
                var id = obj["id"]
-               var title =obj.resource_obj.dc_title_s
+               var title =obj.resource_obj.dct_title_s
                var selected="checked"
 
                 if($.inArray(id,this.unselected_layers)>-1){

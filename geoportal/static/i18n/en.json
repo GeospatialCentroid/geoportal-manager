@@ -38,15 +38,15 @@
 			"historic":{"code":"000", "name":"historic","title":"Historical Scanned Maps", "desc":"Non-digital maps that have been scanned"}
 		},
 	  "FACET_FIELD": {
-		  "dc_subject_sm": "Subject",
+		  "dct_subject_sm": "Subject",
 		  "dct_spatial_sm": "Place",
-		  "dc_creator_sm": "Author",
-		  "solr_geom": "Bounds",
-		  "layer_modified_dt": "Modified Date",
+		  "dct_creator_sm": "Author",
+		  "locn_geometry": "Bounds",
+		  "gbl_mdModified_dt": "Modified Date",
 		  "dct_issued_s": "Publish Date",
 		  "b1g_keyword_sm": "Keyword",
-		  "layer_geom_type_s": "Data Type",
-		  "dc_format_s": "Format"
+		  "gbl_resourceType_sm": "Data Type",
+		  "dct_format_s": "Format"
 	  }
 	},
 	"RESULT": {
@@ -115,9 +115,9 @@
 		"TO": "to",
 		"SORT_OPTIONS": {
 			"RELEVANCE": 		{"name": "Relevance", "search": "score asc"},
-			"TITLE":            {"name": "Alphabetical", "search": "dc_title_s asc"},
-			"NEWEST":			{"name": "Publish date: newest", "search": "layer_modified_dt desc"},
-			"OLDEST":			{"name": "Publish date: oldest", "search": "layer_modified_dt asc"},
+			"TITLE":            {"name": "Alphabetical", "search": "dct_title_s asc"},
+			"NEWEST":			{"name": "Publish date: newest", "search": "gbl_mdModified_dt desc"},
+			"OLDEST":			{"name": "Publish date: oldest", "search": "gbl_mdModified_dt asc"},
 			"LARGEST":			{"name": "Area: largest", "search": "geom_area desc"},
 			"SMALLEST":			{"name": "Area: smallest", "search": "geom_area asc"}
 		}

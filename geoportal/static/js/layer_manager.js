@@ -98,7 +98,7 @@ class Layer_Manager {
 
     if(!resource){
          // we need to load the resource information
-         filter_manager.load_json(filter_manager.base_url+"q=dc_identifier_s:"+_resource_id,filter_manager.loaded_resource,_resource_id);
+         filter_manager.load_json(filter_manager.base_url+"q=dct_identifier_sm:"+_resource_id,filter_manager.loaded_resource,_resource_id);
          console_log("try again!!!")
          return
     }
@@ -140,8 +140,8 @@ class Layer_Manager {
                if (r==$this.service_method[i].ref){
 
                     var type =""
-                    if (resource?.layer_geom_type_s){
-                        type = resource.layer_geom_type_s
+                    if (resource?.gbl_resourceType_sm){
+                        type = resource.gbl_resourceType_sm
                     }
                     console_log("And the type is: ",type)
 
@@ -168,14 +168,14 @@ class Layer_Manager {
         }
         var resource = layer.resource_obj
         var o = layer.layer_obj.options
-        var id = resource.dc_identifier_s
-        var title = resource.dc_title_s
+        var id = resource.dct_identifier_sm
+        var title = resource.dct_title_s
         var title_limit=25
         if(title.length>title_limit){
             title = title.substring(0,title_limit)+"..."
         }
         var download_link = filter_manager.get_download_link(resource)
-        var solr_geom = resource.solr_geom
+        var locn_geometry = resource.locn_geometry
         var add_func = "toggle_layer"
         var add_txt=LANG.RESULT.REMOVE
         var html = "<li class='ui-state-default drag_li' id='"+id+"_drag'>"
@@ -186,7 +186,7 @@ class Layer_Manager {
         //
         html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
         //
-        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+solr_geom+"\")'>"+LANG.RESULT.ZOOM+"</button>"
+        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+locn_geometry+"\")'>"+LANG.RESULT.ZOOM+"</button>"
         if(download_link){
               html +=download_link;
          }
@@ -485,12 +485,12 @@ class Layer_Manager {
 
     }else{
 
-        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.solr_geom)).addTo(this.map);
+        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
     }
 
 
     try{
-        layer_obj.setBounds(filter_manager.get_bounds(resource.solr_geom))
+        layer_obj.setBounds(filter_manager.get_bounds(resource.locn_geometry))
         console_log("Success",resource)
     }catch(e){
         console_log(e)
@@ -553,7 +553,7 @@ class Layer_Manager {
   }
   get_attribution(resource){
 
-   return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["layer_slug_s"]+"')\" >"+resource["dc_title_s"]+"</a>"
+   return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["id"]+"')\" >"+resource["dct_title_s"]+"</a>"
 
   }
   show_image_viewer_layer(_layer){
@@ -724,7 +724,7 @@ class Layer_Manager {
             if (this.layers[i].id==_layer_id){
                 selected += "selected"
             }
-            var title = this.layers[i].resource_obj.dc_title_s;
+            var title = this.layers[i].resource_obj.dct_title_s;
             title = title.clip_text(30)
             html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
         }

@@ -83,10 +83,10 @@ class CSWToGeoBlacklight(object):
         Delete records from Solr.
 
         """
-        self.solr.delete_query("dct_provenance_s:" + self.institutions[inst])
+        self.solr.delete_query("schema_provider_s:" + self.institutions[inst])
 
     def delete_one_record(self, uuid):
-    	self.solr.delete_query("layer_slug_s:" + uuid)
+    	self.solr.delete_query("id:" + uuid)
 
     def delete_records_collection(self, collection):
         """
@@ -104,13 +104,13 @@ class CSWToGeoBlacklight(object):
         """
         Delete records from Solr.
         """
-        self.solr.delete_query("dc_publisher_sm:" + self.publisher[publisher])
+        self.solr.delete_query("dct_publisher_sm:" + self.publisher[publisher])
 
     def delete_records_subject(self, subject):
         """
         Delete records from Solr.
         """
-        self.solr.delete_query("dc_subject_sm:" + self.subject[subject])
+        self.solr.delete_query("dct_subject_sm:" + self.subject[subject])
 
 
     def update_one_record(self, uuid):

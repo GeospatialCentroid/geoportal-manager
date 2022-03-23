@@ -90,7 +90,7 @@ def get_toggle_but_html(resource,LANG):
         add_func = "filter_manager.get_layers"
     elif resource["lyr_count"] and resource["lyr_count"]>1:
         # get dynamic add text - get all the ids for use in determining if on map
-        child_arr = get_child_array(views.get_solr_data("q=path:"+resource["layer_slug_s"]+".layer&fl=layer_slug_s&rows=1000")["response"]["docs"])
+        child_arr = get_child_array(views.get_solr_data("q=path:"+resource["id"]+".layer&fl=id&rows=1000")["response"]["docs"])
 
         add_txt = get_count_text(resource,LANG)
         add_func = "filter_manager.get_layers"
@@ -107,7 +107,10 @@ def get_toggle_but_html(resource,LANG):
         if "dct_references_s" in resource and not get_service_link(resource["dct_references_s"]):
             return ""
 
-    return "<button type='button' id='" + resource["dc_identifier_s"] + "_toggle' class='btn btn-primary " + resource[ "dc_identifier_s"] + "_toggle " + extra_class + "' data-child_arr=\"" + ",".join( child_arr) + "\" onclick=\"" + add_func + "(\'" + resource["dc_identifier_s"] + "\',this)\">" + add_txt + "</button>"
+    #todo support multiple
+    if type(resource[ "dct_identifier_sm"])==list:
+        resource["dct_identifier_sm"]=resource[ "dct_identifier_sm"][0]
+    return "<button type='button' id='" + resource["dct_identifier_sm"] + "_toggle' class='btn btn-primary " + resource[ "dct_identifier_sm"] + "_toggle " + extra_class + "' data-child_arr=\"" + ",".join( child_arr) + "\" onclick=\"" + add_func + "(\'" + resource["dct_identifier_sm"] + "\',this)\">" + add_txt + "</button>"
 
 def get_child_array(children):
     """
@@ -117,7 +120,7 @@ def get_child_array(children):
     """
     child_arr = []
     for c in children:
-        child_arr.append(c["layer_slug_s"])
+        child_arr.append(c["id"])
     return child_arr
 
 def get_count_text(resource,LANG):
@@ -129,7 +132,7 @@ def get_count_text(resource,LANG):
 
 
 def get_details_but_html(resource,LANG):
-    return "<button type='button' class='btn btn-primary' href='"+get_catelog_url(resource)+"' onclick=\"filter_manager.show_details(\'" + resource["dc_identifier_s"] + "\')\">" + \
+    return "<button type='button' class='btn btn-primary' href='"+get_catelog_url(resource)+"' onclick=\"filter_manager.show_details(\'" + resource["dct_identifier_sm"] + "\')\">" + \
            LANG["RESULT"]["DETAILS"] + "</button>"
 
 def get_catelog_link_html(resource,LANG):
@@ -139,11 +142,11 @@ def get_catelog_url(resource):
     panel = "details"
     # for child layers
 
-    if "dc_source_sm" in resource:
+    if "dct_source_sm" in resource:
         panel = "sub_details"
 
 
-    return "?t=search_tab/"+panel+"/"+resource["dc_identifier_s"]
+    return "?t=search_tab/"+panel+"/"+resource["dct_identifier_sm"]
 
 def get_geom_type_icon(_geom_type):
     # returns an html icon
@@ -165,12 +168,12 @@ def get_geom_type_icon(_geom_type):
 
 def get_access_icon(resource):
     html = "<i class='fas fa-lock'></i>"
-    if resource['dc_rights_s'] == "Public":
+    if resource['dct_accessRights_s'] == "Public":
         html = "<i class='fas fa-unlock'></i>"
     return html
 
 def get_reference_data(resource_id):
-    return views.get_solr_data("q=dc_identifier_s:" + str(resource_id))
+    return views.get_solr_data("q=dct_identifier_sm:" + str(resource_id))
 
 def get_more_details_link_html(resource,LANG):
     info_link=get_ref_link(resource['dct_references_s'], "info_page")
@@ -249,8 +252,8 @@ def get_endpoints():
 def get_publisher_icon(resource,end_points,size_class=""):
     html = ""
     for e in end_points:
-       if "dc_publisher_sm" in resource:
-            for p in resource["dc_publisher_sm"]:
+       if "dct_publisher_sm" in resource:
+            for p in resource["dct_publisher_sm"]:
                 if p == e[0] and e[1]:
                     html += '<div class="pub_icon '+size_class+'"><img src="'+e[1]+'" title="'+e[0]+'"></div>'
 
