@@ -34,7 +34,7 @@ def index(request,_LANG=False):
     # for loading relative items dynamically
     args = {'STATIC_URL': settings.STATIC_URL}
     args['GOOGLE_ANALYTICS_ID']= settings.GOOGLE_ANALYTICS_ID
-    args["browse_html"] = html_generation.get_browse_html()
+    args["browse_html"] = html_generation.get_browse_html(request)
 
     # when a filter is set - load the results
     if request.GET.get('f'):
@@ -175,4 +175,14 @@ def get_suggest(request):
         suggest = urllib.request.urlopen(_url + "suggest?suggest.q=" + request.GET.get('q'))
         data= json.load(suggest)
         suggestions=data["suggest"]["mySuggester"][request.GET.get('q')]["suggestions"]
+
         return HttpResponse(json.dumps(suggestions, cls=DjangoJSONEncoder), content_type='application/json')
+
+
+def get_rss(request):
+    # for showing latest records
+    _url = settings.SOLR_URL
+    args={}
+    args["docs"] = get_solr_data("q=*:*%20AND%20solr_type:parent&sort=gbl_mdModified_dt%20desc")["response"]["docs"]
+    args["base_url"] = settings.BASE_URL
+    return TemplateResponse(request, 'geoportal/rss.html', args, content_type="application/xml")

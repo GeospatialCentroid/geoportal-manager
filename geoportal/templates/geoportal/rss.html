@@ -1,0 +1,24 @@
+{% load rss_template %}
+<rss version="2.0">
+<channel>
+    <title>New data in Mountain Scholar Geoportal</title>
+    <description>A harmonized collection of geospatial data</description>
+    <link>{{base_url}}</link>
+    <image>
+    <title>Mountain Scholar Geoportal logo</title>
+    <link>{{base_url}}</link>
+    <url>/static/images/logo.png</url>
+    </image>
+
+{% for d in docs %}
+    <item>
+        <title> {{d.dct_title_s}}</title>
+        <guid>{{d.id}}</guid>
+        <link>{{base_url}}?t=search_tab/details/{{d.id}}</link>
+        <description>{{d.dct_description_s}}</description>
+        <pubDate>{{d.gbl_mdModified_dt|convert_str_date}}</pubDate>
+    </item>
+{% endfor %}
+
+</channel>
+</rss>

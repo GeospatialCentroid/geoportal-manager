@@ -22,7 +22,7 @@ urlpatterns = [
     path('disclaimer/', views.get_disclaimer, name='get_disclaimer'),
     path('services/', views.get_services, name='get_services'),
     path('suggest/', views.get_suggest, name='get_suggest'),
-
+    path('rss/', views.get_rss, name='get_rss'),
 ]
 
 

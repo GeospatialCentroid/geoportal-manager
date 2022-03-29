@@ -73,6 +73,10 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'rss_template': 'geoportal.templatetags.rss_template',
+
+            }
         },
     },
 ]
@@ -126,9 +130,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 SOLR_USERNAME = " " #Fill in if applicable
 SOLR_PASSWORD = SOLR_PASSWORD #Fill in if applicable
-SOLR_URL = "https://{username}:{password}@ " #  URL for Solr core. Something like http://localhost:8983/solr/blacklightcore/
 
 SOLR_URL ="http://localhost:8983/solr/blacklight-core/"
+BASE_URL ="http://geo.mountainscholar.org"
 
 # DEBUG = False # Set this to True if you want more detailed
 

@@ -162,6 +162,11 @@ warning: #ff1b28
      border: 0;
 
 }
+.small{
+     font-size: .65rem;
+     border: 0;
+
+}
 #tab_panels{
       display:none;
 

@@ -1,6 +1,6 @@
 from . import views
 
-import  json
+import xml.etree.ElementTree as ET
 
 from datetime import datetime
 
@@ -14,7 +14,7 @@ from urllib.parse import unquote,urlparse,quote_plus
 
 
 
-def get_browse_html(_LANG=False):
+def get_browse_html(request,_LANG=False):
     # for SEO - render html serverside
     # facets = views.get_solr_data("q=*:*%20AND%20gbl_suppressed_b:False&rows=0&facet.mincount=1&facet=on&wt=json")
     # added parent filter
@@ -44,6 +44,20 @@ def get_browse_html(_LANG=False):
     html += get_list_group_html(-6, args['LANG']["FACET"]["FORMAT"],
                                 facets["facet_counts"]["facet_fields"]["dct_format_s"],
                                 "dct_format_s", False, False, "true")
+    # new data
+    new_data = views.get_rss(request).render()
+    root = ET.fromstring(new_data.content)
+    a_links=[]
+    a_titles = []
+    for i in root.findall('channel/item'):
+        a_titles.append(i.find("title").text+"<br/><span class='small'>"+i.find("pubDate").text+"</span>")
+        id = i.find("guid").text
+        # we want links to go directly to the details page
+        a_links.append( ' onclick="filter_manager.show_details(\'' + id +'\')" href="/?t=search_tab/details/' + id + '"')
+
+    html += get_list_group_html(-7, args['LANG']["FACET"]["NEW_DATA"],
+                                a_titles,
+                                "", False, False, "true",a_links)
 
     #
 
@@ -56,7 +70,7 @@ def get_browse_html(_LANG=False):
 
 
 ##
-def get_list_group_html(id,title, list,facet_name,translate,no_collapsed,reset):
+def get_list_group_html(id,title, list,facet_name,translate,no_collapsed,reset,a_links=False):
     # for ease of access - generate facet links which filter the content
 
     collapse='collapse'
@@ -77,11 +91,15 @@ def get_list_group_html(id,title, list,facet_name,translate,no_collapsed,reset):
 
     for i in range(len(list)):
         if i % 2 == 0:
-            params='!('+facet_name+','+list[i]+')'
-            html +='<a '
-            html += ' onclick="filter_manager.add_filter(\'' + facet_name + '\',\'' + list[i] + '\',' + reset + ')"'
-            html += ' href="/?f='+params+ '"'
-            html += ' class="list-group-item d-flex justify-content-between align-items-center lil_pad"'
+            html += '<a '
+            if not a_links:
+                params = '!(' + facet_name + ',' + list[i] + ')'
+                html += ' onclick="filter_manager.add_filter(\'' + facet_name + '\',\'' + list[i] + '\',' + reset + ')"'
+                html += ' href="/?f='+params+ '"'
+
+            else:
+                html+=a_links[i]
+            html +=' class="list-group-item d-flex justify-content-between align-items-center lil_pad"'
             html +=">"
             title =list[i]
             if translate:
@@ -89,7 +107,9 @@ def get_list_group_html(id,title, list,facet_name,translate,no_collapsed,reset):
                     title =translate[list[i]]['title']
 
             html +=title
-            html +='<span class="badge badge-primary badge-pill">'+str(list[i+1])+'</span>'
+            if not a_links:
+                html +='<span class="badge badge-primary badge-pill">'+str(list[i+1])+'</span>'
+
             html +='</a>'
 
     html+='</ul></div></div></li>'
