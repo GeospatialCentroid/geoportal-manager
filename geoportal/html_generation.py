@@ -242,7 +242,10 @@ def get_resource_header_html(resource,LANG,num):
 
     published=""
     if "dct_issued_s" in resource:
-        published = datetime.strptime(resource["dct_issued_s"], "%Y-%m-%dT%H:%M:%SZ").strftime("%d-%m-%Y")
+        try:
+            published = datetime.strptime(resource["dct_issued_s"], "%Y-%m-%dT%H:%M:%SZ").strftime("%d-%m-%Y")
+        except:
+            published = resource["dct_issued_s"]
 
     format = ""
     if "dct_format_s" in resource:

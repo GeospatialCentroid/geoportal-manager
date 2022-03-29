@@ -54,7 +54,11 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
     args['published'] = ""
 
     if 'dct_issued_s' in d:
-        args['published'] = datetime.strptime(d['dct_issued_s'], '%Y-%m-%dT%H:%M:%SZ')
+        try :
+            args['published'] = datetime.strptime(d['dct_issued_s'], '%Y-%m-%dT%H:%M:%SZ')
+        except:
+            args['published'] =d['dct_issued_s']
+
 
 
     if 'dct_publisher_sm' in d:

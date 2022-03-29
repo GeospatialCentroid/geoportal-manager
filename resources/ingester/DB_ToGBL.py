@@ -124,6 +124,9 @@ class DB_ToGBL:
         if r.modified is not None:
             pub_date= r.modified.strftime(date_str_fmt)
 
+        if not pub_date and hasattr(r, 'year'):
+            pub_date = r.year
+
         # create a parent container "p_data" to store the details
         #todo - make the rights more flexible
 

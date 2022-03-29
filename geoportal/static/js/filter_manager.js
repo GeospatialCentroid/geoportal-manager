@@ -141,7 +141,7 @@ class Filter_Manager {
           filter_manager.delay_date_change();
         }
     );
-    var start =new Date("1900-01-01T00:00:00")
+    var start =new Date("1800-01-01T00:00:00")
     var end =new Date();
     $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
     $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))

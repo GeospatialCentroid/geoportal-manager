@@ -106,9 +106,11 @@ class FileParser_CDM(FileParser):
 
         resource['year'] =  resource['date']
 
+        if resource['year'].isdigit():
+            resource['year']=int(resource['year'])
+
         if isinstance( resource['year'] , str):
             resource['year']=None
-
 
         #########
         
