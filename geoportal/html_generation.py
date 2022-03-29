@@ -279,10 +279,14 @@ def get_resource_button_html(resource,LANG,no_details=False):
 
 
 def get_resource_icon(resource):
+
     # get all the icons
     #todo use the 'dct_accessRights_s' icon for public data to show an open padlock
     html=""
     if "gbl_resourceType_sm" in resource:
+        # todo support mulitple types
+        if type(resource["gbl_resourceType_sm"])==list:
+            resource["gbl_resourceType_sm"]=resource["gbl_resourceType_sm"][0]
         html+=utils.get_geom_type_icon(resource["gbl_resourceType_sm"])
     return html
 

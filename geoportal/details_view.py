@@ -51,7 +51,6 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     args['publisher_html'] = ""
     args['publisher'] = ""
-    args['published'] = ""
 
     if 'dct_issued_s' in d:
         try :
