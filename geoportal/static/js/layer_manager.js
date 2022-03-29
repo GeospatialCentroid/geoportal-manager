@@ -18,6 +18,7 @@ class Layer_Manager {
     // manage the
     // keep track of the layers that are added to the map
     this.layers=[]
+    this.image_layers=[]
 
     this.service_method = []
     $this=this
@@ -476,6 +477,7 @@ class Layer_Manager {
                 corners: cs,
                     }).addTo(this.map);
 
+
         }else{
             //we have no coordinates, just show the image in a separate leaflet
              this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",}))
@@ -572,27 +574,23 @@ class Layer_Manager {
 
   }
   show_image_viewer_layer(_layer){
+        var  $this = this
         $("#image_map").width("75%")
         $("#image_map").show();
         map_manager.update_map_size()
 
          // remove existing layers
-         try{
-            map_manager.image_map.eachLayer(function (layer) {
-                if (typeof(layer._corner)=="undefined"){
-                    layer.remove();
-                }
-            });
-         }catch(e){
-            console.log(e)
-
-         }
+         console.log('remove existing layers')
+        for (var i in $this.image_layers){
+            console.log("remove", $this.image_layers[i])
+            map_manager.image_map.removeLayer($this.image_layers[i]);
+        }
 
          $(".leaflet-spinner").show();
          setTimeout(function(){
              _layer.addTo(map_manager.image_map);
              _layer.on("load",function() {  $(".leaflet-spinner").hide(); });
-
+            $this.image_layers.push(_layer)
          },500);
 
   }
