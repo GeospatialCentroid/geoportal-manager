@@ -45,7 +45,9 @@ class DB_ToGBL:
             # "Layer ID": ["gbl_wxsIdentifier_s"],
             "thumbnail": ["thumbnail_path_ss"],
 
-            "temporal_coverage": ["dct_temporal_sm"]
+            "temporal_coverage": ["dct_temporal_sm"],
+            "license_info": ["dct_rights_sm"],
+
 
         }
         self.multiple_dict = {  # dictionary to translate multivalue Dublin Core/GBL fields into GBLJson

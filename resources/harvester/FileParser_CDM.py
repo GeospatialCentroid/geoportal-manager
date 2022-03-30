@@ -168,6 +168,8 @@ class FileParser_CDM(FileParser):
 
         # add historic category for CONTENTdm
         resource["categories"]=['historic']
+        if "coveraa" in resource:
+            resource["places"] = self.get_places(resource, resource["coveraa"].split(";"))
 
         # print(*resource["urls"])
 

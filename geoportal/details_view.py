@@ -170,6 +170,11 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     if base_url:
         args['get_catelog_html'] = base_url+ args['get_catelog_html']
+
+    if "dct_rights_sm" in d:
+        if type(d["dct_rights_sm"])==list:
+            d["dct_rights_sm"] =d["dct_rights_sm"][0]
+        args['rights'] = d["dct_rights_sm"]
     return args
 
 

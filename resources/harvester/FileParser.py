@@ -132,7 +132,7 @@ class FileParser:
                         all_values.append("")
                 csvout.writerow(all_values)
 
-    def get_places(self,r):
+    def get_places(self,r,tags=[]):
         '''
         Look through the places file and see if there are any matches with the tags lists
         todo - make this more robust
@@ -140,7 +140,6 @@ class FileParser:
         :return:
         '''
         places=[]
-        tags =[]
         if 'tags' in r:
             tags=r['tags']
             print('tags',tags)
