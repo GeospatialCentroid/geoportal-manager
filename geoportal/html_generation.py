@@ -224,7 +224,7 @@ def get_filter_str(filter_arr):
             filter_str_array.append(f_id + "\"" + f[1] + "\"")
 
         # set e parent path
-        if f[0] == "path":
+        if f[0] == "dct_isPartOf_sm":
             has_parent_path=True
 
     # restrict suppressed

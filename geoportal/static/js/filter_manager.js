@@ -496,7 +496,7 @@ class Filter_Manager {
 
         // either get all the children or just the filtered one
         // start with no filters
-         var filters_copy = [["path",String(_resource_id)+".layer"]]; // make suret he parent path is present so the search returns the children
+         var filters_copy = [["dct_isPartOf_sm",String(_resource_id)]]; // make suret he parent path is present so the search returns the children
         // when the search is performed from the details page of the parent record - show all the children
         //otherwise get all the filtered children of the parent
        if(this.panel_name!="details"){

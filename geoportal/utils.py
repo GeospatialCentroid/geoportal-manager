@@ -176,7 +176,9 @@ def get_reference_data(resource_id):
     return views.get_solr_data("q=dct_identifier_sm:" + str(resource_id))
 
 def get_more_details_link_html(resource,LANG):
-    info_link=get_ref_link(resource['dct_references_s'], "info_page")
+    info_link= None
+    if 'dct_references_s' in resource:
+        info_link=get_ref_link(resource['dct_references_s'], "info_page")
     if info_link:
         html=""
         if isinstance(info_link, str):

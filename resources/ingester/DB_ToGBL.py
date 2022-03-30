@@ -174,13 +174,6 @@ class DB_ToGBL:
         if self.verbosity > 1:
             print(ref, "ref")
 
-        # get the layers and their attributes to be added to the json record
-        # todo - consider pulling additional information from a second request viewing the layer on the map
-        # layer_json = json.dumps(r.layer_json, indent = 4) # to show while testing
-        # print(layer_json)
-
-        # if r.layer_json is not None and "layers" in r.layer_json:
-        #     r.layers = r.layer_json["layers"]
 
 
         p_data["lyr_count"] = len(r.layers)
@@ -211,6 +204,9 @@ class DB_ToGBL:
             # add the children to the parent
 
             p_data["_childDocuments_"] = child_docs
+            # remove parent urls
+            # p_data["dct_references_s"]={}
+
         elif len(child_docs)==1:
             # make the parent a child
             p_data = child_docs[0]
@@ -276,7 +272,7 @@ class DB_ToGBL:
         # todo assign the geometry type?
 
         # add attribute information
-        if _l.layer_json and 'fields' in _l.layer_json:
+        if _l.layer_json and 'fields' in _l.layer_json and 'type' in _l.layer_json["fields"][0]:
             l_data["fields"] = _l.layer_json["fields"]
 
         # add preset drawing details
@@ -325,7 +321,7 @@ class DB_ToGBL:
         # when there are more than 1 children - suppress the records and store with parent
         if not is_parent:
             l_data["solr_type"] = "child"
-            l_data["path"] = r.resource_id + ".layer"
+            # l_data["path"] = r.resource_id + ".layer"
             l_data["gbl_suppressed_b"] = False #True
             #store a direct reference to the parent
             l_data["dct_isPartOf_sm"] = r.resource_id

@@ -76,7 +76,9 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
 
     # allow users to georeference_link_html
-    image_link=utils.get_ref_link(d['dct_references_s'],'image')
+    image_link=None
+    if 'dct_references_s' in d:
+        image_link=utils.get_ref_link(d['dct_references_s'],'image')
     if image_link and 'locn_geometry' not in d:
         iiif_link = utils.get_ref_link(d['dct_references_s'], 'iiif')
         # https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
@@ -92,8 +94,9 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     # generate the download links
     args['download_link_html'] = None
-    print(d['dct_references_s'])
-    download_link = utils.get_ref_link(d['dct_references_s'], "download")
+    download_link = None
+    if 'dct_references_s' in d:
+        download_link = utils.get_ref_link(d['dct_references_s'], "download")
     if download_link:
         print(download_link, type(download_link), "download_link")
         if  isinstance(download_link, list) and len(download_link) > 1:
