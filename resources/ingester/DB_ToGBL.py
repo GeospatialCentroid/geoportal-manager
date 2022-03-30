@@ -31,9 +31,10 @@ class DB_ToGBL:
 
             # "Accrual Method": ["dct_accrualMethod_s"],
             "title": ["dct_title_s"],
-            "alt_title": ["dct_alternativeTitle_sm"],
+
             # we're only supporting one alterate title but could be '|' separator
-            "description": ["dct_description_s"],
+            "alt_title": ["dct_alternativeTitle_sm"],
+            "description": ["dct_description_sm"],
 
             "year": ["gbl_indexYear_im"],
             # "owner": ["schema_provider_s"],
@@ -50,7 +51,7 @@ class DB_ToGBL:
         self.multiple_dict = {  # dictionary to translate multivalue Dublin Core/GBL fields into GBLJson
 
             "category": ["dct_subject_sm"],
-            "tag": ["b1g_keyword_sm"],
+            "tag": ["dcat_keyword_sm"],
 
             "place": ["dct_spatial_sm"],
             # todo use owner 'full_name' if available
@@ -327,7 +328,7 @@ class DB_ToGBL:
             l_data["path"] = r.resource_id + ".layer"
             l_data["gbl_suppressed_b"] = False #True
             #store a direct reference to the parent
-            l_data["dct_source_sm"] = r.resource_id
+            l_data["dct_isPartOf_sm"] = r.resource_id
 
         # Add the date
         date_str_fmt = "%Y-%m-%dT%H:%M:%SZ"

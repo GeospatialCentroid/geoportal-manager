@@ -101,14 +101,10 @@ class Change_LogInline(admin.StackedInline):
     extra = 0
 
 class ResourceInline(admin.StackedInline):
-    model = Resource
+    model = Resource.parent.through
+    fk_name = "from_resource" # not work "parent_resource" "resource_id", "parent_id", from_resource_id, to_resource_id
     classes = ['collapse']
-    # fields = ('title','type', 'geometry_type', "format")
-    fieldsets = [
-        (None, {'fields': ['title']}),
-        (None, {'fields': [('type', 'geometry_type', "format")]}),
-        (None, {'fields': ['status_type']})
-    ]
+    verbose_name = "Parent Resource"
 
     extra = 0
     show_change_link=True
@@ -143,6 +139,7 @@ class ResourceAdmin(OSMGeoAdmin):
         (None, {'fields': ['resource_id','year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
         (None, {'fields': ['status_type','end_point']}),
+        (None, {'fields': [('resource_type')]}),
         (None, {'fields': [('type', 'geometry_type', "format")]}),
 
         (None, {'fields': ["get_thumb", "thumbnail"]}),
@@ -160,7 +157,6 @@ class ResourceAdmin(OSMGeoAdmin):
         (None, {'fields': ["_raw_json"]}),
         (None, {'fields': ["_layer_json"]}),
         (None, {'fields': ["license_info"]}),
-        (None, {'fields': ["parent"]}),
 
     ]
 

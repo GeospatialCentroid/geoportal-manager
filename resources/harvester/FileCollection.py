@@ -201,7 +201,7 @@ class FileCollection:
                        "created": obj['created'],
                        "modified": obj['modified'],
                        "accessioned": datetime.now().strftime("%Y-%m-%d %H:%M:%S+00:00"),  # to remove the milliseconds
-                       "parent": parent_resource}
+                       }
 
         try:
             r = Resource.objects.get(resource_id=obj['id'], end_point=self.end_point)
@@ -260,6 +260,9 @@ class FileCollection:
                 # note the place is unique on two columns so use both to avoid duplicates
                 ps = p.split("|")
                 r.place.add(Place.objects.get_or_create(name=ps[0], name_lsad=ps[1])[0])
+
+        if parent_resource:
+            r.parent.add(parent_resource)
 
         # and lastly - create the urls  by looping over the ones in the resources
         for u in obj['urls']:

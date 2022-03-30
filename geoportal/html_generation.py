@@ -27,12 +27,12 @@ def get_browse_html(request,_LANG=False):
     html += get_list_group_html(-1,args['LANG']["FACET"]["TOPICS"], facets["facet_counts"]["facet_fields"]["dct_subject_sm"],
                                      "dct_subject_sm", args['LANG']["FACET"]["CATEGORIES"], True, "true")
 
-    # html += get_list_group_html(-2, args['LANG']["FACET"]["PRODUCERS"],
-    #                             facets["facet_counts"]["facet_fields"]["dct_publisher_s"],
-    #                             "dct_publisher_sm", False, True, "true")
+    html += get_list_group_html(-2, args['LANG']["FACET"]["PRODUCERS"],
+                                facets["facet_counts"]["facet_fields"]["dct_publisher_sm"],
+                                "dct_publisher_sm", False, True, "true")
     # html += get_list_group_html(-2, args['LANG']["FACET"]["KEYWORDS"],
-    #                             facets["facet_counts"]["facet_fields"]["b1g_keyword_sm"],
-    #                             "b1g_keyword_sm", False, False, "true")
+    #                             facets["facet_counts"]["facet_fields"]["dcat_keyword_sm"],
+    #                             "dcat_keyword_sm", False, False, "true")
 
     html += get_list_group_html(-3,args['LANG']["FACET"]["PLACE"], facets["facet_counts"]["facet_fields"]["dct_spatial_sm"],
                                      'dct_spatial_sm', False, False, "true")

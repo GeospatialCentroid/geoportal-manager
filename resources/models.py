@@ -110,10 +110,11 @@ class Geometry_Type(models.Model):
     name = models.CharField(max_length=100, unique=True)
     def __str__(self):
         return str(self.name)
-# class Service_Type(models.Model):
-#     name = models.CharField(max_length=100, unique=True)
-#     def __str__(self):
-#         return str(self.name)
+
+class Resource_Type(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return str(self.name)
 
 class Owner(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -158,7 +159,7 @@ class Resource(models.Model):
 
     type = models.ForeignKey(Type, on_delete=models.SET_NULL,null=True, blank=True, help_text="The service type used to visualize the data in the browser")
     geometry_type = models.ForeignKey(Geometry_Type, on_delete=models.SET_NULL, null=True, blank=True, help_text="To differentiate between vector (Point, Line, Polygon), raster (Raster, Image), and nonspatial formats (table), or a combination (Mixed). Used as icon within interface")
-    # service_type = models.ForeignKey(Service_Type, on_delete=models.SET_NULL, null=True, blank=True)
+    resource_type = models.ManyToManyField(Resource_Type, blank=True)
     format = models.ForeignKey(Format, on_delete=models.SET_NULL, null=True, blank=True, help_text="The format of the data. E.g Shapefile, GeoTIFF, JPEG, TIFF, ArcGRID, Paper Map, Geodatabase, E00 Cartographic Material, ESRI Geodatabase, SQLite Database, GeoJSON, Raster Dataset, Scanned Map, etc. Used in Facet search")
 
     license_info=RichTextField(null=True, blank=True)
@@ -172,7 +173,7 @@ class Resource(models.Model):
     layer_json = models.JSONField(null=True, blank=True)
     # Note -  when deleting parent - system hangs - need to delete each child first - a work around has been implemented
     # see admin delete override.
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='resource')
+    parent = models.ManyToManyField('self', blank=True, related_name='parent_resource')
 
     access_information = models.TextField(null=True, blank=True)
 

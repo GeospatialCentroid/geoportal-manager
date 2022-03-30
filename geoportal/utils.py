@@ -142,7 +142,7 @@ def get_catelog_url(resource):
     panel = "details"
     # for child layers
 
-    if "dct_source_sm" in resource:
+    if "dct_isPartOf_sm" in resource:
         panel = "sub_details"
 
 
@@ -208,12 +208,15 @@ def get_fields_html(_fields,lang):
         j = convert_text_to_json(f)
 
         if type(j) is dict:
-            type_str=j['type']
-            if type_str in int_type:
-                type_str = lang["DETAILS"]["NUMBER"]
+            if 'type' in j:
+                type_str=j['type']
+                if type_str in int_type:
+                    type_str = lang["DETAILS"]["NUMBER"]
+                else:
+                    type_str = lang["DETAILS"]["TEXT"]
+                html += "<tr><td>" +j['name'] + "</td><td>" + type_str + "</td></tr>"
             else:
-                type_str = lang["DETAILS"]["TEXT"]
-            html += "<tr><td>" +j['name'] + "</td><td>" + type_str + "</td></tr>"
+                html += ""
         else:
             html +=str(j)
 

@@ -44,7 +44,7 @@
 		  "locn_geometry": "Bounds",
 		  "gbl_mdModified_dt": "Modified Date",
 		  "dct_issued_s": "Publish Date",
-		  "b1g_keyword_sm": "Keyword",
+		  "dcat_keyword_sm": "Keyword",
 		  "gbl_resourceType_sm": "Data Type",
 		  "dct_format_s": "Format"
 	  }

@@ -31,7 +31,10 @@ def load_data(apps, schema_editor):
             if 'method' not in obj:
                 obj['method'] = ""
 
-            URL_Type(name=obj['name'], ref = obj['ref'],service=obj['service'],_class=obj['class'],_method=obj['method']).save()
+            try:
+                URL_Type(name=obj['name'], ref = obj['ref'],service=obj['service'],_class=obj['class'],_method=obj['method']).save()
+            except:
+                print("already loaded")
 
 
 

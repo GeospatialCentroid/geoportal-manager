@@ -63,9 +63,9 @@ def index(request,_LANG=False):
                     for a in sub_args:
                         args[a] = sub_args[a]
 
-                if len(result_data['response']['docs'])>0 and "dct_source_sm" in result_data['response']['docs'][0] and parts[1]=="sub_details":
+                if len(result_data['response']['docs'])>0 and "dct_isPartOf_sm" in result_data['response']['docs'][0] and parts[1]=="sub_details":
                     # load the sub records
-                    args["sub_result_html"] = html_generation.get_results_html("q=path:"+result_data['response']['docs'][0]["dct_source_sm"][0]+".layer&rows=1000", _LANG=False)
+                    args["sub_result_html"] = html_generation.get_results_html("q=path:"+result_data['response']['docs'][0]["dct_isPartOf_sm"][0]+".layer&rows=1000", _LANG=False)
 
     start=10
     if request.GET.get('start'):

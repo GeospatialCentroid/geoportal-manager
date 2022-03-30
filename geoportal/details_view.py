@@ -31,8 +31,10 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         args['title'] = d['dct_title_s']
 
     args['desc'] = ""
-    if 'dct_description_s' in d:
-        args['desc'] = d['dct_description_s']
+    if 'dct_description_sm' in d:
+        if type(d['dct_description_sm'])==list:
+            d['dct_description_sm']=d['dct_description_sm'][0]
+        args['desc'] = d['dct_description_sm']
 
     args['thumb'] = ""
     if 'thumbnail_path_ss' in d:
