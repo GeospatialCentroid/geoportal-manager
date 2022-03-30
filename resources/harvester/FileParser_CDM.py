@@ -166,7 +166,8 @@ class FileParser_CDM(FileParser):
                 url = self.open_prefix + url
             resource["urls"].append({'url_type': "iiif", 'url': url})
 
-
+        # add historic category for CONTENTdm
+        resource["categories"]=['historic']
 
         # print(*resource["urls"])
 

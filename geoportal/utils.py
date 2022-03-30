@@ -90,7 +90,7 @@ def get_toggle_but_html(resource,LANG):
         add_func = "filter_manager.get_layers"
     elif resource["lyr_count"] and resource["lyr_count"]>1:
         # get dynamic add text - get all the ids for use in determining if on map
-        child_arr = get_child_array(views.get_solr_data("q=path:"+resource["id"]+".layer&fl=id&rows=1000")["response"]["docs"])
+        child_arr = get_child_array(views.get_solr_data("q=dct_isPartOf_sm:"+resource["id"]+".layer&fl=id&rows=1000")["response"]["docs"])
 
         add_txt = get_count_text(resource,LANG)
         add_func = "filter_manager.get_layers"
