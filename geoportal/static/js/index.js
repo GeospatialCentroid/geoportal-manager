@@ -10,7 +10,9 @@ var analytics_manager;
 if (typeof(params)=="undefined"){
     var params = {}
 }
+var last_params={}
 var usp={};// the url params object to be populated
+var browser_control=false
 
 //make sure everything is loaded before proceeding.
 class Load_Manager {
@@ -232,27 +234,30 @@ function init_tabs(){
 
     // click the tab and slide to the panel as appropriate
     if( !$.isEmptyObject(usp) && usp.get("t")){
-        console_log("tab",usp.get("t"))
-        var tab_parts = usp.get("t").split("/")
 
-        // move to the set search panel
-        if(tab_parts.length>1){
-            $("#nav").show()
-            filter_manager.slide_position(tab_parts[1])
-        }
-        if(tab_parts.length>2){
-           filter_manager.display_resource_id = tab_parts[2]
-        }
-
-       //auto click the tab for state saving
-        $("#"+tab_parts[0]).trigger("click")
+       move_to_tab(usp.get("t"))
     }
+}
+function move_to_tab(tab_str){
+    var tab_parts = tab_str.split("/")
+
+    // move to the set search panel
+    if(tab_parts.length>1){
+        $("#nav").show()
+        filter_manager.slide_position(tab_parts[1])
+    }
+    if(tab_parts.length>2){
+       filter_manager.display_resource_id = tab_parts[2]
+    }
+
+   //auto click the tab for state saving
+   $("#"+tab_parts[0]).trigger("click")
 }
 
 function save_params(){
     // access the managers and store the info URL sharing
 
-    var p = "/?f="+rison.encode_array(filter_manager.filters)
+    var p = "/?f="+encodeURIComponent(rison.encode_array(filter_manager.filters))
     +"&e="+rison.encode(map_manager.params)
 
     if(layer_manager && typeof(layer_manager.layers_list)!="undefined"){
@@ -286,8 +291,43 @@ function save_params(){
         p +="&d=1"
     }
 
-    window.history.replaceState(null, null, p.replaceAll(" ", "+").replaceAll("'", "~"));
+    // before saving the sate, let's make sure they are not the same
+    if(JSON.stringify(p) != JSON.stringify(last_params) && !browser_control){
+        window.history.pushState(p, null, p.replaceAll(" ", "+").replaceAll("'", "~"))
+        last_params = p
+    }
+
 }
+// enable back button support
+window.addEventListener('popstate', function(event) {
+    console.log(event,"popstate")
+    var _params={}
+    usp = new URLSearchParams(window.location.search.substring(1).replaceAll("~", "'").replaceAll("+", " "))
+
+        if (usp.get('f')!=null){
+            _params['f'] = rison.decode("!("+usp.get("f")+")")
+        }
+        if (usp.get('e')!=null){
+            _params['e'] =  rison.decode(usp.get('e'))
+        }
+
+        if (usp.get('l')!=null && usp.get('l')!="!()"){
+            _params['l'] =  rison.decode(usp.get('l'))
+        }
+        browser_control=true
+        filter_manager.remove_filters()
+        filter_manager.filters=[]
+        $("#filter_bounds_checkbox").prop("checked", false)
+        filter_manager.set_filters(_params['f'])
+        filter_manager.filter()
+
+        move_to_tab( usp.get("t"))
+
+
+        map_manager.move_map_pos( _params['e'])
+        browser_control=false
+
+}, false);
 
 function window_resize() {
         var data_table_height=0

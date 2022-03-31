@@ -484,10 +484,16 @@ class Map_Manager {
             save_params()
         }
         // also update the table view if table bounds checked
-
         table_manager?.bounds_change_handler();
         //update the search results if search results checked
         filter_manager?.bounds_change_handler();
+    }
+    move_map_pos(_params){
+        var z = Number(_params['z'])
+        var c = _params['c'].split(',')
+        var lat= Number(c[0])
+        var lng = Number(c[1])
+        this.map.setView([lat, lng], z, {animation: true});
     }
 
     set_url_params(type,value){
@@ -499,11 +505,9 @@ class Map_Manager {
     //
     init_image_map(){
       this.image_map = L.map('image_map', {
-
           center: [0, 0],
           zoom:  1,
           crs: L.CRS.Simple,
-
         });
 
         this.image_map._resetView(this.image_map.getCenter(), this.image_map.getZoom());

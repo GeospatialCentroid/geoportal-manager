@@ -79,8 +79,34 @@ class Filter_Manager {
              $("#search_but").trigger("click")
         }
     })
+    // prevent special characters in search
+    //https://stackoverflow.com/questions/895659/how-do-i-block-or-restrict-special-characters-from-input-fields-with-jquery
+    $("#search").on('input', function() {
+      var c = this.selectionStart,
+          r = /[^a-z0-9\s\+\-\"\'\_]/gi,
+          v = $(this).val();
+      if(r.test(v)) {
+        $(this).val(v.replace(r, ''));
+        c--;
+      }
+      this.setSelectionRange(c, c);
+    });
     //
-
+   $("#search").autocomplete({
+     source: function(request, response) {
+         $.get('/suggest', { q: request.term }, function(data) {
+           response($.map( data, function( item ) {
+                return {
+                    label: item.term,
+                    value: item.term
+                }
+            }));
+        })},
+      minLength: 2,
+      select: function( event, ui ) {
+         $("#search_but").trigger("click")
+      }
+    });
     // detect scroll bottom
     $("#result_wrapper").scroll( function(e) {
          if (Math.round($(this).scrollTop() + $(this).innerHeight()) >= $(this)[0].scrollHeight-1){
@@ -115,7 +141,7 @@ class Filter_Manager {
           filter_manager.delay_date_change();
         }
     );
-    var start =new Date("1900-01-01T00:00:00")
+    var start =new Date("1800-01-01T00:00:00")
     var end =new Date();
     $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
     $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
@@ -145,7 +171,7 @@ class Filter_Manager {
   }
   bounds_change_handler(){
 
-        // when the map bounds changes and the serach tab is visiable
+        // when the map bounds changes and the search tab is visible
         if ($('#filter_bounds_checkbox').is(':checked') && "search_tab"==$("#tabs").find(".active").attr("id")){
          this.update_bounds_search()
          this.filter()
@@ -216,7 +242,7 @@ class Filter_Manager {
                     var err = eval("(" + xhr.responseText + ")");
                     alert(err.Message);
                 }catch(e){
-                    console.log("ERROR",xhr)
+                    console_log("ERROR",xhr)
                 }
 
             }
@@ -323,7 +349,7 @@ class Filter_Manager {
                    if(typeof(translate[list[i]])!='undefined'){
                         title =translate[list[i]]['title']
                     }else{
-                        console.log("no translation for", list[i])
+                        console_log("no translation for", list[i])
                     }
                 }
 
@@ -346,9 +372,13 @@ class Filter_Manager {
         $("#result_wrapper .content_left").html(html)
      }
 
-    set_filters(){
+    set_filters(_params){
+
+        if(_params){
+            this.params =_params
+        }
         // when filter url parameters exist - show them and filter
-         console.log("set_filters",this.params )
+        console_log("set_filters -------",this.params )
         if(this.params){
 
             for(var i =0; i<= this.params.length;i++){
@@ -370,14 +400,14 @@ class Filter_Manager {
         this.slide_position("results");
         this.page_start=0;
         $("#result_wrapper").scrollTop(0)
-        var filter_str = this.get_filter_str()
+
         $("#result_total .spinner-border").show();
-//        // show only parents but search within both parent and children
-//        this.fq_str="{!parent which='solr_type:parent'}"
-//        +"&fq="+this.fq_str
+
         var results_url=this.result_url+"f="+rison.encode_array(filter_manager.filters)+"&rows="+this.page_rows+"&start="+this.page_start+"&sort="+this.sort_str
         $.get(results_url,this.show_results)
         //update the facets on the first search requests.
+
+        var filter_str = this.get_filter_str()
         var facet_url=this.base_url+this.facet_params+filter_str
         this.load_json(facet_url,this.update_facets)
 
@@ -396,16 +426,13 @@ class Filter_Manager {
                 f_id=''
             }
             if (f[1]!=''){
-                filter_str_array.push(f_id+f[1])
+                filter_str_array.push(f_id+f[1].replaceAll("'","\\'"))
             }
 
          }
 
          //restrict to parent results
-        var fq="&fq={!parent which='solr_type:parent'}"
-        // restrict suppressed
-        //filter_str_array.push("gbl_suppressed_b:False")
-
+         var fq="&fq={!parent which='solr_type:parent'}"
          return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
     }
     show_results(data){
@@ -466,15 +493,26 @@ class Filter_Manager {
         }
 
     }
-    get_layers(_resource_id){
-        //get all the filtered children of the parent
-        //   $.get(this.result_url+"q=path:"+_resource_id+".layer&rows="+1000,this.show_sublayer_details)
-        console.log(filter_manager.filters)
-        var filters_copy = JSON.parse(JSON.stringify(filter_manager.filters));
-        filters_copy.push(["path",String(_resource_id)+".layer"])
+    get_layers(_resource_id,elm){
+
+        // either get all the children or just the filtered one
+        // start with no filters
+         var filters_copy = [["dct_isPartOf_sm",String(_resource_id)]]; // make suret he parent path is present so the search returns the children
+        // when the search is performed from the details page of the parent record - show all the children
+        //otherwise get all the filtered children of the parent
+       if(this.panel_name!="details"){
+
+            var children =$(elm).attr("data-child_arr").split(",")
+            var temp_array=[]
+            for(var c in children){
+
+                 temp_array.push("dct_identifier_sm:"+String(children[c]))
+
+            }
+             filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
+        }
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
         $.get(results_url,this.show_sublayer_details)
-
     }
 
     show_sublayer_details(layers_html,_resource_id){
@@ -502,15 +540,22 @@ class Filter_Manager {
          }
 
           $(panel_id).load( "/details/"+_resource_id, function() {
-                 $( window ).trigger("resize");
+
+
+                 setTimeout(function(){
+                  $( window ).trigger("resize");
+                 },500)
                  filter_manager.slide_position(pos_id);
                  // update the details toggle button
                 filter_manager.update_parent_toggle_buttons(panel_id)
-                $(this).find(".page_nav").hide()
+
 
                 if(DEBUGMODE){
-                    var link ="/admin/"+_resource_id
-                     $(panel_id).append("<br/><a href='"+link+"' target='_blank'>Admin - View Solr Record</a>")
+
+                     $(panel_id).append("<br/><a href='/admin/"+_resource_id+"' target='_blank'>Admin - View Solr Record</a>")
+                     $(panel_id).append("<br/><a href='/admin/resources/resource/?q="+_resource_id.substring(0,_resource_id.lastIndexOf("_"))+"' target='_blank'>Admin - Curate Record</a>")
+                }else{
+                     $(this).find(".page_nav").hide()
                 }
 
             });
@@ -544,7 +589,7 @@ class Filter_Manager {
                                 label = url.substring(url.indexOf('.') + 1).toUpperCase()
                             }
                             if (label && url){
-                                html += "<option value='" + url + "'>" +label+ "</option>"
+                                html += "<option value='" + url + "'>" +label.clip_text(6)+ "</option>"
                             }
                         }
                         html += "</select>"
@@ -569,25 +614,47 @@ class Filter_Manager {
               case 'http://schema.org/downloadUrl':
                     return "download"
               default:
-                console.log("Unassigned ref type",_ref)
+                console_log("Unassigned ref type",_ref)
                 return ""
         }
     }
-    get_bounds(_locn_geometry){
-        var b = this.get_bound_array(_locn_geometry)
+    get_bounds(geom){
+
+     if (typeof(geom) !="undefined"){
+
+        var b = this.get_bound_array(geom)
         var nw = L.latLng(b[2],b[0])
         var se =  L.latLng(b[3],b[1])
 
         return L.latLngBounds(L.latLng(nw), L.latLng(se))
-
+        }
     }
 
-    zoom_layer(_locn_geometry){
-        this.get_bounds(_locn_geometry)
-        map_manager.zoom_rect( this.get_bounds(_locn_geometry))
+    zoom_layer(geom){
+        this.get_bounds(geom)
+        map_manager.zoom_rect( this.get_bounds(geom))
     }
     get_bound_array(geom){
-        return geom.substring(9,geom.length-1).split(",")
+        if (typeof(geom) !="undefined"){
+            //check if we're dealing with an envalop or polygon
+            if (geom.indexOf("POLYGON")>-1){
+                var corners = filter_manager.get_poly_array(geom)
+                var cs=[]
+                for(var i =0;i<4;i++){
+                    var c = corners[i].split(" ")
+                    // not values come in as lng lat
+                    cs.push(L.latLng(c[1],c[0]))
+                }
+                var bounds = L.latLngBounds(cs).toBBoxString().split(",")
+                //shift the 2nd and 3rd value to conform
+                bounds.splice(1, 0, bounds.splice(2, 1)[0]);
+
+                return bounds
+
+            }else{
+                 return geom.substring(9,geom.length-1).split(",")
+            }
+        }
     }
     get_poly_array(geom){
         if (typeof(geom) =="undefined"){
@@ -599,14 +666,14 @@ class Filter_Manager {
     show_bounds(_resource_id){
         var resource = this.get_resource(_resource_id)
         // parse the envelope - remove beginning and end
-        if(resource?.locn_geometry){
-             show_bounds_str(resource.locn_geometry)
+        if(resource?.dcat_bbox){
+             show_bounds_str(resource.dcat_bbox)
         }
 
     }
-    show_bounds_str(locn_geometry){
-        if (locn_geometry){
-            var b = this.get_bound_array(locn_geometry)
+    show_bounds_str(dcat_bbox){
+        if (dcat_bbox){
+            var b = this.get_bound_array(dcat_bbox)
             map_manager.show_highlight_rect([[b[2],b[0]],[b[3],b[1]]])
         }
     }
@@ -624,8 +691,8 @@ class Filter_Manager {
             }
          }
 
-         console.log("unable to locate resource :(",_resource_id)
-         console.log( this.all_results)
+         console_log("unable to locate resource :(",_resource_id)
+         console_log( this.all_results)
 
     }
 
@@ -664,7 +731,7 @@ class Filter_Manager {
 
     }
     go_back(){
-        console.log("A generic function to handle the panel movement",this.panel_name)
+
         // based on the panel position choose the movement
         var go_to_panel=""
         if(this.panel_name == 'results'){
@@ -679,7 +746,6 @@ class Filter_Manager {
             go_to_panel = "layers"
         }else{
             //trigger a search
-            console.log("trigger search")
             // $("#search_but").trigger("click");
              return
         }
@@ -692,7 +758,7 @@ class Filter_Manager {
         save_params()
     }
     add_filter(id,value,reset,no_filter){
-        console.log("Check the filters:",this.filters)
+        console_log("Check the filters:",this.filters)
         //if the facet filter is from the browse screen reset the lot
         if (reset){
             this.reset()
@@ -728,13 +794,11 @@ class Filter_Manager {
         }
         //shorten the date
          //todo map the text to use translated value
-         this.show_filter_selection(id,text+": "+value,this.filters)
+         this.show_filter_selection(id,text+": "+value.clip_text(30),this.filters)
          save_params()
 
         // now that we've adjusted the height of the search area - update the height of the results area
         $('#side_header').trigger("resize");
-
-        console.log("the filters are:",this.filters)
 
         if (!no_filter){
              this.filter()
@@ -748,6 +812,7 @@ class Filter_Manager {
         // add a close button
         text+="<a class='fa fa-times btn chip_x' onclick='filter_manager.remove_filter_index(this)'></a>"
         //create a list of selected filters to easily keep track
+        console.log()
         var html="<div class='chip blue' >"+text+"</div>"
 
         $("#filter_box").append(html)
@@ -763,12 +828,12 @@ class Filter_Manager {
         return false
     }
     remove_filter_index(elm){
-        console.log("remove_filter_index",elm, $(elm).parent().index())
+        console_log("remove_filter_index",elm, $(elm).parent().index())
         //
         //check if the filter being removed in linked to a checkbox
         var filter_name=this.filters[$(elm).parent().index()][0]
-        if ($.inArray(filter_name,["locn_geometry","dct_issued_s"])>-1){
-            if(filter_name=="locn_geometry"){
+        if ($.inArray(filter_name,["dcat_bbox","dct_issued_s"])>-1){
+            if(filter_name=="dcat_bbox"){
                 $('#filter_bounds_checkbox').prop('checked', false);
             }else if(filter_name=="dct_issued_s"){
                  $('#filter_date_checkbox').prop('checked', false);
@@ -794,7 +859,11 @@ class Filter_Manager {
     remove_filter_selection(index){
       $("#filter_box").children().eq(index).remove()
     }
-
+    remove_filters(){
+        for (var i =this.filters.length-1;i>=0;i--){
+            $("#filter_box").children().eq(i).remove()
+         }
+    }
 
      //
      update_parent_but(_resource_id){

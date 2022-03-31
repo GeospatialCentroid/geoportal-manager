@@ -89,7 +89,8 @@
 		"TYPE": "Type",
 		"NUMBER": "Number",
 		"TEXT": "String",
-		"GEOREFERENCE": "Georeference this Image"
+		"GEOREFERENCE": "Georeference this Image",
+		"RIGHTS": "Rights"
 
 	},
 	"DISCLAIMER": {

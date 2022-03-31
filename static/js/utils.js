@@ -34,14 +34,14 @@ function componentToHex(c) {
 
 String.prototype.clip_text=function(limit){
     if(this.length>limit){
-       return "<div title='"+this+"'>"+this.substring(0,limit)+"...</div>"
+       return "<div class='d-inline' title='"+this.toString()+"'>"+this.substring(0,limit)+"...</div>"
     }
     return this
 }
 String.prototype.hyper_text=function(){
-    console.log(this,"hyper_text------")
+
     if(this.startsWith("http")){
-        return "<a href='"+this+"' target='_blank'>"+this+"</a>"
+        return "<a href='"+this.toString()+"' target='_blank'>"+this.toString()+"</a>"
     }
     return this
 }

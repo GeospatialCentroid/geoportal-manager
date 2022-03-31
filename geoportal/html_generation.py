@@ -221,7 +221,7 @@ def get_filter_str(filter_arr):
             filter_str_array.append(f_id + "" + f[1] + "")
         else:
             # be sure to encapsulate facet spaces
-            filter_str_array.append(f_id + "\"" + f[1] + "\"")
+            filter_str_array.append(f_id + "\"" + f[1].replace("&","%26") + "\"")
 
         # set e parent path
         if f[0] == "dct_isPartOf_sm":

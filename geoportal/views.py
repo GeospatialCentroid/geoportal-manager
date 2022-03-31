@@ -65,7 +65,6 @@ def index(request,_LANG=False):
 
                 if len(result_data['response']['docs'])>0 and "dct_isPartOf_sm" in result_data['response']['docs'][0] and parts[1]=="sub_details":
                     # load the sub records
-                    print("HEY THERE --- ",result_data['response']['docs'][0]["dct_isPartOf_sm"][0])
                     args["sub_result_html"] = html_generation.get_results_html("q=dct_isPartOf_sm:"+result_data['response']['docs'][0]["dct_isPartOf_sm"][0]+".layer&rows=1000", _LANG=False)
 
     start=10
@@ -175,7 +174,7 @@ def get_suggest(request):
         print(_url + "suggest?suggest.q=" + request.GET.get('q'))
         suggest = urllib.request.urlopen(_url + "suggest?suggest.q=" + request.GET.get('q'))
         data= json.load(suggest)
-        suggestions=data["suggest"]["mySuggester"][request.GET.get('q')]["suggestions"]
+        suggestions=data["suggest"]["mySuggester"][urllib.parse.unquote(request.GET.get('q'))]["suggestions"]
 
         return HttpResponse(json.dumps(suggestions, cls=DjangoJSONEncoder), content_type='application/json')
 

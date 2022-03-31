@@ -18,6 +18,7 @@ class Layer_Manager {
     // manage the
     // keep track of the layers that are added to the map
     this.layers=[]
+    this.image_layers=[]
 
     this.service_method = []
     $this=this
@@ -133,30 +134,47 @@ class Layer_Manager {
             }
 
         }
-    //find the link in the array of links
-    for (var r in json_refs){
-            //check if it's an acceptable format
-            for (var i=0;i<$this.service_method.length;i++){
-               if (r==$this.service_method[i].ref){
+        //find the link in the array of links
+         var usable_links=[]
+            for (var r in json_refs){
+                //check if it's an acceptable format
+                for (var i=0;i<$this.service_method.length;i++){
+                   if (r==$this.service_method[i].ref){
+                        usable_links.push(r)
+                   }
 
-                    var type =""
-                    if (resource?.gbl_resourceType_sm){
-                        type = resource.gbl_resourceType_sm
-                    }
-                    console_log("And the type is: ",type)
+                }
+            }
 
-                    $this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
-                    $this.add_to_map_tab(_resource_id,z);
-                    filter_manager.update_parent_toggle_buttons(".content_right");
+        if ( usable_links.length>0){
+            var type =""
+            if (resource?.gbl_resourceType_sm){
+                type = resource.gbl_resourceType_sm
+              }
+              var priority = $this.get_priority(usable_links)
 
-                    analytics_manager.track_event("side_bar","add_layer","layer_id",_resource_id)
-                    return
-               }
+            $this.add_layer(_resource_id,json_refs[priority],resource["drawing_info"],z,priority,type)
 
+            $this.add_to_map_tab(_resource_id,z);
+            filter_manager.update_parent_toggle_buttons(".content_right");
+
+            analytics_manager.track_event("side_bar","add_layer","layer_id",_resource_id)
+        }else{
+            console_log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
+        }
+  }
+  get_priority(usable_links){
+        //pick the best one - for now just image before iiif since we can map images
+        var link_priority=["https://schema.org/ImageObject","http://iiif.io/api/image"]
+        for(var p in link_priority){
+            for (var l in usable_links){
+            console.log("compare ",usable_links[l],link_priority[p])
+                if (usable_links[l]==link_priority[p]){
+                    return usable_links[l]
+                }
             }
         }
-        console_log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
-
+        return usable_links[0]
   }
     add_to_map_tab(_resource_id,_z){
         var $this = this;
@@ -175,21 +193,18 @@ class Layer_Manager {
             title = title.substring(0,title_limit)+"..."
         }
         var download_link = filter_manager.get_download_link(resource)
-        var locn_geometry = resource.locn_geometry
+        var dcat_bbox = resource.dcat_bbox
         var add_func = "toggle_layer"
         var add_txt=LANG.RESULT.REMOVE
         var html = "<li class='ui-state-default drag_li' id='"+id+"_drag'>"
         html+="<div class='grip'><i class='fas fa-grip-vertical'></i></div>"
         html +="<div class='item_title font-weight-bold'>"+title+"</span></div>"
-        console_log(layer.layer_obj.options)
-        console_log(layer.type)
-        if (layer.type !="esriPMS"){
-            html += this.get_slider_html(id)
-        }
+
+         html += this.get_slider_html(id)
         //
         html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
         //
-        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+locn_geometry+"\")'>"+LANG.RESULT.ZOOM+"</button>"
+        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+dcat_bbox+"\")'>"+LANG.RESULT.ZOOM+"</button>"
         if(download_link){
               html +=download_link;
          }
@@ -204,7 +219,7 @@ class Layer_Manager {
         if (typeof(o.fillColor)!="undefined"){
          html += "<div class='color_box'><input type='text' id='"+id+"_fill_color' value='"+o.fillColor+"'/><br/><label for='"+id+"_fill_color' >"+LANG.MAP.Fill_COLOR+"</label></div>"
         }
-        if (layer.type !="esriPMS"){
+        if ($.inArray(layer.type,["esriPMS","esriSMS"])==-1){
             html+=this.get_slit_cell_control(id)
         }
 
@@ -219,11 +234,7 @@ class Layer_Manager {
         this.make_color_palette(id+'_line_color',"color")
         this.make_color_palette(id+'_fill_color',"fillColor")
 
-        if (layer.type !="esriPMS"){
-            // markers not able to be made transparent
-            this.make_slider(id+'_slider',100)
-        }
-
+        this.make_slider(id+'_slider',100)
 
   }
   show_details(_resource_id){
@@ -327,7 +338,21 @@ class Layer_Manager {
             var temp_obj = {}
             temp_obj[_attr]=hexcolor
             layer.layer_obj.setStyle(temp_obj)
+
+            //make exception for markers
+            if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
+                //update existing and new markers
+                if(_attr=="fillColor"){
+                    $("._marker_class"+_id).css({"background-color":hexcolor})
+                    $("<style type='text/css'> ._marker_class"+_id+"{ background-color:"+hexcolor+";} </style>").appendTo("head");
+                }else{
+                    $("._marker_class"+_id).css({"border-color":hexcolor})
+                     $("<style type='text/css'> ._marker_class"+_id+"{border-color:"+hexcolor+";} </style>").appendTo("head");
+                }
+
+            }
             analytics_manager.track_event("map_tab","change_"+_attr,"layer_id",_id)
+
         })
         // make sure the panel shows-up on top
         $("#"+elm_id).next().next().css({"z-index": 10001});
@@ -346,21 +371,23 @@ class Layer_Manager {
             value:value,
             range: "min",
             slide: function( event, ui ) {
-
-                var ext ="_slider"
-                var id = $(this).attr('id')
-                var _id= id.substring(0,id.length-ext.length)
+                 var ext ="_slider"
+                 var id = $(this).attr('id')
+                 var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
-                     if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
-                        layer.layer_obj.setOpacity(ui.value/100)
-                     }else{
-                        layer.layer_obj.setStyle({
-                        opacity: ui.value/100,
-                        fillOpacity: ui.value/100
-                      })
+                 var val =ui.value/100
+                 if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
+                    layer.layer_obj.setOpacity(val)
+                 }else if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
+                       $("._marker_class"+_id).css({"opacity":val})
+                 }else{
+                    layer.layer_obj.setStyle({
+                    opacity: val,
+                    fillOpacity: val
+                  })
 
-                     }
-                     analytics_manager.track_event("map_tab","transparency_slider","layer_id",_id,3)
+                 }
+                 analytics_manager.track_event("map_tab","transparency_slider","layer_id",_id,3)
               }
 
          })
@@ -422,17 +449,20 @@ class Layer_Manager {
      //check for a legend
     if(service_method._method=="tiledMapLayer" || service_method._method=="dynamicMapLayer" ){
 
-        filter_manager.load_json(layer_options.url+'/legend?f=json',layer_manager.create_legend,_resource_id)
+        // if the last character is a 0
         if (layer_options.url.substring(layer_options.url.length-1) =='0'){
             layer_options.url=layer_options.url.substring(0,layer_options.url.length-1)
         }
-
+        // might need a forward slash
+        if (layer_options.url.substring(layer_options.url.length-1) !='/'){
+            layer_options.url+="/"
+        }
+        filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
-
 
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
-        var corners = filter_manager.get_poly_array(resource["solr_poly_geom"])
+        var corners = filter_manager.get_poly_array(resource["locn_geometry"])
         var cs=[]
         if (corners){
             for(var i =0;i<4;i++){
@@ -447,15 +477,20 @@ class Layer_Manager {
                 corners: cs,
                     }).addTo(this.map);
 
+
         }else{
             //we have no coordinates, just show the image in a separate leaflet
-             this.show_image_viewer_layer(L[service_method._class](url))
+             this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",}))
+              map_manager.image_map.attributionControl._attributions = {};
+              map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
              return
         }
 
 
     }else if(service_method._method=="iiif"){
         this.show_image_viewer_layer(L[service_method._class][service_method._method](url))
+         map_manager.image_map.attributionControl._attributions = {};
+         map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
         return
     }else if(service_method._method==""){
         //todo - get this from the service
@@ -467,12 +502,12 @@ class Layer_Manager {
 
     }else{
 
-        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
+        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.geom_area)).addTo(this.map);
     }
 
 
     try{
-        layer_obj.setBounds(filter_manager.get_bounds(resource.locn_geometry))
+        layer_obj.setBounds(filter_manager.get_bounds(resource.geom_area))
         console_log("Success",resource)
     }catch(e){
         console_log(e)
@@ -533,20 +568,29 @@ class Layer_Manager {
 
     this.layer_list_change();
   }
+  get_attribution(resource){
+
+   return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["id"]+"')\" >"+resource["dct_title_s"]+"</a>"
+
+  }
   show_image_viewer_layer(_layer){
+        var  $this = this
         $("#image_map").width("75%")
         $("#image_map").show();
         map_manager.update_map_size()
 
          // remove existing layers
-         map_manager.image_map.eachLayer(function (layer) {
-                if (typeof(layer._corner)=="undefined"){
-                    layer.remove();
-                }
-         });
+         console.log('remove existing layers')
+        for (var i in $this.image_layers){
+            console.log("remove", $this.image_layers[i])
+            map_manager.image_map.removeLayer($this.image_layers[i]);
+        }
 
+         $(".leaflet-spinner").show();
          setTimeout(function(){
-             _layer.addTo(map_manager.image_map)
+             _layer.addTo(map_manager.image_map);
+             _layer.on("load",function() {  $(".leaflet-spinner").hide(); });
+            $this.image_layers.push(_layer)
          },500);
 
   }
@@ -598,7 +642,7 @@ class Layer_Manager {
 
              // in the case of polygons the renderer.symbol.color refers to fill
              if(symbol.color && type != "esriSLS"){
-                 var color_arr=symbol.color
+                     var color_arr=symbol.color
                      layer_options.fillColor = rgbToHex(color_arr[0], color_arr[1], color_arr[2])
                      layer_options.fillOpacity = 255/Number(color_arr[2])
 
@@ -606,12 +650,16 @@ class Layer_Manager {
                         layer_options.fill=false
                      }
                 }
-                // we are dealing with a simple somethings
-                //TEST - to see about creating  custom points
+                // we are dealing with markers
                 var resource_marker_class = "_marker_class"+_resource_id
+                if(typeof(layer_options.color)=="undefined"){
+                    layer_options.color="#ffffff"
+                }
+                 if(typeof(layer_options.fillColor)=="undefined"){
+                    layer_options.fillColor="#0290ce"
+                }
 
-                //todo add controls to make this class editable
-                $("<style type='text/css'> ."+resource_marker_class+"{ border: 1px solid #FFFFFF; background-color:rgba(0, 120, 168, 1);} </style>").appendTo("head");
+                $("<style type='text/css'> ."+resource_marker_class+"{ border: "+layer_options.weight+"px solid "+layer_options.color+"; background-color:"+layer_options.fillColor+";} </style>").appendTo("head");
 
                 layer_options.pointToLayer = function (geojson, latlng) {
                   return L.marker(latlng, {
@@ -690,7 +738,7 @@ class Layer_Manager {
                 selected += "selected"
             }
             var title = this.layers[i].resource_obj.dct_title_s;
-            title.clip_text(30)
+            title = title.clip_text(30)
             html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
         }
         html+="<select>"
@@ -811,7 +859,7 @@ class Layer_Manager {
         for (var i=0;i<data['layers'].length;i++){
             var l = data['layers'][i]
             var layer_name=l.layerName
-            layer_name.clip_text(15)
+            layer_name = layer_name.clip_text(15)
             html += '<span class="legend_title">'+layer_name+'</span>'
 
             for (var j=0;j<l['legend'].length;j++){

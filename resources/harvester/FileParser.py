@@ -150,7 +150,7 @@ class FileParser:
                     val = p.name.lower()+"|"+p.name_lsad
                     if val not in places and t.lower() not in ["trail","basin","wells","hydro","forest"]:
                         # so that we can map to the same place - use both the name and lsad
-                        places.append(val)
+                        places.append(p.name+"|"+p.name_lsad)
 
         return places
 

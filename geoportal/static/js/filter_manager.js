@@ -83,7 +83,7 @@ class Filter_Manager {
     //https://stackoverflow.com/questions/895659/how-do-i-block-or-restrict-special-characters-from-input-fields-with-jquery
     $("#search").on('input', function() {
       var c = this.selectionStart,
-          r = /[^a-z0-9\s\+\-\"\'\_]/gi,
+          r = /[^a-z0-9\s\+\-\"\'\_\&]/gi,
           v = $(this).val();
       if(r.test(v)) {
         $(this).val(v.replace(r, ''));
@@ -94,7 +94,7 @@ class Filter_Manager {
     //
    $("#search").autocomplete({
      source: function(request, response) {
-         $.get('/suggest', { q: request.term }, function(data) {
+         $.get('/suggest', { q: encodeURIComponent(request.term) }, function(data) {
            response($.map( data, function( item ) {
                 return {
                     label: item.term,
@@ -372,9 +372,11 @@ class Filter_Manager {
         $("#result_wrapper .content_left").html(html)
      }
 
-    set_filters(){
+    set_filters(_params){
+        if(_params){
+            this.params =_params
+        }
         // when filter url parameters exist - show them and filter
-        console_log("set_filters",this.params )
         if(this.params){
 
             for(var i =0; i<= this.params.length;i++){
@@ -382,12 +384,14 @@ class Filter_Manager {
                var f = this.params[i]
                console_log(this.params[i],typeof(f)!="undefined")
                if (typeof(f)!="undefined"){
+
+                    if(f[0]=="locn_geometry"){
+                         $("#filter_bounds_checkbox").prop("checked", true)
+                    }
                     this.add_filter(f[0],f[1],false,true)
                 }
             }
-//            if (this.filters.length){
-//                this.filter()
-//            }
+
         }
     }
 
@@ -399,7 +403,7 @@ class Filter_Manager {
 
         $("#result_total .spinner-border").show();
 
-        var results_url=this.result_url+"f="+rison.encode_array(filter_manager.filters)+"&rows="+this.page_rows+"&start="+this.page_start+"&sort="+this.sort_str
+        var results_url=this.result_url+"f="+encodeURIComponent(rison.encode_array(filter_manager.filters))+"&rows="+this.page_rows+"&start="+this.page_start+"&sort="+this.sort_str
         $.get(results_url,this.show_results)
         //update the facets on the first search requests.
 
@@ -422,16 +426,13 @@ class Filter_Manager {
                 f_id=''
             }
             if (f[1]!=''){
-                filter_str_array.push(f_id+f[1].replaceAll("'","\\'"))
+               filter_str_array.push(f_id+ encodeURIComponent(f[1]).replaceAll("'","\\'"))
             }
 
          }
 
          //restrict to parent results
-        var fq="&fq={!parent which='solr_type:parent'}"
-        // restrict suppressed
-        //filter_str_array.push("gbl_suppressed_b:False")
-
+         var fq="&fq={!parent which='solr_type:parent'}"
          return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
     }
     show_results(data){
@@ -858,7 +859,11 @@ class Filter_Manager {
     remove_filter_selection(index){
       $("#filter_box").children().eq(index).remove()
     }
-
+    remove_filters(){
+        for (var i =this.filters.length-1;i>=0;i--){
+            $("#filter_box").children().eq(i).remove()
+         }
+    }
 
      //
      update_parent_but(_resource_id){

@@ -291,8 +291,6 @@ class Map_Manager {
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
-
-//         this.popup_show()
            setTimeout(function(){
                $("#popup_content").html(html)
                 //show the first returned feature
@@ -318,7 +316,8 @@ class Map_Manager {
         var props= this.features[this.result_num].properties
         var html=''
          for (var p in props){
-              html+="<tr><td>"+p+"</td><td>"+props[p]+"</td></tr>"
+            var val = String(props[p]).hyper_text()
+            html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
          }
         $("#props_table").html(html)
 
@@ -485,10 +484,16 @@ class Map_Manager {
             save_params()
         }
         // also update the table view if table bounds checked
-
         table_manager?.bounds_change_handler();
         //update the search results if search results checked
         filter_manager?.bounds_change_handler();
+    }
+    move_map_pos(_params){
+        var z = Number(_params['z'])
+        var c = _params['c'].split(',')
+        var lat= Number(c[0])
+        var lng = Number(c[1])
+        this.map.setView([lat, lng], z, {animation: true});
     }
 
     set_url_params(type,value){
@@ -500,15 +505,14 @@ class Map_Manager {
     //
     init_image_map(){
       this.image_map = L.map('image_map', {
-
           center: [0, 0],
           zoom:  1,
           crs: L.CRS.Simple,
-
         });
 
         this.image_map._resetView(this.image_map.getCenter(), this.image_map.getZoom());
         this.add_close_control()
+        this.add_load_control()
 
         //add resize control
         var $this=this
@@ -550,6 +554,28 @@ class Map_Manager {
         }
 
         L.control.save_but({ position: 'topright' }).addTo(this.image_map);
+    }
+     add_load_control(){
+        var $this = this;
+        L.Control.save_but = L.Control.extend({
+            onAdd: function(map) {
+              this._container = L.DomUtil.create('div', '');
+              this._container.classList.add('leaflet-spinner');
+               this._container.classList.add('spinner-border');
+                this._container.classList.add('spinner-border-sm');
+
+              L.DomEvent.disableClickPropagation(this._container);
+
+              this._defaultCursor = this._map._container.style.cursor;
+
+              return  this._container;
+            }
+        });
+        L.control.save_but = function(opts) {
+            return new L.Control.save_but(opts);
+        }
+
+        L.control.save_but({ position: 'bottomleft' }).addTo(this.image_map);
     }
 
     add_legend(){

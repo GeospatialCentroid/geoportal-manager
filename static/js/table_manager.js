@@ -25,6 +25,7 @@ class Table_Manager {
      this.page_rows=10;
      this.query="1=1"
      this.sort_col;
+     this.csv=""
 
 
 
@@ -59,13 +60,15 @@ class Table_Manager {
 
     $("#data_table_export_select option[value='default']").html(LANG.DATA_TABLE.EXPORT_RESULT)
     $("#data_table_export_select option[value='csv']").text(LANG.DATA_TABLE.AS_CSV)
-    $("#data_table_export_select option[value='xls']").text(LANG.DATA_TABLE.AS_XLS)
-    $("#data_table_export_select option[value='shp']").text(LANG.DATA_TABLE.AS_SHP)
+//    $("#data_table_export_select option[value='xls']").text(LANG.DATA_TABLE.AS_XLS)
+//    $("#data_table_export_select option[value='shp']").text(LANG.DATA_TABLE.AS_SHP)
 
     $('#data_table_export_select').change(
         function(){
 
-            console.log("trigger export",$(this).val())
+           if ($(this).val() =='csv'){
+                $this.download('test.csv',  $this.csv);
+           }
             $("#data_table_export_select").val("default");
             analytics_manager.track_event("table","export_data_"+$(this).val(),"layer_id",$this.selected_layer_id)
         });
@@ -287,15 +290,18 @@ class Table_Manager {
         return
     }
     var first_row = _features[0]
-
+    var csv_array=[]
     for (var p in first_row.properties){
-    //todo add domain names (alias) for headers and pass database name to function for sorting
-     var sort_icon="<i/>"
-     if(this.sort_col ==p){
-        sort_icon=this.get_sort_icon(this.sort_dir)
-     }
-     html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
+        //todo add domain names (alias) for headers and pass database name to function for sorting
+         var sort_icon="<i/>"
+         if(this.sort_col ==p){
+            sort_icon=this.get_sort_icon(this.sort_dir)
+         }
+         html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
+
+        csv_array.push(p)
     }
+    this.csv=csv_array.join(",")+"\n"
 
     html +="</tr></thead><tbody>";
     html+=this.get_rows_html(_features)
@@ -311,19 +317,21 @@ class Table_Manager {
     var html="";
     for(var i =0;i<_rows.length;i++){
         var id=0
+        var csv_array=[]
         html+="<tr onclick='table_manager.highlight_feature(this,\""+_rows[i].id+"\")' ondblclick='table_manager.zoom_feature(this,\""+_rows[i].id+"\")'>"
         for (var p in _rows[i].properties){
               var text = _rows[i].properties[p]
 
               if(typeof text === 'string'){
                 text = text.hyper_text()
-                console.log(text," hyper_text")
                 text = text.clip_text(50)
 
               }
               html+="<td>"+text+"</td>"
+              csv_array.push(text)
         }
         html+="</tr>"
+        this.csv+=csv_array.join(",")+"\n"
     }
     return html
   }
@@ -399,4 +407,16 @@ class Table_Manager {
     }
     analytics_manager.track_event("table","close_table","layer_id",this.selected_layer_id)
   }
+  download(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+
+      element.style.display = 'none';
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+    }
 }

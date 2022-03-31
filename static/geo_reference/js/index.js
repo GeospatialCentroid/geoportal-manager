@@ -12,8 +12,20 @@ $( function() {
 
     //
 
-//    $("#popup_win").trigger("click");
- $( "#dialog" ).dialog({width: "90%"});
+     $("#dialog").dialog({width: "90%"});
+
+     $("#dont_show_again_checkbox").click(function() {
+
+             //check if the checkbox is selected
+             if ($(this).is(':checked')){
+                $.cookie("dont_show_again",true);
+
+             }
+
+        });
+         if(typeof($.cookie("dont_show_again")) !='undefined'){
+            $("#dialog").dialog("close");
+         }
 
 });
 
@@ -30,14 +42,15 @@ class Geo_Reference_Manager {
 
 
         this.add_image_control();
-        var sliderControl = L.control.sliderControl({
+        var slider_control = L.control.sliderControl({
           position: "topright",
           parent:this
         });
 
-        this.map.addControl(sliderControl);
+        this.map.addControl(slider_control);
 
-        sliderControl.startSlider();
+        slider_control.startSlider();
+
 
         this.add_save_control()
         this.init_image()
@@ -55,10 +68,10 @@ class Geo_Reference_Manager {
          $this.trigger_resize()
     }
     trigger_resize(){
-     var window_width= $(window).width()
-                // account for right border
-                $( "#map" ).width(window_width-$("#image_map").width()-3)
-                this.map.invalidateSize()
+        var window_width= $(window).width()
+        // account for right border
+        $( "#map" ).width(window_width-$("#image_map").width()-3)
+        this.map.invalidateSize()
     }
     get_tile_corners(){
         // when
@@ -93,7 +106,7 @@ class Geo_Reference_Manager {
     init_map(){
         var options={}
         this.map = L.map('map',options).setView([this["lat"], this["lng"]], this["z"]);
-        var osm = L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+        var osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
         var topo = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}")
         var sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}")
 
@@ -143,14 +156,15 @@ class Geo_Reference_Manager {
             corners=false
         }
          this.distortable_img = L.distortableImageOverlay(this["img"],
-         {actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.OpacityAction, L.LockAction],
+         {actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.LockAction],
          corners: corners,
          }).addTo(this.map);
 
          //show the save button
          $(".leaflet-save-but").show();
 
-          console.log(this.distortable_img,"$this.distortable_img")
+         $(".slider").show()
+         $(".ui-slider-handle").css({"left":"100%"})
 
 
     }
@@ -159,25 +173,53 @@ class Geo_Reference_Manager {
         this.distortable_img=false
 
          $(".leaflet-save-but").hide()
+         $(".slider").hide()
    }
 
     init_image(){
-      this.image_map = L.map('image_map', {
-          minZoom: 1,
-          maxZoom: 15,
+            this.image_map = L.map('image_map', {
+//            minZoom: 1,
+//            maxZoom: 15,
+//            center: [0, 0],
+//            zoom: 3,
+//            crs: L.CRS.Simple
           center: [0, 0],
-          zoom: 3,
-          crs: L.CRS.Simple
+          zoom:  1,
+          crs: L.CRS.Simple,
+        })
+        this.add_load_control();
+        this.add_crop_control()
+
+         this.polygon_drawer = new L.Draw.Polygon( this.image_map);
+
+         var $this =this
+
+          this.image_map.on('draw:created', function (e) {
+            var type = e.layerType,
+                layer = e.layer;
+
+            layer.addTo(  $this.image_map);
+            layer.editing.enable();
+
         });
 
-        this.image_map._resetView(this.image_map.getCenter(), this.image_map.getZoom());
-        this._img = L.distortableImageOverlay(this["img"],{mode: 'lock',actions: [],suppressToolbar: true,editable:false}).addTo(this.image_map);
 
+         this.polygon_drawer.on("edit", function(event) {
+            console.log(event)
+        });
+
+
+        if(typeof(this["iiif"])!="undefined"){
+            this._img =L["tileLayer"]["iiif"](this["iiif"])
+            this._img.addTo(this.image_map);
+        }else{
+            this.image_map._resetView(this.image_map.getCenter(), this.image_map.getZoom());
+            this._img = L.distortableImageOverlay(this["img"],{mode: 'lock',actions: [],suppressToolbar: true,editable:false}).addTo(this.image_map);
+        }
         this._img.on('load', function (e) {
-         //todo turn off loading icon
-
-            console.log("hide loader")
+            $(".leaflet-spinner").hide();
         });
+
     }
     add_image_control(){
          var $this = this;
@@ -268,8 +310,64 @@ class Geo_Reference_Manager {
         }
 
         L.control.save_but({ position: 'bottomleft' }).addTo(this.map);
+    }
+     add_load_control(){
+        var $this = this;
+        L.Control.save_but = L.Control.extend({
+            onAdd: function(map) {
+              this._container = L.DomUtil.create('div', '');
+              this._container.classList.add('leaflet-spinner');
+               this._container.classList.add('spinner-border');
+                this._container.classList.add('spinner-border-sm');
+
+              L.DomEvent.disableClickPropagation(this._container);
+
+              this._defaultCursor = this._map._container.style.cursor;
+
+              return  this._container;
+            }
+        });
+        L.control.save_but = function(opts) {
+            return new L.Control.save_but(opts);
+        }
+
+        L.control.save_but({ position: 'bottomleft' }).addTo(this.image_map);
+    }
+    add_crop_control(){
+        var $this = this;
+        L.Control.but = L.Control.extend({
+            onAdd: function(map) {
+                this._container = L.DomUtil.create('div', 'leaflet-crop');
+               this._container.classList.add('leaflet-but');
+               this._container.classList.add('leaflet-bar');
+
+              this._container.classList.add('fa');
+              this._container.classList.add('fa-crop');
 
 
+              L.DomEvent.disableClickPropagation(this._container);
+
+              this._defaultCursor = this._map._container.style.cursor;
+               L.DomEvent.on(this._container, 'click', function(){
+                if($this.polygon_drawer_enabled==true){
+                      $(".leaflet-crop").removeClass("enabled")
+                      $this.polygon_drawer.disable();
+                      $this.polygon_drawer_enabled=false
+                }else{
+                      $(".leaflet-crop").addClass("enabled")
+                      $this.polygon_drawer.enable();
+                      $this.polygon_drawer_enabled=true
+                }
+               });
+
+              return  this._container;
+            }
+        });
+        L.control.but = function(opts) {
+            return new L.Control.but(opts);
+        }
+
+        L.control.but({ position: 'topright' }).addTo(this.image_map);
     }
     save_corners(corners){
         var $this=this
