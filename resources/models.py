@@ -177,6 +177,8 @@ class Resource(models.Model):
 
     access_information = models.TextField(null=True, blank=True)
 
+    missing = models.BooleanField(help_text="Should the endpoint no longer list this resource", null=True, blank=True)
+
     Status_Type = (
         ('as', 'Approved for Staging'),
         ('is', 'In Staging'),

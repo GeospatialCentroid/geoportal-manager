@@ -300,7 +300,6 @@ function save_params(){
 }
 // enable back button support
 window.addEventListener('popstate', function(event) {
-    console.log(event,"popstate")
     var _params={}
     usp = new URLSearchParams(window.location.search.substring(1).replaceAll("~", "'").replaceAll("+", " "))
 

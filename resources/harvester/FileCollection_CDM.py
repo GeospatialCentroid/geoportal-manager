@@ -75,7 +75,6 @@ class FileCollection_CDM(FileCollection):
             if self.resource_ids:
                 # only load specified resource ids
                 for r_id in self.resource_ids:
-
                     if r_id == id:
                         print("Loading", r_id)
                         self.load_data(id, r, layers_path)

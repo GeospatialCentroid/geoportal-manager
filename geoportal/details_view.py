@@ -161,7 +161,6 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     if "fields" in d:
         args['attribute_html'] = '<span class="font-weight-bold">'+args['LANG']["DETAILS"]["ATTRIBUTES"]+':</span><br/>'
-
         args['attribute_html'] += utils.get_fields_html(d["fields"], args['LANG'])
 
     args['format'] = ""

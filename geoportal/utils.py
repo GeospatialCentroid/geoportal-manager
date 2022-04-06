@@ -145,7 +145,8 @@ def get_catelog_url(resource):
     if "dct_isPartOf_sm" in resource:
         panel = "sub_details"
 
-
+    if type(resource["dct_identifier_sm"]) == list:
+        resource["dct_identifier_sm"]=resource["dct_identifier_sm"][0]
     return "?t=search_tab/"+panel+"/"+resource["dct_identifier_sm"]
 
 def get_geom_type_icon(_geom_type):
@@ -173,7 +174,7 @@ def get_access_icon(resource):
     return html
 
 def get_reference_data(resource_id):
-    return views.get_solr_data("q=dct_identifier_sm:" + str(resource_id))
+    return views.get_solr_data("q=dct_identifier_sm:" + str(resource_id).replace(":","\:"))
 
 def get_more_details_link_html(resource,LANG):
     info_link= None
@@ -207,20 +208,20 @@ def get_fields_html(_fields,lang):
 
     for f in _fields:
         #
-        j = convert_text_to_json(f)
-
-        if type(j) is dict:
-            if 'type' in j:
-                type_str=j['type']
-                if type_str in int_type:
-                    type_str = lang["DETAILS"]["NUMBER"]
+        i = convert_text_to_json(f)
+        for j in i:
+            if type(j) is dict:
+                if 'type' in j:
+                    type_str=j['type']
+                    if type_str in int_type:
+                        type_str = lang["DETAILS"]["NUMBER"]
+                    else:
+                        type_str = lang["DETAILS"]["TEXT"]
+                    html += "<tr><td>" +j['name'] + "</td><td>" + type_str + "</td></tr>"
                 else:
-                    type_str = lang["DETAILS"]["TEXT"]
-                html += "<tr><td>" +j['name'] + "</td><td>" + type_str + "</td></tr>"
+                    html += ""
             else:
-                html += ""
-        else:
-            html +=str(j)
+                html +=str(j)
 
     return html+"</table><br/>"
 

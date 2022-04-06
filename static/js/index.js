@@ -257,7 +257,7 @@ function move_to_tab(tab_str){
 function save_params(){
     // access the managers and store the info URL sharing
 
-    var p = "/?f="+rison.encode_array(filter_manager.filters)
+    var p = "/?f="+encodeURIComponent(rison.encode_array(filter_manager.filters))
     +"&e="+rison.encode(map_manager.params)
 
     if(layer_manager && typeof(layer_manager.layers_list)!="undefined"){
@@ -317,7 +317,7 @@ window.addEventListener('popstate', function(event) {
         browser_control=true
         filter_manager.remove_filters()
         filter_manager.filters=[]
-        console.log("Set the blooming filters",_params['f'])
+        $("#filter_bounds_checkbox").prop("checked", false)
         filter_manager.set_filters(_params['f'])
         filter_manager.filter()
 

@@ -73,4 +73,6 @@ class FileManager:
         else:
             print("No support yet for: ", props["end_point_type"],"?@!" )
 
+        return file_collection
+
 

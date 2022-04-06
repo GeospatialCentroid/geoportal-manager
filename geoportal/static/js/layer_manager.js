@@ -99,6 +99,7 @@ class Layer_Manager {
 
     if(!resource){
          // we need to load the resource information
+         console.log("please load")
          filter_manager.load_json(filter_manager.base_url+"q=dct_identifier_sm:"+_resource_id,filter_manager.loaded_resource,_resource_id);
          console_log("try again!!!")
          return
@@ -120,9 +121,6 @@ class Layer_Manager {
         return
     }
 
-
-    //$.inArray(type,feature_types)>-1
-    console_log("toggle_layer",resource["drawing_info"])
     if (resource["drawing_info"] && typeof(resource["drawing_info"][0])!="undefined"){
             var drawing_info = $this.convert_text_to_json(resource["drawing_info"][0])
             resource["drawing_info"]=drawing_info
@@ -502,12 +500,12 @@ class Layer_Manager {
 
     }else{
 
-        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.geom_area)).addTo(this.map);
+        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
     }
 
 
     try{
-        layer_obj.setBounds(filter_manager.get_bounds(resource.geom_area))
+        layer_obj.setBounds(filter_manager.get_bounds(resource.locn_geometry))
         console_log("Success",resource)
     }catch(e){
         console_log(e)
@@ -808,7 +806,6 @@ class Layer_Manager {
         //solr stores the json structure of nested elements as a smi usable string
         // convert the string to json for use!
         // returns a usable json object
-
         var reg = new RegExp(/(\w+)=([^\s|\[|,|\{|\}]+)/, 'gi');// get words between { and =
         text=text.replace(reg,'"$1"="$2"')
 

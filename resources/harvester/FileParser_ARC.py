@@ -99,7 +99,7 @@ class FileParser_ARC(FileParser):
         # try to get the year
         resource["year"] = self.get_year(resource)
 
-        if resource["description"] == "" and "snippet" in resource:
+        if "description" in resource and resource["description"] == "" and "snippet" in resource:
             resource["description"]=resource["snippet"]
 
 
@@ -149,7 +149,7 @@ class FileParser_ARC(FileParser):
 
         # store the urls for easy access
         resource["urls"] = []
-        if _r and not child_obj:
+        if _r and not child_obj and 'id' in resource:
             # generate a link to the landing page - only do this on parent objects
             resource["info_page"] = file_collection.open_prefix + str(resource['id'])
             resource["urls"].append({'url_type': "info_page", 'url': resource["info_page"]})
@@ -167,7 +167,7 @@ class FileParser_ARC(FileParser):
                 url =resource["url"]
                 if resource["type"].lower().find("feature")>-1:
                     url+="/0/"
-                resource["urls"].append({'url_type': resource["type"], 'url': url})
+                resource["urls"].append({'url_type': resource["type"].lower(), 'url': url})
         else:
             # we are working with a child object which has all the urls
             if "landingPage" in resource:
@@ -178,8 +178,8 @@ class FileParser_ARC(FileParser):
                 for d in resource['distribution']:
                     if d["title"] in file_collection.api_types:
                         # store the base url
-                        r_type = resource["type"]
-                        if r_type == "Raster Layer":
+                        r_type = resource["type"].lower()
+                        if r_type == "raster layer":
                             r_type = "map service"
                         resource["urls"].append({'url_type': r_type, 'url': d["accessURL"]})
                         # # set the type while we're at it

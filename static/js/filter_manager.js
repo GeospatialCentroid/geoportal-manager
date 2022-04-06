@@ -621,7 +621,7 @@ class Filter_Manager {
     get_bounds(geom){
 
      if (typeof(geom) !="undefined"){
-
+        console.log(geom)
         var b = this.get_bound_array(geom)
         var nw = L.latLng(b[2],b[0])
         var se =  L.latLng(b[3],b[1])

@@ -621,7 +621,6 @@ class Filter_Manager {
     get_bounds(geom){
 
      if (typeof(geom) !="undefined"){
-
         var b = this.get_bound_array(geom)
         var nw = L.latLng(b[2],b[0])
         var se =  L.latLng(b[3],b[1])
@@ -636,7 +635,7 @@ class Filter_Manager {
     }
     get_bound_array(geom){
         if (typeof(geom) !="undefined"){
-            //check if we're dealing with an envalop or polygon
+            //check if we're dealing with an envelop or polygon
             if (geom.indexOf("POLYGON")>-1){
                 var corners = filter_manager.get_poly_array(geom)
                 var cs=[]
@@ -652,6 +651,8 @@ class Filter_Manager {
                 return bounds
 
             }else{
+
+                console.log(geom,"about to be subbed")
                  return geom.substring(9,geom.length-1).split(",")
             }
         }

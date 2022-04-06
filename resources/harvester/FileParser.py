@@ -33,7 +33,10 @@ class FileParser:
             categories = r["categories"] # most likely an empty list
         else:
             categories=[]
-        text = r['description']
+
+        text = ''
+        if 'description' in r:
+            text = r['description']
         # append the keywords
 
         if 'tags' in r:
@@ -77,7 +80,9 @@ class FileParser:
         :return:
         """
         # -- get the year --
-        text = r['description']
+        text = None
+        if 'description' in r:
+            text = r['description']
 
         year = ""
 

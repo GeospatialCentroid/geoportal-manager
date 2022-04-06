@@ -130,7 +130,7 @@ class ParentFilter(admin.SimpleListFilter):
 
 # @admin.register(Resource)
 class ResourceAdmin(OSMGeoAdmin):
-    list_filter = ('end_point',"type","status_type","owner",ParentFilter)
+    list_filter = ('end_point',"type","status_type","owner",ParentFilter,"missing")
     search_fields = ('title','alt_title','description','resource_id')
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
@@ -138,7 +138,7 @@ class ResourceAdmin(OSMGeoAdmin):
     fieldsets = [
         (None, {'fields': ['resource_id','year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
-        (None, {'fields': ['status_type','end_point']}),
+        (None, {'fields': ['status_type','end_point',"missing"]}),
         (None, {'fields': [('resource_type')]}),
         (None, {'fields': [('type', 'geometry_type', "format")]}),
 

@@ -166,7 +166,11 @@ class DB_ToGBL:
             p_data["dcat_centroid"] = str(" ".join(list(map(str,r.bounding_box.centroid.coords))))
             p_data["geom_area"] =r.bounding_box.area
             #required to store the corners for image placement
-            p_data["locn_geometry"] = self.get_poly(r.bounding_box)
+            # check for coplanarity - and if so use the envelop instead of the polygon
+            if(int(r.bounding_box.centroid.coords[0]) ==0 or int(r.bounding_box.centroid.coords[0]) ==0) or r.bounding_box.area==0:
+                p_data["locn_geometry"] =  p_data["dcat_bbox"]
+            else:
+                p_data["locn_geometry"] = self.get_poly(r.bounding_box)
 
 
         # store the list of references for injection
@@ -185,7 +189,7 @@ class DB_ToGBL:
 
         #---------------------------------
 
-        print(r.id," has ",len(r.layers),"layers")
+        print(r.resource_id," has ",len(r.layers),"layers")
 
         # create a list to store the children
         child_docs=[]
@@ -217,13 +221,19 @@ class DB_ToGBL:
             p_data["solr_type"] = "parent"
 
             if p_data is not None:
+                if "drawingInfo" in p_data:
+                    p_data["drawing_info"] = p_data["drawingInfo"]
                 if "drawing_info" in p_data:
                     p_data["drawing_info"]=json.dumps(p_data["drawing_info"])
                 # if "fields" in p_data:
                 #     # and get the fields from the child
                 #     p_data["fields"]=p_data["fields"]
 
+        if r.layer_json and 'drawingInfo' in r.layer_json:
+            p_data["drawing_info"] = json.dumps(r.layer_json["drawingInfo"])
 
+        if r.layer_json and 'fields' in r.layer_json:
+            p_data["fields"] = json.dumps(r.layer_json["fields"])
 
         # set the json file name
         filename = r.resource_id.replace('/', '_') + ".json"
@@ -279,6 +289,7 @@ class DB_ToGBL:
 
         # add preset drawing details
         # note: these are stored in the layer_json if they are present
+
         if _l.layer_json and 'drawingInfo' in _l.layer_json:
             l_data["drawing_info"] = _l.layer_json["drawingInfo"]
 
@@ -454,7 +465,6 @@ class DB_ToGBL:
             #     type = "iiif"
 
             ref = self.match_ref(u.url, u.url_type)
-            print("Add the ref is")
             if ref:
                 if type =="download":
                     # check for another download

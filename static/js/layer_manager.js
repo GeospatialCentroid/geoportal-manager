@@ -99,7 +99,8 @@ class Layer_Manager {
 
     if(!resource){
          // we need to load the resource information
-         filter_manager.load_json(filter_manager.base_url+"q=dct_identifier_sm:"+_resource_id,filter_manager.loaded_resource,_resource_id);
+         console.log("please load")
+         filter_manager.load_json(filter_manager.base_url+"q=dct_identifier_sm:"+_resource_id.replaceAll(":","\\:"),filter_manager.loaded_resource,_resource_id);
          console_log("try again!!!")
          return
     }
