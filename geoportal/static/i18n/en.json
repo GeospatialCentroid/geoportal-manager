@@ -134,7 +134,9 @@
 			"CSV": { "name": "CSV", "ext": "csv"},
 			"KML": { "name": "KML", "ext": "kml"},
 			"GEOJSON": { "name": "GeoJSON", "ext": "geojson"}
-		}
+		},
+		"NO_DOWNLOAD_TITLE": "No Dynamic Downloadable Layers",
+		"NO_DOWNLOAD_CONTENT": "Please view layer details for alternate download methods."
 	},
 
 	"IDENTIFY": {

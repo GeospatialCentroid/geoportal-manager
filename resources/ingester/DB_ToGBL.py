@@ -55,7 +55,7 @@ class DB_ToGBL:
             "category": ["dct_subject_sm"],
             "tag": ["dcat_keyword_sm"],
 
-            "place": ["dct_spatial_sm"],
+            "named_place": ["dct_spatial_sm"],
             # todo use owner 'full_name' if available
             "owner": ["dct_creator_sm"],
             "publisher": ["dct_publisher_sm"],
@@ -284,8 +284,11 @@ class DB_ToGBL:
         # todo assign the geometry type?
 
         # add attribute information
-        if _l.layer_json and 'fields' in _l.layer_json and 'type' in _l.layer_json["fields"][0]:
-            l_data["fields"] = _l.layer_json["fields"]
+        try:
+            if _l.layer_json and 'fields' in _l.layer_json and 'type' in _l.layer_json["fields"][0]:
+                l_data["fields"] = _l.layer_json["fields"]
+        except:
+            pass
 
         # add preset drawing details
         # note: these are stored in the layer_json if they are present
@@ -323,10 +326,9 @@ class DB_ToGBL:
         # get a more accurate bounds for the layer
 
         if hasattr(_l, "bounding_box") and hasattr(_l.bounding_box,'extent'):
-            l_data["locn_geometry"] = self.get_bounds(_l.bounding_box)
+            l_data["dcat_bbox"] = self.get_bounds(_l.bounding_box)
             # lets also save a polygon representing the points for image overlays.
-            l_data["solr_poly_geom"] = self.get_poly(_l.bounding_box)
-            print(l_data["solr_poly_geom"])
+            l_data["locn_geometry"] = self.get_poly(_l.bounding_box)
 
 
         # todo add child specific descriptions

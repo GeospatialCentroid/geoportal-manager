@@ -48,7 +48,7 @@
 
     {% if rights %}
     <span class="font-weight-bold">{{LANG.DETAILS.RIGHTS}}:</span><br/>
-        {{rights}}
+        {{rights|safe}}
     {% endif %}
 
     <div class="clearfix"></div><br/>

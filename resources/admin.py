@@ -4,7 +4,7 @@ from django.contrib.gis.admin import OSMGeoAdmin
 
 from django.views.decorators.cache import never_cache
 from django.contrib.admin import SimpleListFilter
-from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type
+from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place,Named_Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type
 
 from django.utils.safestring import mark_safe
 
@@ -100,15 +100,23 @@ class Change_LogInline(admin.StackedInline):
     ]
     extra = 0
 
-class ResourceInline(admin.StackedInline):
+class ParentInline(admin.StackedInline):
     model = Resource.parent.through
     fk_name = "from_resource" # not work "parent_resource" "resource_id", "parent_id", from_resource_id, to_resource_id
     classes = ['collapse']
     verbose_name = "Parent Resource"
-
+    verbose_name_plural = "Parent Resources"
     extra = 0
     show_change_link=True
 
+class ChildrenInline(admin.StackedInline):
+    model = Resource.parent.through
+    fk_name = "to_resource" # not work "parent_resource" "resource_id", "parent_id", from_resource_id, to_resource_id
+    classes = ['collapse']
+    verbose_name = "Child Resource"
+    verbose_name_plural = "Child Resources"
+    extra = 0
+    show_change_link=True
 
 class ParentFilter(admin.SimpleListFilter):
     title = 'Root Resource'
@@ -134,7 +142,7 @@ class ResourceAdmin(OSMGeoAdmin):
     search_fields = ('title','alt_title','description','resource_id')
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
-    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_places","get_category","child_count")
+    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count")
     fieldsets = [
         (None, {'fields': ['resource_id','year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
@@ -151,7 +159,7 @@ class ResourceAdmin(OSMGeoAdmin):
 
         (None, {'fields': ["languages","category"]}),
         (None, {'fields': [( "get_tags","tag")]}),
-        (None, {'fields': [("get_places","place")]}),
+        (None, {'fields': [("get_named_places","named_place")]}),
 
 
         (None, {'fields': ["_raw_json"]}),
@@ -161,17 +169,19 @@ class ResourceAdmin(OSMGeoAdmin):
     ]
 
     def child_count(self, obj=None):
-        return len(Resource.objects.filter(parent=obj.id))
+        with connection.cursor() as cursor:
+            cursor.execute("Select count(id) from resources_resource_parent where to_resource_id={};".format(obj.id))
 
-    def parent_filter(self, obj=None):
-        return obj.parent==None
+            return (cursor.fetchone()[0])
+
+
 
     def get_tags(self, obj=None):
          print(obj.tag.all())
          return ", ".join([t.name for t in obj.tag.all()])
 
-    def get_places(self, obj=None):
-        return ", ".join([p.name for p in obj.place.all()])
+    def get_named_places(self, obj=None):
+        return ", ".join([p.name for p in obj.named_place.all()])
 
     def get_category(self, obj):
         return ",".join([p.name for p in obj.category.all()])
@@ -192,7 +202,8 @@ class ResourceAdmin(OSMGeoAdmin):
         return mark_safe(get_pretty_json(obj.layer_json)) if obj.layer_json else ""
 
     inlines = [
-        ResourceInline,
+        ParentInline,
+        ChildrenInline,
         URLInline,
         Status_LogInline,
         Change_LogInline
@@ -353,6 +364,10 @@ admin_site.register(Tag, TagAdmin)
 class PlaceAdmin(OSMGeoAdmin):
    pass
 admin_site.register(Place, PlaceAdmin)
+
+class Named_PlaceAdmin(OSMGeoAdmin):
+   pass
+admin_site.register(Named_Place, Named_PlaceAdmin)
 
 class URL_TypeAdmin(OSMGeoAdmin):
     list_display = ('name', 'ref', 'service', '_class', '_method')

@@ -3,7 +3,7 @@ The super class FileCollection is used to handle json file loading/saving and da
 
 """
 
-from resources.models import Resource, Format, Category,Owner,Publisher,Type, Language,Category,Tag,Place,URL,URL_Type,URL_Label,Geometry_Type,Change_Log
+from resources.models import Resource, Format, Category,Owner,Publisher,Type, Language,Category,Tag,Place,Named_Place,URL,URL_Type,URL_Label,Geometry_Type,Change_Log
 
 from django.contrib.gis.geos import GEOSGeometry
 
@@ -273,8 +273,7 @@ class FileCollection:
         if 'places' in obj:
             for p in obj['places']:
                 # note the place is unique on two columns so use both to avoid duplicates
-                ps = p.split("|")
-                r.place.add(Place.objects.get_or_create(name=ps[0], name_lsad=ps[1])[0])
+                r.named_place.add(Named_Place.objects.get_or_create(name=p)[0])
 
         if parent_resource:
             r.parent.add(parent_resource)

@@ -151,12 +151,11 @@ class FileParser:
         for t in tags:
             # look for a match
             for p in self.places:
-                if t.lower() == p.name.lower() or t.lower() == p.name_lsad.lower():
-                    val = p.name.lower()+"|"+p.name_lsad
-                    if val not in places and t.lower() not in ["trail","basin","wells","hydro","forest"]:
-                        # so that we can map to the same place - use both the name and lsad
-                        places.append(p.name+"|"+p.name_lsad)
-
+                if t.lower() not in ["trail","basin","wells","hydro","forest"]:
+                    if t.lower() == p.name.lower():
+                        places.append(p.name)
+                    elif t.lower() == p.name_lsad.lower():
+                        places.append(p.name_lsad)
         return places
 
 # https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python

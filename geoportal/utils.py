@@ -202,28 +202,37 @@ def get_fields_html(_fields,lang):
     :param _fields:
     :return: html
     """
-    int_type=["esriFieldTypeOID","esriFieldTypeSingle","esriFieldTypeDouble"]
+
     html="<table class='attr_table'>"
     html += "<tr><th>"+lang["DETAILS"]["NAME"]+"</th><th>"+lang["DETAILS"]["TYPE"]+"</th></tr>"
 
     for f in _fields:
         #
         i = convert_text_to_json(f)
-        for j in i:
-            if type(j) is dict:
-                if 'type' in j:
-                    type_str=j['type']
-                    if type_str in int_type:
-                        type_str = lang["DETAILS"]["NUMBER"]
-                    else:
-                        type_str = lang["DETAILS"]["TEXT"]
-                    html += "<tr><td>" +j['name'] + "</td><td>" + type_str + "</td></tr>"
+        if type(i) is dict:
+            html += get_fields_row_html(i,lang)
+        else:
+            for j in i:
+                if type(j) is dict:
+                    html += get_fields_row_html(j, lang)
                 else:
-                    html += ""
-            else:
-                html +=str(j)
+                    html +=""
 
     return html+"</table><br/>"
+
+def get_fields_row_html(j,lang):
+    html=""
+    int_type = ["esriFieldTypeOID", "esriFieldTypeSingle", "esriFieldTypeDouble"]
+    if 'type' in j:
+        type_str = j['type']
+        if type_str in int_type:
+            type_str = lang["DETAILS"]["NUMBER"]
+        else:
+            type_str = lang["DETAILS"]["TEXT"]
+        html += "<tr><td>" + j['name'] + "</td><td>" + type_str + "</td></tr>"
+    else:
+        html += ""
+    return html
 
 def convert_text_to_json(text):
     # //solr stores the json structure of nested elements as a smi usable string

@@ -577,10 +577,8 @@ class Layer_Manager {
         $("#image_map").show();
         map_manager.update_map_size()
 
-         // remove existing layers
-         console.log('remove existing layers')
+        // remove existing layers
         for (var i in $this.image_layers){
-            console.log("remove", $this.image_layers[i])
             map_manager.image_map.removeLayer($this.image_layers[i]);
         }
 

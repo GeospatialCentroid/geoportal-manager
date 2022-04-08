@@ -651,8 +651,6 @@ class Filter_Manager {
                 return bounds
 
             }else{
-
-                console.log(geom,"about to be subbed")
                  return geom.substring(9,geom.length-1).split(",")
             }
         }
