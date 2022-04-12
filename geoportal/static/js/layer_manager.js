@@ -163,7 +163,11 @@ class Layer_Manager {
   }
   get_priority(usable_links){
         //pick the best one - for now just image before iiif since we can map images
-        var link_priority=["https://schema.org/ImageObject","http://iiif.io/api/image"]
+        var link_priority=["urn:x-esri:serviceType:ArcGIS#DynamicMapLayer",
+        "urn:x-esri:serviceType:ArcGIS#TiledMapLayer",
+        "https://www.ogc.org/standards/wmts",
+        "https://schema.org/ImageObject",
+        "http://iiif.io/api/image"]
         for(var p in link_priority){
             for (var l in usable_links){
             console.log("compare ",usable_links[l],link_priority[p])

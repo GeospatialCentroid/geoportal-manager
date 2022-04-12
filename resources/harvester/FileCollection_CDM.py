@@ -109,19 +109,22 @@ class FileCollection_CDM(FileCollection):
         parent = self.ingest_parent_record(data, parent_obj)
 
         layers_path = self.path + self.folder + "/layers"
-
-        if "page" in data['objectInfo']:
-            print("There are children here")
+        print(data['objectInfo'],"????????")
+        if "page" in data['objectInfo'] or "node" in data['objectInfo'] :
+            print("There are children here ---------------")
 
             # todo - associate the children - all details exist in the 'data'
             #generate urls for all children
             root_path = self.open_prefix+data['thumbnailUri'][:data['thumbnailUri'].index("/id/")+4]
 
-            #make sure there are more than 1 pages
-            if isinstance(data['objectInfo']["page"], list):
-                child_list=data['objectInfo']["page"]
+            if "node" in data['objectInfo']:
+                child_list = data['objectInfo']["node"]["page"]
             else:
-                child_list = [data['objectInfo']["page"]]
+                #make sure there are more than 1 pages
+                if isinstance(data['objectInfo']["page"], list):
+                    child_list=data['objectInfo']["page"]
+                else:
+                    child_list = [data['objectInfo']["page"]]
 
             for index, p in enumerate(child_list):
 

@@ -25,6 +25,8 @@ class Download_Manager {
     $("#download_instruction").html(LANG.DOWNLOAD.DOWNLOAD_INSTRUCTION)
 
     $("#download_button").html(LANG.DOWNLOAD.DOWNLOAD_BUT)
+     $("#download_button").attr("title",LANG.DOWNLOAD.NO_DOWNLOAD_TITLE)
+     $("#download_button").attr("data-content",LANG.DOWNLOAD.NO_DOWNLOAD_CONTENT)
     this.generate_data_type_dropdown($("#download_panel_wrapper"))
 
 
@@ -32,6 +34,16 @@ class Download_Manager {
         download_manager.show_download_tab();
 
      });
+
+     $('#download_button').popover({
+        container: 'body',
+        delay: {
+            "show": 500,
+            "hide": 100
+        }
+      })
+
+
 
   }
   generate_data_type_dropdown(){
@@ -75,6 +87,27 @@ class Download_Manager {
 
         return html;
     }
+    search_download_links(json_refs){
+        // loop through the links and find one matching the extention
+         json_refs = JSON.parse(json_refs)
+         var file_ext=$("#download_bounds_select").val()
+         for(var j in json_refs){
+            if (j==this.url_type){
+               var links = this.get_download_links(json_refs[j])
+               //check if any of the links match
+               for (var l =0;l<links.length;l++){
+                    // check if the extension matches
+                    if (this.get_file_ext(links[l])==file_ext){
+                        //match
+                       return links[l]
+                    }
+
+               }
+
+            }
+        }
+        return false
+    }
     get_download_links(_link_str){
         if(_link_str.indexOf("[")>-1){
             // should there be square brackets, remove those first then split
@@ -85,8 +118,20 @@ class Download_Manager {
             return  _link_str.split(",")
         }
 
+    }
+    get_download_link(_file_name){
+        //Extract the base url for the download link
+        if (_file_name?.url){
+            _file_name = _file_name.url
+        }
+        if (_file_name.indexOf("?")>-1){
+            _file_name = _file_name.substring(0,_file_name.lastIndexOf("?"))
+        }
+        return _file_name
 
     }
+
+
     get_file_ext(_file_name){
         if (_file_name?.url){
             _file_name = _file_name.url
@@ -98,16 +143,7 @@ class Download_Manager {
         return ext
 
     }
-     get_download_link(_file_name){
-        if (_file_name?.url){
-            _file_name = _file_name.url
-        }
-        if (_file_name.indexOf("?")>-1){
-            _file_name = _file_name.substring(0,_file_name.lastIndexOf("?"))
-        }
-        return _file_name
 
-    }
     get_ext_name(_ext){
         switch(_ext) {
            case "zip":
@@ -126,55 +162,48 @@ class Download_Manager {
         $(elm).addClass("progress-bar-striped progress-bar-animated active")
         // get the list of all the selected download layers - they will be ':checked' inputs
         // and download them!
+        var has_download=false
         $("#downloadable_layers").find(":input").each(function(){
-           if($(this).is(':checked')){
-                var file_ext=$("#download_bounds_select").val()
+           if($(this).is(':checked') && !$(this).prop('disabled')){
+
                 var ext = "_download_checkbox"
                 var  id= $(this).attr('id')
                 var _id = id.substring(0,id.length-ext.length);
                 var layer = layer_manager.get_layer_obj(_id)
                 var resource = layer.resource_obj
 
-                var json_refs = JSON.parse(resource.dct_references_s)
-                var download_link=false
-                for(var j in json_refs){
-                    console.log("Looking through download layers does j==$this.url_type",j,$this.url_type)
-                    if (j==$this.url_type){
-                       var links = $this.get_download_links(json_refs[j])
-                       //check if any of the links match
-                       for (var l =0;l<links.length;l++){
-                            // check if the extension matches
-                            if ($this.get_file_ext(links[l])==file_ext){
-                                //match
-                                download_link = links[l]
-                                $this.open_download_link($this.get_download_link(links[l]),$("#download_bounds_checkbox").is(':checked'))
-                            }
-
-
-                       }
-
-                    }
+                var download_link=$this.search_download_links(resource.dct_references_s)
+                if(download_link){
+                    has_download=true
+                    $this.open_download_link($this.get_download_link(download_link),$("#download_bounds_checkbox").is(':checked'))
                 }
-                if(!download_link){
-                    console.log("No download link found, how did we get here")
-                    console.log("trying brute force approach with first link - need to refine!!!")
-
-                    //$this.open_download_link($this.get_download_link(links[l]),$("#download_bounds_checkbox").is(':checked'))
-                    for(var j in json_refs){
-                        console.log(json_refs[j])
-
-                        var file_ext="geojson"
-                        if ($("#download_bounds_select").val()!=''){
-                             file_ext=$("#download_bounds_select").val()
-                        }
-                        console.log(layer)
-                        var file_name =layer.resource_obj["dct_title_s"]+"."+file_ext
-                        $this.download_file(json_refs[j]+"/query?returnGeometry=true&where=1%3D1&outSR=4326&outFields=*&orderByFields=Shape%20ASC&f="+file_ext,file_name)
-                    }
-                }
+//                if(!download_link){
+//                    console.log("No download link found, how did we get here")
+//                    console.log("trying brute force approach with first link - need to refine!!!")
+//
+//                    //$this.open_download_link($this.get_download_link(links[l]),$("#download_bounds_checkbox").is(':checked'))
+//                    for(var j in json_refs){
+//                        console.log(json_refs[j])
+//                        // default file extension
+//                        var file_ext="geojson"
+//                        if ($("#download_bounds_select").val()!=''){
+//                             file_ext=$("#download_bounds_select").val()
+//                        }
+//                        console.log(layer)
+//                        var file_name =layer.resource_obj["dct_title_s"]+"."+file_ext
+//                        $this.download_file(json_refs[j]+"/query?returnGeometry=true&where=1%3D1&outSR=4326&outFields=*&orderByFields=Shape%20ASC&f="+file_ext,file_name)
+//                    }
+//                }
 
             }
         })
+        if(!has_download){
+            $('#download_button').popover('show');
+            setTimeout(function () {
+                $('#download_button').popover('hide');
+            }, 5000);
+             $this.download_complete("download_button")
+        }
     }
 
     download_select(elm){
@@ -194,15 +223,23 @@ class Download_Manager {
         var html="<ul class='list-group'>"
            for(var i =0;i<layer_manager.layers.length;i++){
                var obj = layer_manager.layers[i]
+
                var id = obj["id"]
+
                var title =obj.resource_obj.dct_title_s
                var selected="checked"
 
                 if($.inArray(id,this.unselected_layers)>-1){
                     selected = "";
                 }
-                html+='<li class="list-group-item"><input id="'+id+'_download_checkbox" type="checkbox" value="" '+selected+' onclick="download_manager.unselect_layer(this)"> <label class="form-check-label" for="'+id+'_download_checkbox">'+title+'</label></li>'
-
+                 // check for download link
+                 // check for layer type
+                 var download_link=this.search_download_links(obj.resource_obj.dct_references_s)
+                 var disabled=""
+                  if(!download_link){
+                    disabled="disabled"
+                  }
+                  html+='<li class="list-group-item"><input id="'+id+'_download_checkbox" type="checkbox" value="" '+selected+' '+disabled+' onclick="download_manager.unselect_layer(this)"> <label class="form-check-label" for="'+id+'_download_checkbox">'+title+'</label></li>'
         }
         html+="</ul>"
         $("#downloadable_layers").html(html)

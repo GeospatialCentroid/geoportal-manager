@@ -206,7 +206,7 @@ class FileCollection_CO(FileCollection):
 
         child_obj = self.file_parser.create_record(parent_data,data, self)
         child_obj['id']=str(parent_data['id'])+"_"+str(data['id'])
-        child_obj["urls"].append({'url_type': data["type"], 'url': parent_data["url"]+"/"+str(data['id'])})
+        child_obj["urls"].append({'url_type': data["type"].lower(), 'url': parent_data["url"]+"/"+str(data['id'])})
         child_obj['title']= data['name']
         # retain the parent outside of the object
         r = parent_data['parent_resource']

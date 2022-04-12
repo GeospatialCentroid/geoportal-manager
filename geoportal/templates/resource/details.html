@@ -58,7 +58,7 @@
     {% endif %}
     <span class="font-weight-bold">{{LANG.DETAILS.CITATION}}:</span><br/>
     <span>
-        {{producer|safe}}. ({{published|date:"Y"}}). {% if format %}[{{format|safe}}].{% endif %} {{publisher|safe}}. {{LANG.DETAILS.RETRIEVED_FROM}} {{get_catelog_html|safe}}
+        {{producer|safe}}. ({{published}}). {% if format %}[{{format|safe}}].{% endif %} {{publisher|safe}}. {{LANG.DETAILS.RETRIEVED_FROM}} {{get_catelog_html|safe}}
 
     </span>
 </div>

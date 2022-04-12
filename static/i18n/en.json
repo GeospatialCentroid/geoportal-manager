@@ -46,7 +46,8 @@
 		  "dct_issued_s": "Publish Date",
 		  "dcat_keyword_sm": "Keyword",
 		  "gbl_resourceType_sm": "Data Type",
-		  "dct_format_s": "Format"
+		  "dct_format_s": "Format",
+		  "dct_publisher_sm": "Publisher"
 	  }
 	},
 	"RESULT": {
@@ -134,7 +135,9 @@
 			"CSV": { "name": "CSV", "ext": "csv"},
 			"KML": { "name": "KML", "ext": "kml"},
 			"GEOJSON": { "name": "GeoJSON", "ext": "geojson"}
-		}
+		},
+		"NO_DOWNLOAD_TITLE": "No Dynamic Downloadable Layers",
+		"NO_DOWNLOAD_CONTENT": "Please view layer details for alternate download methods."
 	},
 
 	"IDENTIFY": {

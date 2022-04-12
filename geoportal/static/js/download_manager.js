@@ -90,8 +90,8 @@ class Download_Manager {
     search_download_links(json_refs){
         // loop through the links and find one matching the extention
          json_refs = JSON.parse(json_refs)
+         var file_ext=$("#download_bounds_select").val()
          for(var j in json_refs){
-            console.log("Looking through download layers does j==$this.url_type",j,this.url_type)
             if (j==this.url_type){
                var links = this.get_download_links(json_refs[j])
                //check if any of the links match
@@ -165,7 +165,7 @@ class Download_Manager {
         var has_download=false
         $("#downloadable_layers").find(":input").each(function(){
            if($(this).is(':checked') && !$(this).prop('disabled')){
-                var file_ext=$("#download_bounds_select").val()
+
                 var ext = "_download_checkbox"
                 var  id= $(this).attr('id')
                 var _id = id.substring(0,id.length-ext.length);

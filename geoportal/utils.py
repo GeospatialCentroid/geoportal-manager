@@ -202,21 +202,22 @@ def get_fields_html(_fields,lang):
     :param _fields:
     :return: html
     """
-
-    html="<table class='attr_table'>"
+    html='<span class="font-weight-bold">'+lang["DETAILS"]["ATTRIBUTES"]+':</span><br/>'
+    html+="<table class='attr_table'>"
     html += "<tr><th>"+lang["DETAILS"]["NAME"]+"</th><th>"+lang["DETAILS"]["TYPE"]+"</th></tr>"
-
     for f in _fields:
-        #
-        i = convert_text_to_json(f)
-        if type(i) is dict:
-            html += get_fields_row_html(i,lang)
-        else:
-            for j in i:
-                if type(j) is dict:
-                    html += get_fields_row_html(j, lang)
-                else:
-                    html +=""
+        try:
+            i = convert_text_to_json(f)
+            if type(i) is dict:
+                html += get_fields_row_html(i,lang)
+            else:
+                for j in i:
+                    if type(j) is dict:
+                        html += get_fields_row_html(j, lang)
+                    else:
+                        html +=""
+        except:
+            return ""
 
     return html+"</table><br/>"
 

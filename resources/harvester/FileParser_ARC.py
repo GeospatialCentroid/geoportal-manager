@@ -176,20 +176,23 @@ class FileParser_ARC(FileParser):
             # loop over the distributions
             if "distribution" in resource:
                 for d in resource['distribution']:
+                    url =d["accessURL"]
+                    # quick fix for broken ESRI DCAT urls
+                    url=url.replace("/maps/","/datasets/")
                     if d["title"] in file_collection.api_types:
                         # store the base url
                         r_type = resource["type"].lower()
                         if r_type == "raster layer":
                             r_type = "map service"
-                        resource["urls"].append({'url_type': r_type, 'url': d["accessURL"]})
+                        resource["urls"].append({'url_type': r_type, 'url': url})
                         # # set the type while we're at it
                         # resource["type"] = "Dataset|Service"
                     elif "mediaType" in d and d["mediaType"] == "text/html":
-                        resource["urls"].append({'url_type': "info_page", 'url': d["accessURL"]})
+                        resource["urls"].append({'url_type': "info_page", 'url': url})
                     elif d["title"]:
-                        resource["urls"].append({'url_type': "download", 'url': d["accessURL"], 'label': d["title"]})
+                        resource["urls"].append({'url_type': "download", 'url': url, 'label': d["title"]})
                     else:
-                        resource["urls"].append({'url_type': "html", 'url': d["accessURL"]})
+                        resource["urls"].append({'url_type': "html", 'url': url})
 
 
 

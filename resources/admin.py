@@ -224,7 +224,8 @@ class ResourceAdmin(OSMGeoAdmin):
         updated =queryset.update(status_type='rs')
         for obj in queryset:
             # remove from solr
-            deleter.interface.delete_one_record(obj.resource_id)
+            print("DELETE---", obj.resource_id)
+            deleter.interface.delete_one_record("\""+obj.resource_id+"\"")
 
         self.message_user(request, ngettext(
             '%d resource was successfully removed from Staging.',

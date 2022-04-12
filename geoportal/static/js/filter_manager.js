@@ -83,7 +83,7 @@ class Filter_Manager {
     //https://stackoverflow.com/questions/895659/how-do-i-block-or-restrict-special-characters-from-input-fields-with-jquery
     $("#search").on('input', function() {
       var c = this.selectionStart,
-          r = /[^a-z0-9\s\+\-\"\'\_\&]/gi,
+          r = /[^a-z0-9\s\+\-\"\'\_\&]\*/gi,
           v = $(this).val();
       if(r.test(v)) {
         $(this).val(v.replace(r, ''));
@@ -426,7 +426,7 @@ class Filter_Manager {
                 f_id=''
             }
             if (f[1]!=''){
-               filter_str_array.push(f_id+ encodeURIComponent(f[1]).replaceAll("'","\\'"))
+               filter_str_array.push(f_id+ "%22"+encodeURIComponent(f[1]).replaceAll("'","\\'")+"%22")
             }
 
          }
@@ -504,12 +504,17 @@ class Filter_Manager {
 
             var children =$(elm).attr("data-child_arr").split(",")
             var temp_array=[]
-            for(var c in children){
+            // specifying children to maintain filtering can cause really long urls
+            //todo consider a better fix than arbitrary cut-off.
+            if(children.length<100){
+                for(var c in children){
 
-                 temp_array.push("dct_identifier_sm:"+String(children[c]))
+                     temp_array.push("dct_identifier_sm:"+String(children[c]))
 
-            }
-             filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
+                }
+                  filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
+             }
+
         }
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
         $.get(results_url,this.show_sublayer_details)
@@ -553,7 +558,7 @@ class Filter_Manager {
                 if(DEBUGMODE){
 
                      $(panel_id).append("<br/><a href='/admin/"+_resource_id+"' target='_blank'>Admin - View Solr Record</a>")
-                     $(panel_id).append("<br/><a href='/admin/resources/resource/?q="+_resource_id.substring(0,_resource_id.lastIndexOf("_"))+"' target='_blank'>Admin - Curate Record</a>")
+                     $(panel_id).append("<br/><a href='/admin/resources/resource/?q="+_resource_id.substring(0,_resource_id.lastIndexOf("-"))+"' target='_blank'>Admin - Curate Record</a>")
                 }else{
                      $(this).find(".page_nav").hide()
                 }

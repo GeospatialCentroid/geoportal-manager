@@ -235,6 +235,9 @@ class DB_ToGBL:
         if r.layer_json and 'fields' in r.layer_json:
             p_data["fields"] = json.dumps(r.layer_json["fields"])
 
+        if hasattr(r, 'format') and hasattr(r.format, 'name'):
+            p_data["dct_format_s"] = self.get_format_type(r.format.name)
+
         # set the json file name
         filename = r.resource_id.replace('/', '_') + ".json"
         # create a sub directory should one be set

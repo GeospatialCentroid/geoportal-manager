@@ -56,7 +56,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
 
     if 'dct_issued_s' in d:
         try :
-            args['published'] = datetime.strptime(d['dct_issued_s'], '%Y-%m-%dT%H:%M:%SZ')
+            args['published'] = datetime.strptime(d['dct_issued_s'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d')
         except:
             args['published'] =d['dct_issued_s']
 
@@ -82,7 +82,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
     if image_link and 'locn_geometry' not in d:
         iiif_link = utils.get_ref_link(d['dct_references_s'], 'iiif')
         # https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
-        link="/geo_reference?id="+str(d['dct_identifier_sm'])+"&img="+image_link+"&lng=-98.74&lat=36.25&z=8"
+        link="/geo_reference?id="+str(d['dct_identifier_sm'][0])+"&img="+image_link+"&lng=-98.74&lat=36.25&z=8"
         if iiif_link:
             link+="&iiif="+iiif_link
         args['georeference_link_html']='<a href="'+link+'" target="_blank">'+ args['LANG']["DETAILS"]["GEOREFERENCE"]+'</a><br/><br/>'
@@ -132,10 +132,13 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
     # create nav
     # if we have the item count don't worry about it.
     all_records = views.get_solr_data("q=*:*&fl=id&rows=1421747930")
+
+    args['cur_num']=1
     if all_records is not None:
         # find out where we're at
         ds = all_records['response']['docs']
         args['num_found'] = all_records['response']['numFound']
+        print("We've found this many records+++++=======",len(ds))
         for i in range(len(ds)):
             if ds[i]['id'] == str(args["resource_id"]):
                 if i>0:
@@ -160,8 +163,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
     args['attribute_html'] = ""
 
     if "fields" in d:
-        args['attribute_html'] = '<span class="font-weight-bold">'+args['LANG']["DETAILS"]["ATTRIBUTES"]+':</span><br/>'
-        args['attribute_html'] += utils.get_fields_html(d["fields"], args['LANG'])
+        args['attribute_html'] = utils.get_fields_html(d["fields"], args['LANG'])
 
     args['format'] = ""
     if "dct_format_s" in d:

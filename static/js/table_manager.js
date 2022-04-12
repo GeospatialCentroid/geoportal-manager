@@ -67,7 +67,7 @@ class Table_Manager {
         function(){
 
            if ($(this).val() =='csv'){
-                $this.download('test.csv',  $this.csv);
+                $this.download('export.csv',  $this.csv);
            }
             $("#data_table_export_select").val("default");
             analytics_manager.track_event("table","export_data_"+$(this).val(),"layer_id",$this.selected_layer_id)
@@ -82,7 +82,7 @@ class Table_Manager {
      $("#table_query_fields").click(function(){
         var index = $(this).find(":hover").last().index();
         var layer = layer_manager.get_layer_obj( $this.selected_layer_id)
-        table_manager.add_query_field(layer.resource_obj.fields[index].alias)
+        table_manager.add_query_field(layer.resource_obj.fields[0][index].alias)
 
     });
 
@@ -105,13 +105,15 @@ class Table_Manager {
     var layer = layer_manager.get_layer_obj( this.selected_layer_id)
      var html ="";
      for(var i in layer.resource_obj.fields){
-        var f =layer.resource_obj.fields[i]
-         var type=LANG.DETAILS.TEXT
-         if(int_type.indexOf(f.type) > -1 ){
-              var type=LANG.DETAILS.NUMBER
-         }
+         for(var j in layer.resource_obj.fields[i]){
+             var f = layer.resource_obj.fields[i][j]
+             var type=LANG.DETAILS.TEXT
+             if(int_type.indexOf(f.type) > -1 ){
+                  var type=LANG.DETAILS.NUMBER
+             }
 
-         html +='<a href="#" class="list-group-item list-group-item-action">'+f.name+": "+type+'</a>';
+             html +='<a href="#" class="list-group-item list-group-item-action">'+f.name+": "+type+'</a>';
+         }
      }
 
      //
