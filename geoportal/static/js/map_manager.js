@@ -201,8 +201,15 @@ class Map_Manager {
         }
          // show popup
         this.popup_show();
+        var query_base =false
+        try{
+         var query_base = layer.layer_obj.query()
+        }catch(e){
 
-        var query_base = layer.layer_obj.query()
+            this.show_popup_details()
+            return
+        }
+
         // if the layer is a point - add some wiggle room
         if(layer.type=="esriPMS"){
             query_full=query_base.nearby(this.click_lat_lng, 5)

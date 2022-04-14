@@ -36,7 +36,7 @@ class Table_Manager {
     $("[for='table_bounds_checkbox']").text(LANG.DATA_TABLE.LIMIT)
     $('#table_bounds_checkbox').change(
         function(){
-            $this.get_layer_data()
+            $this.get_layer_data().change()
 
             analytics_manager.track_event("table","filter_bounds_"+$('#table_bounds_checkbox').is(':checked'),"layer_id",$this.selected_layer_id)
         });
@@ -167,11 +167,13 @@ class Table_Manager {
     if (typeof(_layer_id)!="undefined"){
         this.selected_layer_id = _layer_id
      }
+     console.log("the layer select ID is ", this.selected_layer_id)
      // if the _layer_id is not set and the this.selected_layer_id is no longer on the map trigger a new map click with the first layer
      if ((!_layer_id || !layer_manager.is_on_map(this.selected_layer_id)) && this.elm_wrap.is(":visible")){
         if(layer_manager.layers.length>0){
             this.selected_layer_id=layer_manager.layers[0].id
             trigger_layer_data_load = true
+            console.log("we'll select the firts one instead!!!!!")
         }else{
             // hide the table
             this.close()

@@ -508,12 +508,14 @@ class Filter_Manager {
             //todo consider a better fix than arbitrary cut-off.
             if(children.length<100){
                 for(var c in children){
-
-                     temp_array.push("dct_identifier_sm:"+String(children[c]))
-
+                 if (children[c]!=""){
+                 temp_array.push("dct_identifier_sm:"+String(children[c]))
+                 }
                 }
-                  filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
-             }
+            }
+            if(temp_array.length>0){
+                    filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
+                }
 
         }
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"

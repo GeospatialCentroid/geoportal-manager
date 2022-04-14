@@ -55,6 +55,10 @@ class Geo_Reference_Manager {
         this.add_save_control()
         this.init_image()
          this.get_tile_corners()
+
+          $(".slider").show()
+         $(".ui-slider-handle").css({"left":"100%"})
+
         var $this=this
         $("#image_map").resizable({
              handles: "e, w",
@@ -143,6 +147,7 @@ class Geo_Reference_Manager {
             }
             //shift the last value into the second position to conform with distortableImageOverlay
             cs.splice(1, 0, cs.splice(3, 1)[0]);
+            console.log(cs)
             this.add_image_to_map(cs);
             //zoom to bounds
             this.map.fitBounds(bounds);
@@ -155,8 +160,9 @@ class Geo_Reference_Manager {
         if(!corners){
             corners=false
         }
+        console.log(this["img"])
          this.distortable_img = L.distortableImageOverlay(this["img"],
-         {actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.LockAction],
+         {mode: L.ScaleAction, actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.LockAction],
          corners: corners,
          }).addTo(this.map);
 

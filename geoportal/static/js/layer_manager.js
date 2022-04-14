@@ -37,6 +37,8 @@ class Layer_Manager {
     this.split_left_layers=[];
     this.split_right_layers=[];
 
+    //  only show the table for specific types
+    this.table_types=["esriSFS","esriPMS","esriSLS","vector"]
     //
     var $this=this;
     // make the map layers sortable
@@ -212,8 +214,10 @@ class Layer_Manager {
          }
         html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_details(\""+id+"\")'>"+LANG.RESULT.DETAILS+"</button>"
 
-        html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='fa fa-table'></i></button>"
-
+        console.log("the type is ",layer.type)
+        if ($.inArray(layer.type,$this.table_types)>-1){
+            html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='fa fa-table'></i></button>"
+        }
 
         if (typeof(o.color)!="undefined"){
           html += "<div class='color_box'><input type='text' id='"+id+"_line_color' value='"+o.color+"'/><br/><label for='"+id+"_line_color' >"+LANG.MAP.OUTLINE_COLOR+"</label></div>"
@@ -474,10 +478,18 @@ class Layer_Manager {
             }
              //shift the last value into the second position to conform with distortableImageOverlay
              cs.splice(1, 0, cs.splice(3, 1)[0]);
+
+           try{
              var layer_obj =  L[service_method._class](url,{
-                actions:[L.LockAction],mode:"lock",
+                actions:[L.LockAction],mode:"lock",editable:false,
                 corners: cs,
                     }).addTo(this.map);
+
+           }catch(e){
+
+            console.log("zoom in first")
+           }
+
 
 
         }else{
