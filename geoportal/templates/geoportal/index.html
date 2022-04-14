@@ -187,6 +187,11 @@
 
             <div id="search_panel_wrapper" class="tab_panel">
                 <div id="side_header">
+                    <div id="search_types">
+                        <div class="inline"><input name="search_type" type="radio" checked=""  value="data" id="radio_data" tabindex="0" aria-pressed="true"></div> <label id="radio_data_label" for="radio_data"></label>
+                        &nbsp&nbsp<div class="inline"><input name="search_type" type="radio" value="place" id="radio_place" tabindex="0"></div> <label id="radio_place_label" for="radio_place"></label>
+                    </div>
+
                     <div class="input-group search_wrapper">
                       <input id="search" type="text" class="form-control" placeholder="">
                       <div class="input-group-append">
@@ -201,7 +206,7 @@
                         </div>
                      </div>
                     <br/>
-                     <div id="filter_date">
+                     <div id="filter_date" class="inline">
                          <input  id="filter_date_checkbox" type="checkbox" value="">
                           <label class="form-check-label" for="filter_date_checkbox"></label>
                          <input id="filter_start_date" type="text" class="date_field"/>

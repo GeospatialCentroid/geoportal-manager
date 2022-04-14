@@ -113,6 +113,7 @@ $( function() {
      result_url:'/result?',
      facet_params:'rows=0&facet.mincount=1&facet=on&wt=json&df=text&',
      params:params['f'],
+     place_url:'https://nominatim.openstreetmap.org/search?format=json'
      })
 
      map_manager = new Map_Manager(
@@ -188,6 +189,10 @@ function initialize_interface(){
     $("[for='filter_bounds_checkbox']").text(LANG.SEARCH.LIMIT)
     $("#filter_date_to").text(LANG.SEARCH.TO)
     $("[for='filter_date_checkbox']").text(LANG.SEARCH.LIMIT_DATE)
+
+    $("#radio_data_label").text(LANG.SEARCH.RADIO_DATA_LABEL)
+
+    $("#radio_place_label").text(LANG.SEARCH.RADIO_PLACE_LABEL)
     //
     disclaimer_manager.init();
     //

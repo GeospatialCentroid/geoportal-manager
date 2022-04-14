@@ -39,7 +39,7 @@ class Filter_Manager {
     this.sort_str=""
     // track the filter query for only showing parents in search results
     this.fq_str=""
-
+    this.mode="data"
     // for showing loading
     // this.progress_interval;
 
@@ -61,14 +61,30 @@ class Filter_Manager {
 //      }, 100);
 
     //
+    $('input[type=radio][name=search_type]').change(function() {
+        $this.mode=this.value
+    });
+
     $("#search").focus();
     $("#search_clear").click(function(){
         $("#search").val("")
 
     })
     $("#search_but").click(function(){
-        filter_manager.add_filter(false,$("#search").val())
-        analytics_manager.track_event("search","filter","text",$("#search").val())
+
+        if($this.mode=="data"){
+           filter_manager.add_filter(false,$("#search").val())
+            analytics_manager.track_event("search","filter","text",$("#search").val())
+        }else{
+         $.get($this.place_url, { q: $("#search").val() }, function(data) {
+                try{
+                    $this.show_place_bounds(data[0].boundingbox)
+                    $("#search").val(data[0].display_name)
+                }catch(e){}
+
+              }
+            )
+        }
     })
 
     $("#search").is(":focus")
@@ -94,17 +110,41 @@ class Filter_Manager {
     //
    $("#search").autocomplete({
      source: function(request, response) {
-         $.get('/suggest', { q: encodeURIComponent(request.term) }, function(data) {
-           response($.map( data, function( item ) {
-                return {
-                    label: item.term,
-                    value: item.term
-                }
-            }));
-        })},
+
+          if($this.mode=="data"){
+             $.get('/suggest', { q: encodeURIComponent(request.term) }, function(data) {
+               response($.map( data, function( item ) {
+                    return {
+                        label: item.term,
+                        value: item.term
+                    }
+                }));
+            })
+            }else{
+                 $.get($this.place_url, { q: request.term }, function(data) {
+                   response($.map( data, function( item ) {
+                        return {
+                            label: item.display_name,
+                            value: item.display_name,
+                            lat: item.lat,
+                            lng: item.lon,
+                            boundingbox:item.boundingbox,
+                        }
+                    }));
+                 })
+            }
+            },
       minLength: 2,
       select: function( event, ui ) {
-         $("#search_but").trigger("click")
+
+          if($this.mode=="data"){
+            $("#search_but").trigger("click")
+          }else{
+             $this.show_place_bounds(ui.item.boundingbox)
+
+          }
+
+
       }
     });
     // detect scroll bottom
@@ -168,6 +208,13 @@ class Filter_Manager {
 
          }
     })
+  }
+  show_place_bounds(b){
+        var sw = L.latLng(Number(b[0]), Number(b[2])),
+            ne = L.latLng(Number(b[1]), Number(b[3])),
+            bounds = L.latLngBounds(sw, ne);
+            map_manager.map_zoom_event(bounds)
+
   }
   bounds_change_handler(){
 

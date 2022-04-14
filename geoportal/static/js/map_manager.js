@@ -44,16 +44,6 @@ class Map_Manager {
 
     L.control.locate({"flyTo":true,"initialZoomLevel":19}).addTo(this.map);
 
-    const provider = new window.GeoSearch.OpenStreetMapProvider();
-    const searchControl = new window.GeoSearch.GeoSearchControl({
-        provider: provider,
-          retainZoomLevel: false,
-          autoComplete: true,
-          keepResults:true,
-           searchLabel: 'Enter address',//todo translate this
-    });
-    this.map.addControl(searchControl);
-
     // create a reference to this for use during interaction
     var $this=this
 
