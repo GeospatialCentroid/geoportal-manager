@@ -170,6 +170,8 @@ omit this to have today's date appended to loaded data when using local matadata
 -o for overwriting existing loaded data
 without this, subsequent harvests will not refresh existing data
 
+-t to track_missing files. This will add a flag for resources that no longer listed in the endpoint.
+
 ###### Curation
 1. Navigate to http://localhost:8000/admin/, use the Django admin username and password created earlier to log-in
    and click the resources link
