@@ -48,9 +48,21 @@ class Map_Manager {
     var $this=this
 
     this.map.on('click', function(e) {
-          $this.map_click_event(e.latlng)
-
+          if ($this.mousedown_time<200){
+             $this.map_click_event(e.latlng)
+          }
     });
+
+    // keep track of time mouse depressed to control click
+     this.map.on('mousedown', function () {
+           var d = new Date()
+           $this.mousedown_start = d.getTime()
+     });
+
+     this.map.on('mouseup', function () {
+        var d = new Date()
+         $this.mousedown_time = d.getTime() - $this.mousedown_start
+     });
 
     // specify popup options
     this.popup_options =

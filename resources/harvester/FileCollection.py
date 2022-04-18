@@ -248,7 +248,7 @@ class FileCollection:
             r.save()
             print("Already exists!!! But Updated")
         except Resource.DoesNotExist:
-            print("Create a new resource!!!")
+            print("Create a new resource!!! ID:", obj['id'])
             r = Resource.objects.get_or_create(**data_struct)[0]
 
             if owner:

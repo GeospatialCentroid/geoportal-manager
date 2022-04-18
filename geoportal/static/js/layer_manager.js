@@ -490,11 +490,9 @@ class Layer_Manager {
             console.log("zoom in first")
            }
 
-
-
         }else{
             //we have no coordinates, just show the image in a separate leaflet
-             this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",}))
+             this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",editable:false}))
               map_manager.image_map.attributionControl._attributions = {};
               map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
              return
@@ -528,6 +526,7 @@ class Layer_Manager {
     }
 
     layer_obj.on('click', function (e) {
+        //
         map_manager.selected_layer_id=_resource_id
 
         map_manager.click_lat_lng = e.latlng

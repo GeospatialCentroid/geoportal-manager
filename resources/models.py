@@ -121,8 +121,8 @@ class Resource_Type(models.Model):
         return str(self.name)
 
 class Owner(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    full_name = models.CharField(max_length=150, null=True, blank=True)
+    name = models.CharField(max_length=300, unique=True)
+    full_name = models.CharField(max_length=500, null=True, blank=True)
     def __str__(self):
         return str(self.name)
 
@@ -141,7 +141,7 @@ class Resource(models.Model):
     '''
     id = models.AutoField(primary_key=True)
     resource_id = models.CharField(max_length=100)
-    title= models.CharField(max_length=200)
+    title= models.CharField(max_length=400)
     alt_title = models.CharField(max_length=200, null=True, blank=True)
     description = RichTextField(null=True, blank=True)
     bounding_box = models.PolygonField(null=True, blank=True)#,srid = 4326
@@ -300,7 +300,7 @@ class Status_Log(models.Model):
 class Georeference_Request(models.Model):
    date = models.DateTimeField('Date requested', default=datetime.now, blank=True)
    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
-   name = models.CharField(max_length=200,null=True, blank=True)
+   name = models.CharField(max_length=400,null=True, blank=True)
    email = models.CharField(max_length=200,null=True, blank=True)
    notes = models.TextField(null=True, blank=True)
 

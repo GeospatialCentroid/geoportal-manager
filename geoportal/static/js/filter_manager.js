@@ -472,7 +472,9 @@ class Filter_Manager {
             if (!f[0]){
                 f_id=''
             }
-            if (f[1]!=''){
+            if (f[0]=='locn_geometry'){
+               filter_str_array.push(f_id+ encodeURIComponent(f[1]))
+            }else if (f[1]!=''){
                filter_str_array.push(f_id+ "%22"+encodeURIComponent(f[1]).replaceAll("'","\\'")+"%22")
             }
 
