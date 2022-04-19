@@ -4,7 +4,7 @@ from django.contrib.gis.admin import OSMGeoAdmin
 
 from django.views.decorators.cache import never_cache
 from django.contrib.admin import SimpleListFilter
-from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place,Named_Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type
+from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place,Named_Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type,URL
 
 from django.utils.safestring import mark_safe
 
@@ -19,12 +19,16 @@ from django.utils.translation import ngettext
 
 from django.http import HttpResponseRedirect
 import resources.ingester.Delete_From_Solr as Delete_From_Solr
+import resources.ingester.DB_ToGBL as db_to_gbl
+import resources.ingester.Publish_ToGBL as publish_to_gbl
 from django.shortcuts import render
 
 import decimal
 from django.contrib.gis.geos import Point, WKTWriter
 from django.contrib.gis.geos import GEOSGeometry
 
+import os
+import glob
 import sys
 sys.setrecursionlimit(10000)
 
@@ -215,8 +219,40 @@ class ResourceAdmin(OSMGeoAdmin):
             del actions['delete_selected']
         return actions
 
-    actions = ["delete_selected_resources", 'remove_selected_resources_from_index_staging']
+    actions = ["add_selected_resources_to_staging","delete_selected_resources", 'remove_selected_resources_from_index_staging']
 
+    def add_selected_resources_to_staging(self, request, queryset):
+        # first export
+        # then ingest
+        directory = os.path.dirname(os.path.realpath(__file__)) + "/ingester"
+        verbosity=1
+        # clear the directory
+        if os.path.exists(directory + "/json"):
+            files = glob.glob(directory + "/json/*")
+            if (verbosity>1):
+                print("removing existing files from past ingest for a fresh start!")
+
+            for f in files:
+                os.remove(f)
+
+        exporter = db_to_gbl.DB_ToGBL({
+            "resources": queryset,
+            "path": directory + "/",
+            "verbosity": verbosity
+        })
+        publish_to_gbl.Publish_ToGBL({
+            "path": directory + "/json",
+            "verbosity": verbosity
+        })
+        # set status to remove from staging
+        updated =queryset.update(status_type='is')
+        self.message_user(request, ngettext(
+            '%d resource was successfully ingested to Staging.',
+            '%d resources were successfully ingested to Staging.',
+            updated,
+        ) % updated, messages.SUCCESS)
+
+    add_selected_resources_to_staging.short_description = "Ingest to Staging"
 
     def remove_selected_resources_from_index_staging(self, request, queryset):
         deleter = Delete_From_Solr.Delete_From_Solr({})
@@ -229,7 +265,7 @@ class ResourceAdmin(OSMGeoAdmin):
 
         self.message_user(request, ngettext(
             '%d resource was successfully removed from Staging.',
-            '%d stories were successfully removed from Staging.',
+            '%d resources were successfully removed from Staging.',
             updated,
         ) % updated, messages.SUCCESS)
 
@@ -374,4 +410,9 @@ class URL_TypeAdmin(OSMGeoAdmin):
     list_display = ('name', 'ref', 'service', '_class', '_method')
 
 admin_site.register(URL_Type,URL_TypeAdmin)
+
+class URLAdmin(OSMGeoAdmin):
+    list_filter = ("url_type",)
+
+admin_site.register(URL,URLAdmin)
 

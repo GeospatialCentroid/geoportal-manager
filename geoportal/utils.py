@@ -22,12 +22,13 @@ def clean_json(_json_refs):
     return json_refs
 
 def get_ref_link(_json_refs,_type):
-    # look for a download link
+    # look for link with type ...
     json_refs = clean_json(_json_refs)
 
     if json_refs:
 
         for j in json_refs:
+            ref = get_ref_type(j)
             ref = get_ref_type(j)
             if ref == _type:
                     # not list and type(json_refs[j]) is not dict
@@ -59,18 +60,29 @@ def get_service_link(_json_refs):
 
 
 def get_ref_type(_ref):
-    if _ref == 'http://schema.org/url':
-        return "info_page"
-    elif _ref == 'http://www.isotc211.org/schemas/2005/gmd/':
-        return "metadata"
-    elif _ref == 'http://schema.org/downloadUrl':
-        return "download"
-    elif _ref == 'https://schema.org/ImageObject':
-        return "image"
-    elif _ref == 'http://iiif.io/api/image':
-        return "iiif"
-    else:
-        return ""
+    '''
+
+    :param _ref:
+    :return: gets the name from the URL_type
+    '''
+
+    services = views.get_services(None)
+    for s in  json.loads(services.content):
+        if _ref == s["ref"]:
+            return s["name"]
+    return ""
+    # if _ref == 'http://schema.org/url':
+    #     return "info_page"
+    # elif _ref == 'http://www.isotc211.org/schemas/2005/gmd/':
+    #     return "metadata"
+    # elif _ref == 'http://schema.org/downloadUrl':
+    #     return "download"
+    # elif _ref == 'https://schema.org/ImageObject':
+    #     return "image"
+    # elif _ref == 'http://iiif.io/api/image':
+    #     return "iiif"
+    # else:
+    #     return ""
 
 def get_toggle_but_html(resource,LANG):
 
@@ -88,7 +100,7 @@ def get_toggle_but_html(resource,LANG):
 
         add_txt = get_count_text(resource,LANG)
         add_func = "filter_manager.get_layers"
-    elif resource["lyr_count"] and resource["lyr_count"]>1:
+    elif "lyr_count" in resource and resource["lyr_count"]>1:
         # get dynamic add text - get all the ids for use in determining if on map
         child_arr = get_child_array(views.get_solr_data("q=dct_isPartOf_sm:"+resource["id"]+".layer&fl=id&rows=1000")["response"]["docs"])
 

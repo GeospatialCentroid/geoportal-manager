@@ -88,6 +88,10 @@ def result_page(request,_LANG=False):
 def geo_reference(request):
     # for loading relative items dynamically
     args = {'STATIC_URL': settings.STATIC_URL}
+    resource_id=request.GET.get('id')
+
+    args["id"]=resource_id[0:resource_id.rfind("-")]
+
     return render(request, 'geo_reference/index.html', args)
 
 
@@ -164,7 +168,8 @@ def get_disclaimer(request):
        return HttpResponse(e.disclaimer)
 
 def get_services(request):
-   url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class','_method')
+   # url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class','_method')
+   url_types = URL_Type.objects.values('name', 'ref', '_class', '_method')
 
    return HttpResponse(json.dumps(list(url_types)), content_type='application/json')
 

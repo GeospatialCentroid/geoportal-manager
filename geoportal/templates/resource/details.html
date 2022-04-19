@@ -44,6 +44,10 @@
     {{get_more_details_link_html|safe}}
     {{get_catelog_link_html|safe}}
 
+     {% if webservice_links_html %}
+     <br/>{{webservice_links_html|safe}}
+     {% endif %}
+
     <div class="clearfix"></div><br/>
 
     {% if rights %}

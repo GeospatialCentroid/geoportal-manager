@@ -172,7 +172,6 @@ class Layer_Manager {
         "http://iiif.io/api/image"]
         for(var p in link_priority){
             for (var l in usable_links){
-            console.log("compare ",usable_links[l],link_priority[p])
                 if (usable_links[l]==link_priority[p]){
                     return usable_links[l]
                 }

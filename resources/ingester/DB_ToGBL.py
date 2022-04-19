@@ -180,31 +180,31 @@ class DB_ToGBL:
         if self.verbosity > 1:
             print(ref, "ref")
 
-
-
-        p_data["lyr_count"] = len(r.layers)
-
         p_data["solr_type"] = "parent"
         p_data["gbl_suppressed_b"] = False
 
-        #---------------------------------
-
-        print(r.resource_id," has ",len(r.layers),"layers")
-
         # create a list to store the children
-        child_docs=[]
+        child_docs = []
         # default setting for a parent
-        is_parent=False
+        is_parent = False
 
-        # should the parent have only one child - the parent becomes the child
-        if len(r.layers) == 1:
-            is_parent=True
 
-        # when there are children - store them in the 'child_docs' list
-        if len(r.layers)>0:
-            for l in r.layers:
-                # start with the parent
-                child_docs.append(self.generate_child_record(p_data.copy(),l,r,is_parent))
+        if hasattr(r, 'layers'):
+            p_data["lyr_count"] = len(r.layers)
+            print(r.resource_id, " has ", len(r.layers), "layers")
+
+            # should the parent have only one child - the parent becomes the child
+            if len(r.layers) == 1:
+                is_parent = True
+
+            # when there are children - store them in the 'child_docs' list
+            if len(r.layers) > 0:
+                for l in r.layers:
+                    # start with the parent
+                    child_docs.append(self.generate_child_record(p_data.copy(), l, r, is_parent))
+
+
+
 
         if len(child_docs)>1:
             # add the children to the parent
