@@ -20,7 +20,7 @@ class DB_ToGBL:
             setattr(self, p, props[p])
 
         # makes a folder to store the export - if it doesn't exist
-        if not os.path.exists(self.path+"json/"):
+        if hasattr(self,'path') and not os.path.exists(self.path+"json/"):
             os.mkdir(self.path+"json/")
 
         self.single_dict = {  # dictionary to translate single-value Dublin Core/GBL fields into GBLJson
@@ -63,9 +63,10 @@ class DB_ToGBL:
             "languages": ["dct_language_sm"],
 
         }
-
+        self.exported=[]
         for r in self.resources:
-            self.export(r)
+            e = self.export(r)
+            self.exported.append(e)
 
     def map_data(self, data, stub):
         """
@@ -239,15 +240,20 @@ class DB_ToGBL:
             p_data["dct_format_s"] = self.get_format_type(r.format.name)
 
         # set the json file name
-        filename = r.resource_id.replace('/', '_') + ".json"
+        filename = r.resource_id.replace('/', '_').replace('.', '_') + ".json"
         # create a sub directory should one be set
-        if not os.path.exists(self.path + "json/"+sub_folder):
-            os.mkdir(self.path + "json/"+sub_folder)
+
+        if hasattr(self, 'path'):
+            if not os.path.exists(self.path + "json/"+sub_folder):
+                os.mkdir(self.path + "json/"+sub_folder)
 
 
-        with open(self.path+"json/" + sub_folder + "/" + filename,
-                  'w') as jsonfile:  # writes to a json with the identifier as the filename
-            json.dump(p_data, jsonfile, indent=2)
+            with open(self.path+"json/" + sub_folder + "/" + filename,
+                      'w') as jsonfile:  # writes to a json with the identifier as the filename
+                json.dump(p_data, jsonfile, indent=2)
+
+
+        return p_data
 
 
 

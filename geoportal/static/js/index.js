@@ -102,6 +102,7 @@ $( function() {
         }
 
 
+
     }
 
     console_log("index params",params)
@@ -147,7 +148,13 @@ $( function() {
 
      filter_manager.init();
 
+     // check for preview mode
+       if(document.URL.indexOf("/preview")>-1){
+            //preview mode
+            // generate and return json for the record and load it in
+            get_preview(usp.get('id'))
 
+       }
 
 
 });
@@ -181,6 +188,7 @@ function load_language(properties){
 
 
 function initialize_interface(){
+
     var sort_str=""
     if(!$.isEmptyObject(usp) && usp.get("sort")){
         sort_str=usp.get("sort")
@@ -222,8 +230,6 @@ function init_tabs(){
     $("#search_tab").text(LANG.TAB_TITLES.BROWSE_TAB)
     $("#map_tab .label").text(LANG.TAB_TITLES.MAP_TAB)
     $("#download_tab").text(LANG.TAB_TITLES.DOWNLOAD_TAB)
-
-
     $(".tab_but").click(function() {
         $(".tab_but").removeClass("active")
         $(this).addClass("active")
@@ -405,3 +411,14 @@ function window_resize() {
 
 
  }
+
+function get_preview(id){
+    console.log("Get the proview")
+    //load in the json
+    filter_manager.load_json("/generate_gbl_record/?id="+id,show_preview,id)
+}
+function show_preview(data,extra){
+    filter_manager.all_results.push(data)
+    filter_manager.show_details(data["id"])
+   
+}

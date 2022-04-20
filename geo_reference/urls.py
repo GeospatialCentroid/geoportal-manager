@@ -15,11 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from resources.admin import admin_site ##! Important..Import your object (admin_site) instead of your class (MyAdminSite)
+from resources.admin import admin_site
+from . import views
 
 urlpatterns = [
-    path('admin/', admin_site.urls),
-    path('', include('geoportal.urls')),
-    path('', include('geo_reference.urls')),
+    path('geo_reference', views.geo_reference, name='geo_reference'),
+    path('set_geo_reference', views.set_geo_reference, name='set_geo_reference'),
 
 ]

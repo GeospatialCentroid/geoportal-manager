@@ -6,19 +6,23 @@ from django.template.response import TemplateResponse
 
 from django.conf import settings
 
-from django.contrib.gis.geos import GEOSGeometry
+
 from resources.models import Resource,Community_Input,End_Point,URL_Type
 
 from django.http import JsonResponse
 from django.core import serializers
 
-from django.views.decorators.csrf import csrf_exempt
 
 from . import html_generation
 
 from . import details_view
 
 from . import utils
+
+from django.contrib.auth.decorators import login_required
+
+import resources.ingester.DB_ToGBL as db_to_gbl
+
 
 fq="&fq=solr_type:parent"
 child_filter="&childFilter={!edismax v=$q.user}"
@@ -78,6 +82,26 @@ def index(request,_LANG=False):
 
     return render(request, 'geoportal/index.html', args)
 
+@login_required(login_url='/accounts/login/')
+def preview(request,_LANG=False):
+    return index(request, _LANG)
+
+@login_required(login_url='/accounts/login/')
+def generate_gbl_record(request,_LANG=False):
+    # takes the id, creates the gbl record and returns the result
+    r = Resource.objects.get(resource_id=request.GET.get('id'))
+
+    # todo - need a better way than just relying upon the parent status
+    r.layers = Resource.objects.filter(status_type=r.status_type, parent=r.id)
+
+    exporter = db_to_gbl.DB_ToGBL({
+        "resources": [r],
+        "verbosity": 1
+    })
+    #return the first as there should ohly be one
+    return HttpResponse(json.dumps(exporter.exported[0]), content_type='application/json')
+
+
 def result_page(request,_LANG=False):
     # for loading relative items dynamically
     args = {}
@@ -85,14 +109,7 @@ def result_page(request,_LANG=False):
 
     return TemplateResponse(request, 'geoportal/result.html', args)
 
-def geo_reference(request):
-    # for loading relative items dynamically
-    args = {'STATIC_URL': settings.STATIC_URL}
-    resource_id=request.GET.get('id')
 
-    args["id"]=resource_id[0:resource_id.rfind("-")]
-
-    return render(request, 'geo_reference/index.html', args)
 
 
 def resource_page(request,resource_id,_LANG=False):
@@ -138,29 +155,7 @@ def get_solr_data(_query):
     request = urllib.request.urlopen(_url + "select?" +_query)
     return json.load(request)
 
-@csrf_exempt
-def set_geo_reference(request):
 
-    # note the id is actually two parts the resource_id and the endpoint id
-    solr_id_parts = request.GET.get('id').rsplit('-', 1)
-    resource_id =solr_id_parts[0]
-    end_point_id =solr_id_parts[1]
-    print(resource_id,end_point_id)
-    # when an image is georeferenced the values are saved with the resource for distortion in public facing interface
-    r = Resource.objects.get(resource_id=resource_id, end_point_id=end_point_id)
-
-    c = False
-    # get the patron name and email
-    if request.method == "POST":
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        c = Community_Input.objects.create(name=name, email=email,field_name="bounding_box",resource=r)
-
-    r.bounding_box=GEOSGeometry("POLYGON((" + request.GET.get('d') + "))", srid=4326)
-
-    # pass c - for community to identify the source of the change
-    r.save('c',c)
-    return HttpResponse(json.dumps({'complete': True}, cls=DjangoJSONEncoder), content_type='application/json')
 
 def get_disclaimer(request):
    if request.GET.get('e'):

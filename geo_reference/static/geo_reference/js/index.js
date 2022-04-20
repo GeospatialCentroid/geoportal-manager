@@ -386,7 +386,7 @@ class Geo_Reference_Manager {
               modal: true,
               buttons: {
                 "Save": function( event ) {
-                  $this.submit_form(corners)
+                  $this.submit_form(corners,{name:$("#name").val(),email:$("#email").val()})
                    form_dialog.dialog( "close" );
                 },
                 Cancel: function() {
@@ -399,7 +399,7 @@ class Geo_Reference_Manager {
             });
             var form = form_dialog.find( "form" ).on( "submit", function( event ) {
               event.preventDefault();
-              $this.submit_form(corners)
+
             });
             form_dialog.dialog("open")
 
@@ -408,8 +408,10 @@ class Geo_Reference_Manager {
         }
 
     }
-    submit_form(corners){
-        var data = {}
+    submit_form(corners,data){
+        if (!data){
+            data = {}
+        }
         $.ajax({
           url: "set_geo_reference?id="+this["id"]+"&d="+corners,
           type: "POST",

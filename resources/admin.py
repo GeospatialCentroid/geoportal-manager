@@ -146,9 +146,9 @@ class ResourceAdmin(OSMGeoAdmin):
     search_fields = ('title','alt_title','description','resource_id')
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
-    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count")
+    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count","preview")
     fieldsets = [
-        (None, {'fields': ['resource_id','year','temporal_coverage']}),
+        (None, {'fields': [('resource_id','preview'),'year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
         (None, {'fields': ['status_type','end_point',"missing"]}),
         (None, {'fields': [('resource_type')]}),
@@ -223,7 +223,7 @@ class ResourceAdmin(OSMGeoAdmin):
 
     def add_selected_resources_to_staging(self, request, queryset):
         # first export
-        # then ingest
+
         directory = os.path.dirname(os.path.realpath(__file__)) + "/ingester"
         verbosity=1
         # clear the directory
@@ -235,11 +235,18 @@ class ResourceAdmin(OSMGeoAdmin):
             for f in files:
                 os.remove(f)
 
+        # associate the children
+        for r in queryset:
+            #todo - need a better way than just relying upon the parent status
+            r.layers = Resource.objects.filter(status_type=r.status_type,parent=r.id)
+            print("The layers are:",r.layers)
+
         exporter = db_to_gbl.DB_ToGBL({
             "resources": queryset,
             "path": directory + "/",
             "verbosity": verbosity
         })
+        # then ingest
         publish_to_gbl.Publish_ToGBL({
             "path": directory + "/json",
             "verbosity": verbosity
@@ -315,6 +322,17 @@ class ResourceAdmin(OSMGeoAdmin):
               """
         obj.save(request.user)
 
+    def preview(self, obj):
+        if obj.pk:
+
+            html = "<a href='/preview?id="+obj.resource_id+"' target='_blank' >Preview</a>"
+            return mark_safe(html)
+        else:
+            return '-'
+
+    preview.short_description = ("Preview")
+    preview.allow_tags = True
+
 
 
 def get_pretty_json(_json):
@@ -322,21 +340,13 @@ def get_pretty_json(_json):
     # Convert the data to sorted, indented JSON
     response = json.dumps(_json, sort_keys=True, indent=2)
 
-
-    # Truncate the data. Alter as needed
-    # response = response[:5000]
-
     # Get the Pygments formatter
     formatter = HtmlFormatter(style='colorful')
-
     # Highlight the data
     response = highlight(response, JsonLexer(), formatter)
 
     # Get the stylesheet
-
     return  "<style>" + formatter.get_style_defs() + "</style><br><div style='max-height: 500px; overflow: scroll;'>" + response+"</div>"
-
-
 
 
 admin_site.register(Resource, ResourceAdmin)
@@ -347,11 +357,11 @@ class End_PointAdmin(OSMGeoAdmin):
 admin_site.register(End_Point, End_PointAdmin)
 
 class PublisherAdmin(OSMGeoAdmin):
-   pass
+    pass
 admin_site.register(Publisher, PublisherAdmin)
 
 class Community_InputAdmin(OSMGeoAdmin):
-   pass
+   list_display = ["resource","date","name", "email"]
 admin_site.register(Community_Input, Community_InputAdmin)
 
 class Georeference_RequestAdmin(OSMGeoAdmin):
