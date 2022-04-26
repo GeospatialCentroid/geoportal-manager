@@ -102,6 +102,7 @@ $( function() {
         }
 
 
+
     }
 
     console_log("index params",params)
@@ -113,6 +114,7 @@ $( function() {
      result_url:'/result?',
      facet_params:'rows=0&facet.mincount=1&facet=on&wt=json&df=text&',
      params:params['f'],
+     place_url:'https://nominatim.openstreetmap.org/search?format=json'
      })
 
      map_manager = new Map_Manager(
@@ -146,19 +148,23 @@ $( function() {
 
      filter_manager.init();
 
-
+     // check for preview mode
+       if(document.URL.indexOf("/preview")>-1){
+            //preview mode
+            // generate and return json for the record and load it in
+            get_preview(usp.get('id'))
+            show_mode("Preview")
+       }
 
 
 });
 
 function load_language(properties){
-    if (properties.language == "en-US"){
+    if (properties.language.toLowerCase() == "en-us"){
         lang_file_name="en"
     }else{
         console_log("This language is not yet implemented",properties.language)
     }
-    console_log(properties.language,lang_file_name)
-
     $.ajax({
             type: "GET",
             url: properties.path+lang_file_name+".json",
@@ -180,6 +186,7 @@ function load_language(properties){
 
 
 function initialize_interface(){
+
     var sort_str=""
     if(!$.isEmptyObject(usp) && usp.get("sort")){
         sort_str=usp.get("sort")
@@ -188,6 +195,10 @@ function initialize_interface(){
     $("[for='filter_bounds_checkbox']").text(LANG.SEARCH.LIMIT)
     $("#filter_date_to").text(LANG.SEARCH.TO)
     $("[for='filter_date_checkbox']").text(LANG.SEARCH.LIMIT_DATE)
+
+    $("#radio_data_label").text(LANG.SEARCH.RADIO_DATA_LABEL)
+
+    $("#radio_place_label").text(LANG.SEARCH.RADIO_PLACE_LABEL)
     //
     disclaimer_manager.init();
     //
@@ -217,8 +228,6 @@ function init_tabs(){
     $("#search_tab").text(LANG.TAB_TITLES.BROWSE_TAB)
     $("#map_tab .label").text(LANG.TAB_TITLES.MAP_TAB)
     $("#download_tab").text(LANG.TAB_TITLES.DOWNLOAD_TAB)
-
-
     $(".tab_but").click(function() {
         $(".tab_but").removeClass("active")
         $(this).addClass("active")
@@ -300,7 +309,6 @@ function save_params(){
 }
 // enable back button support
 window.addEventListener('popstate', function(event) {
-    console.log(event,"popstate")
     var _params={}
     usp = new URLSearchParams(window.location.search.substring(1).replaceAll("~", "'").replaceAll("+", " "))
 
@@ -401,3 +409,17 @@ function window_resize() {
 
 
  }
+
+function get_preview(id){
+    //load in the json
+    filter_manager.load_json("/generate_gbl_record/?id="+id,show_preview,"?id="+id)
+}
+function show_preview(data,extra){
+    filter_manager.all_results.push(data)
+    filter_manager.show_details(data["id"],false,extra)
+
+}
+function show_mode(_title){
+    $("#mode").html(_title)
+     $("#mode").show();
+}

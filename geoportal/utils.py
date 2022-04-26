@@ -29,7 +29,6 @@ def get_ref_link(_json_refs,_type):
 
         for j in json_refs:
             ref = get_ref_type(j)
-            ref = get_ref_type(j)
             if ref == _type:
                     # not list and type(json_refs[j]) is not dict
                     # print("get_ref_link found",_type,type(json_refs[j]),json_refs[j])
@@ -49,10 +48,10 @@ def get_service_link(_json_refs):
     json_refs = clean_json(_json_refs)
     if json_refs:
         url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class', '_method')
-
+        print(url_types)
         for j in json_refs:
             for u in url_types:
-
+                print("compare:",u["ref"],"to",j)
                 if u["ref"]==j:
                     return True
 
@@ -66,7 +65,7 @@ def get_ref_type(_ref):
     :return: gets the name from the URL_type
     '''
 
-    services = views.get_services(None)
+    services = views.get_url_types(None)
     for s in  json.loads(services.content):
         if _ref == s["ref"]:
             return s["name"]
@@ -113,9 +112,10 @@ def get_toggle_but_html(resource,LANG):
     if (add_txt!=LANG["RESULT"]["REMOVE"]):
         extra_class=""
 
+    print(add_txt == LANG["RESULT"]["ADD"],"get_service_link",get_service_link(resource["dct_references_s"]) )
+
     if(add_txt == LANG["RESULT"]["ADD"]):
         # check for add link
-
         if "dct_references_s" in resource and not get_service_link(resource["dct_references_s"]):
             return ""
 

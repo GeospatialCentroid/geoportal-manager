@@ -17,7 +17,10 @@ class Map_Manager {
     for (var p in properties){
         this[p]=properties[p]
     }
-    this.click_lat_lng
+    // keep track of position on *map* when clicked
+    this.click_lat_lng;
+    //keep track of position on *page* when clicked
+    this.click_x_y;
     //look at the url params to see if they exist and should be used instead
     if (this.params){
         if (this.params.hasOwnProperty('z')){
@@ -44,23 +47,30 @@ class Map_Manager {
 
     L.control.locate({"flyTo":true,"initialZoomLevel":19}).addTo(this.map);
 
-    const provider = new window.GeoSearch.OpenStreetMapProvider();
-    const searchControl = new window.GeoSearch.GeoSearchControl({
-        provider: provider,
-          retainZoomLevel: false,
-          autoComplete: true,
-          keepResults:true,
-           searchLabel: 'Enter address',//todo translate this
-    });
-    this.map.addControl(searchControl);
-
     // create a reference to this for use during interaction
     var $this=this
 
     this.map.on('click', function(e) {
-          $this.map_click_event(e.latlng)
 
+          if ($this.mousedown_time<200){
+            if ($this.layer_clicked==false){
+                $this.map_click_event(e.latlng)
+            }else{
+                $this.layer_clicked==false
+            }
+          }
     });
+
+    // keep track of time mouse depressed to control click
+     this.map.on('mousedown', function () {
+           var d = new Date()
+           $this.mousedown_start = d.getTime()
+     });
+
+     this.map.on('mouseup', function () {
+        var d = new Date()
+         $this.mousedown_time = d.getTime() - $this.mousedown_start
+     });
 
     // specify popup options
     this.popup_options =
@@ -158,10 +168,44 @@ class Map_Manager {
 
   }
     set_selected_layer_id(elm){
-
-        map_manager.selected_layer_id =$(elm).val();
+        var $this= this
+        $this.selected_layer_id =$(elm).val();
         // retrigger the click event
-        map_manager.map_click_event()
+        // map_manager.map_click_event()
+        //turn off other layer
+         for (var i in layer_manager.layers){
+            var l = layer_manager.layers[i]
+            if (l.id!=$this.selected_layer_id){
+             l.layer_obj.setInteractive(false)
+            }
+         }
+
+        var layer = layer_manager.get_layer_obj($this.selected_layer_id).layer_obj
+
+         var ev = document.createEvent("MouseEvent");
+         var offset = $("#map").offset()
+         var el = document.elementFromPoint(offset.top+$this.click_x_y["y"],offset.left+$this.click_x_y["x"])
+         $this.map.removeLayer($this.highlighted_feature)
+           setTimeout(function(){
+
+                ev.initMouseEvent(
+                    "click",
+                    true /* bubble */, true /* cancelable */,
+                    window, null,
+                    0,0,  offset.left+$this.click_x_y["x"], offset.top+$this.click_x_y["y"], /* coordinates */
+                    false, false, false, false, /* modifier keys */
+                    0 /*left*/, null
+                );
+                $("#dot").css({top: offset.top+$this.click_x_y["y"]+"px",left:offset.left+$this.click_x_y["x"]+"px"})
+                el.dispatchEvent(ev);
+
+                // turn back on interactivity
+                for (var i in layer_manager.layers){
+                    var l = layer_manager.layers[i]
+                     l.layer_obj.setInteractive(true)
+                 }
+
+           },1000)
 
     }
      get_selected_layer(){
@@ -201,8 +245,15 @@ class Map_Manager {
         }
          // show popup
         this.popup_show();
+        var query_base =false
+        try{
+         var query_base = layer.layer_obj.query()
+        }catch(e){
 
-        var query_base = layer.layer_obj.query()
+            this.show_popup_details()
+            return
+        }
+
         // if the layer is a point - add some wiggle room
         if(layer.type=="esriPMS"){
             query_full=query_base.nearby(this.click_lat_lng, 5)
@@ -262,7 +313,7 @@ class Map_Manager {
     }
 
     show_popup_details(_features){
-
+           console.log("show pop up details")
            var $this =this
            var layer = this.get_selected_layer()
            if(!layer){
@@ -292,6 +343,7 @@ class Map_Manager {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
            setTimeout(function(){
+                console.log("set a time out")
                $("#popup_content").html(html)
                 //show the first returned feature
 
@@ -305,22 +357,22 @@ class Map_Manager {
 
         }
        show_popup_details_show_num(num){
+
         if (!num){
             // default setting
             this.result_num=0
         }else{
             this.result_num=this.result_num+num
         }
-
         this.show_highlight_geo_json(this.features[this.result_num])
         var props= this.features[this.result_num].properties
+
         var html=''
          for (var p in props){
             var val = String(props[p]).hyper_text()
             html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
          }
         $("#props_table").html(html)
-
         // update the text
         $("#popup_result_num").html(this.result_num+1)
         //update the controls

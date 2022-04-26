@@ -150,6 +150,9 @@ class Layer_Manager {
             var type =""
             if (resource?.gbl_resourceType_sm){
                 type = resource.gbl_resourceType_sm
+                if (Array.isArray(type)){
+                    type=type[0]
+                }
               }
               var priority = $this.get_priority(usable_links)
 
@@ -385,6 +388,14 @@ class Layer_Manager {
                     layer.layer_obj.setOpacity(val)
                  }else if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
                        $("._marker_class"+_id).css({"opacity":val})
+                 }else if($.inArray(layer.type,["GeoJSON"])>-1){
+                    layer.layer_obj.eachLayer(function (layer) {
+                        layer.setStyle({
+                            opacity: val,
+                            fillOpacity: val
+                          })
+                    });
+
                  }else{
                     layer.layer_obj.setStyle({
                     opacity: val,
@@ -475,19 +486,20 @@ class Layer_Manager {
                 // not values come in as lng lat
                 cs.push(L.latLng(c[1],c[0]))
             }
-             //shift the last value into the second position to conform with distortableImageOverlay
-             cs.splice(1, 0, cs.splice(3, 1)[0]);
+            //shift the last value into the second position to conform with distortableImageOverlay
+            cs.splice(1, 0, cs.splice(3, 1)[0]);
 
-           try{
-             var layer_obj =  L[service_method._class](url,{
-                actions:[L.LockAction],mode:"lock",editable:false,
-                corners: cs,
-                    }).addTo(this.map);
+             // zoom in first for images as they are often quite small
+             filter_manager.zoom_layer(resource.dcat_bbox)
 
-           }catch(e){
+             // delay showing image as it may not appear correctly ad higher scales
+             setTimeout(1000,function(){
+                  var layer_obj =  L[service_method._class](url,{
+                    actions:[L.LockAction],mode:"lock",editable:false,
+                    corners: cs,
+                   }).addTo(this.map);
+             })
 
-            console.log("zoom in first")
-           }
 
         }else{
             //we have no coordinates, just show the image in a separate leaflet
@@ -503,17 +515,41 @@ class Layer_Manager {
          map_manager.image_map.attributionControl._attributions = {};
          map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
         return
-    }else if(service_method._method==""){
+    }else if(service_method._method=="" || service_method._method==null){
         //todo - get this from the service
         layer_options.maxZoom= 21
+        console.log(service_method,service_method._class,service_method._method)
         var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
-    }else if(service_method._method.indexOf(".")>-1){
+    }else if(service_method?._method && service_method._method.indexOf(".")>-1){
         var method_parts=service_method._method.split(".")
         var layer_obj =  L[service_method._class][method_parts[0]][method_parts[1]](layer_options.url).addTo(this.map);
 
     }else{
+      if (service_method._method=="ajax"){
 
+            var layer_obj = L.layerGroup();
+            $.ajax({
+                dataType: "json",
+                url: url,
+                success: function(data) {
+
+                    L["geoJSON"](data,{
+                        onEachFeature: function(feature, layer){
+                            var geo =L.geoJSON(feature, {pane: _resource_id})
+
+                             layer_obj.addLayer(geo)
+                             geo.on('click', function(e) { $this.layer_click(e,_resource_id) });
+                        }
+                    })
+                    layer_obj.addTo($this.map);
+                    $this.layer_load_complete({layer_id:_resource_id})
+                }
+            }).error(function() {});
+
+      }else{
         var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
+      }
+
     }
 
 
@@ -525,12 +561,7 @@ class Layer_Manager {
     }
 
     layer_obj.on('click', function (e) {
-        //
-        map_manager.selected_layer_id=_resource_id
-
-        map_manager.click_lat_lng = e.latlng
-        map_manager.popup_show();
-        map_manager.show_popup_details([e.layer.feature])
+        $this.layer_click(e,_resource_id);
 
     });
 
@@ -570,21 +601,42 @@ class Layer_Manager {
      }
 
      layer_obj.on('load', function (e) {
+        $this.layer_load_complete(this);
 
-         $("."+this.layer_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated")
-         $("."+this.layer_id+"_toggle").text(LANG.RESULT.REMOVE)
-         // update the maps ta
-         $this.update_layer_count();
-          download_manager.add_downloadable_layers()
     });
 
     this.layer_list_change();
   }
+
   get_attribution(resource){
 
    return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["id"]+"')\" >"+resource["dct_title_s"]+"</a>"
 
   }
+  layer_click(e,_resource_id){
+        map_manager.layer_clicked=true
+        map_manager.selected_layer_id=_resource_id
+
+        map_manager.click_lat_lng = e.latlng
+        map_manager.click_x_y=e.containerPoint
+
+        map_manager.popup_show();
+         console.log(e)
+        try{
+              map_manager.show_popup_details([e.layer.feature])
+        }catch(error){
+            // could be an artificial click
+             console.log(e)
+        }
+  }
+  layer_load_complete(elm){
+    $("."+elm.layer_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated")
+    $("."+elm.layer_id+"_toggle").text(LANG.RESULT.REMOVE)
+    // update the maps ta
+    this.update_layer_count();
+    download_manager.add_downloadable_layers()
+  }
+
   show_image_viewer_layer(_layer){
         var  $this = this
         $("#image_map").width("75%")
@@ -676,7 +728,7 @@ class Layer_Manager {
                     icon: map_manager.get_marker_icon(resource_marker_class)
                   });
                 }
-                // END TEST
+
              }
 
           }

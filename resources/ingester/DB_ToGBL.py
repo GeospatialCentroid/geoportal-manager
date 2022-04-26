@@ -98,15 +98,6 @@ class DB_ToGBL:
     def export(self,r):
 
         print("Resource- coming down the ramp")
-        # created = models.DateTimeField('Date created', null=True, blank=True)
-        # accessioned = models.DateTimeField('Date accessioned', null=True, blank=True)
-        # license_info = RichTextField(null=True, blank=True)
-
-        # harvest = models.ForeignKey(Harvest, on_delete=models.SET_NULL, null=True, blank=True)
-
-        # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, related_name='resource')
-        #
-        # access_information = models.TextField(null=True, blank=True)
 
         if self.verbosity>0:
             print(r.publisher)
@@ -114,8 +105,9 @@ class DB_ToGBL:
         # a list of attributes that map to the json output
         #todo - updated id to be persistent identifier - https://github.com/geoblacklight/geoblacklight/wiki/GeoBlacklight-1.0-Metadata-Elements
         # make unique
-        r.resource_id+="-"+str(r.end_point.id)
 
+        if r.end_point:
+            r.resource_id+="-"+str(r.end_point.id)
 
         sub_folder = "" # consider setting this to better organize records
 
@@ -463,17 +455,10 @@ class DB_ToGBL:
     def get_refs(self,urls,_type):
         refs=[]
         downloads=[]
-        print("get REFS *")
+        print("get REFS *",urls)
         for u in urls:
             type = str(u.url_type.name).lower()
 
-            # if type == "base_url" and _type:
-            #     # substitute the layer type for this
-            #     type=_type
-
-            # # todo - this should be set via harvest or at least in the admin
-            # if str(u.url_type) == "base_url" and "iiif" in u.url:
-            #     type = "iiif"
 
             ref = self.match_ref(u.url, u.url_type)
             if ref:
@@ -514,4 +499,5 @@ class DB_ToGBL:
         if u_obj.ref:
             return '"'+u_obj.ref+'":"' + val + '"'
         else:
-            return
+            #return anyway
+            return '"'+str(u_obj)+'":"' + val + '"'

@@ -578,7 +578,7 @@ class Filter_Manager {
 
     }
 
-    show_details(_resource_id,resource){
+    show_details(_resource_id,resource,preview_url){
          // can be called from layer_manager with a resource in mind - required as the all_results is transient
 
          if (!resource){
@@ -594,9 +594,13 @@ class Filter_Manager {
             panel_id = "#child_panel"
             pos_id = "sub_details"
          }
+         var extra = _resource_id
+         if(preview_url){
+            extra+=preview_url
+         }
 
-          $(panel_id).load( "/details/"+_resource_id, function() {
-
+          $(panel_id).load( "/details/"+extra, function() {
+                console.log("We're loading the details")
 
                  setTimeout(function(){
                   $( window ).trigger("resize");

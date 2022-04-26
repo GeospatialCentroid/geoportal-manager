@@ -55,6 +55,10 @@ class Geo_Reference_Manager {
         this.add_save_control()
         this.init_image()
          this.get_tile_corners()
+
+          $(".slider").show()
+         $(".ui-slider-handle").css({"left":"100%"})
+
         var $this=this
         $("#image_map").resizable({
              handles: "e, w",
@@ -143,6 +147,7 @@ class Geo_Reference_Manager {
             }
             //shift the last value into the second position to conform with distortableImageOverlay
             cs.splice(1, 0, cs.splice(3, 1)[0]);
+            console.log(cs)
             this.add_image_to_map(cs);
             //zoom to bounds
             this.map.fitBounds(bounds);
@@ -155,8 +160,9 @@ class Geo_Reference_Manager {
         if(!corners){
             corners=false
         }
+        console.log(this["img"])
          this.distortable_img = L.distortableImageOverlay(this["img"],
-         {actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.LockAction],
+         {mode: L.ScaleAction, actions:[L.ScaleAction,L.DistortAction, L.RotateAction,L.FreeRotateAction, L.LockAction],
          corners: corners,
          }).addTo(this.map);
 
@@ -380,7 +386,7 @@ class Geo_Reference_Manager {
               modal: true,
               buttons: {
                 "Save": function( event ) {
-                  $this.submit_form(corners)
+                  $this.submit_form(corners,{name:$("#name").val(),email:$("#email").val()})
                    form_dialog.dialog( "close" );
                 },
                 Cancel: function() {
@@ -393,7 +399,7 @@ class Geo_Reference_Manager {
             });
             var form = form_dialog.find( "form" ).on( "submit", function( event ) {
               event.preventDefault();
-              $this.submit_form(corners)
+
             });
             form_dialog.dialog("open")
 
@@ -402,8 +408,10 @@ class Geo_Reference_Manager {
         }
 
     }
-    submit_form(corners){
-        var data = {}
+    submit_form(corners,data){
+        if (!data){
+            data = {}
+        }
         $.ajax({
           url: "set_geo_reference?id="+this["id"]+"&d="+corners,
           type: "POST",

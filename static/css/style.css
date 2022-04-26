@@ -613,7 +613,7 @@ position: absolute;
 .date_field {
   width: 90px;
 }
-#filter_date{
+.inline{
     display:inline-block;
 }
 .filter_slider_box{
@@ -888,4 +888,8 @@ body.modal-open {
 .disabled_link {
   pointer-events: none;
   color:#ccc !important;
+}
+
+#mode{
+display:none;
 }

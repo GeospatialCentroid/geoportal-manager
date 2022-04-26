@@ -17,7 +17,10 @@ class Map_Manager {
     for (var p in properties){
         this[p]=properties[p]
     }
-    this.click_lat_lng
+    // keep track of position on *map* when clicked
+    this.click_lat_lng;
+    //keep track of position on *page* when clicked
+    this.click_x_y;
     //look at the url params to see if they exist and should be used instead
     if (this.params){
         if (this.params.hasOwnProperty('z')){
@@ -33,7 +36,7 @@ class Map_Manager {
         this.params={}
     }
     console_log("Map_Manager params are:", this.params)
-
+    this.layer_clicked=false
     this.highlighted_feature
     this.highlighted_rect
 
@@ -48,8 +51,13 @@ class Map_Manager {
     var $this=this
 
     this.map.on('click', function(e) {
+            console.log("The map has been clicked",$this.mousedown_time,$this.layer_clicked)
           if ($this.mousedown_time<200){
-             $this.map_click_event(e.latlng)
+            if ($this.layer_clicked==false){
+                $this.map_click_event(e.latlng)
+            }else{
+                $this.layer_clicked==false
+            }
           }
     });
 
@@ -160,10 +168,42 @@ class Map_Manager {
 
   }
     set_selected_layer_id(elm){
-
-        map_manager.selected_layer_id =$(elm).val();
+        var $this= this
+        $this.selected_layer_id =$(elm).val();
         // retrigger the click event
-        map_manager.map_click_event()
+        // map_manager.map_click_event()
+        //turn off other layer
+         for (var i in layer_manager.layers){
+            var l = layer_manager.layers[i]
+            if (l.id!=$this.selected_layer_id){
+             l.layer_obj.setInteractive(false)
+            }
+         }
+
+        var layer = layer_manager.get_layer_obj($this.selected_layer_id).layer_obj
+
+         var ev = document.createEvent("MouseEvent");
+         var offset = $("#map").offset()
+         var el = document.elementFromPoint(offset.top+$this.click_x_y["y"],offset.left+$this.click_x_y["x"])
+         $this.map.removeLayer($this.highlighted_feature)
+           setTimeout(function(){
+
+                ev.initMouseEvent(
+                    "click",
+                    true /* bubble */, true /* cancelable */,
+                    window, null,
+                    0,0,  offset.left+$this.click_x_y["x"], offset.top+$this.click_x_y["y"], /* coordinates */
+                    false, false, false, false, /* modifier keys */
+                    0 /*left*/, null
+                );
+                el.dispatchEvent(ev);
+                // turn back on interactivity
+                for (var i in layer_manager.layers){
+                    var l = layer_manager.layers[i]
+                     l.layer_obj.setInteractive(true)
+                 }
+
+           },1000)
 
     }
      get_selected_layer(){
@@ -197,6 +237,7 @@ class Map_Manager {
         analytics_manager.track_event("web_map","click","layer_id",this.get_selected_layer()?.id)
         //start by using the first loaded layer
         var layer = this.get_selected_layer()
+        console.log("Get selected layer")
         if (!layer){
 
             return
@@ -271,7 +312,7 @@ class Map_Manager {
     }
 
     show_popup_details(_features){
-
+           console.log("show pop up details")
            var $this =this
            var layer = this.get_selected_layer()
            if(!layer){
@@ -301,6 +342,7 @@ class Map_Manager {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
            setTimeout(function(){
+                console.log("set a time out")
                $("#popup_content").html(html)
                 //show the first returned feature
 
@@ -314,22 +356,22 @@ class Map_Manager {
 
         }
        show_popup_details_show_num(num){
+
         if (!num){
             // default setting
             this.result_num=0
         }else{
             this.result_num=this.result_num+num
         }
-
         this.show_highlight_geo_json(this.features[this.result_num])
         var props= this.features[this.result_num].properties
+
         var html=''
          for (var p in props){
             var val = String(props[p]).hyper_text()
             html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
          }
         $("#props_table").html(html)
-
         // update the text
         $("#popup_result_num").html(this.result_num+1)
         //update the controls

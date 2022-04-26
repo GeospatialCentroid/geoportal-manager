@@ -121,7 +121,15 @@ def resource_page(request,resource_id,_LANG=False):
 
 def details_page(request,resource_id,_LANG=False):
     # for loading relative items dynamically
-    result_data = utils.get_reference_data(resource_id)
+    print("We have preview id",request.GET.get('id'))
+    if request.GET.get('id'):
+        data = generate_gbl_record(request).content.decode('utf8')
+        # convert the data to the expected solr structure
+        result_data = {'response':{'docs':[json.loads(data)]}}
+
+        print("result_data ((((((((((",result_data)
+    else:
+        result_data = utils.get_reference_data(resource_id)
 
     args = details_view.get_details_args(result_data,_LANG,False,request.build_absolute_uri("/"))
     return TemplateResponse(request, 'resource/details.html', args)
@@ -162,9 +170,14 @@ def get_disclaimer(request):
        e = End_Point.objects.get(id=request.GET.get('e'))
        return HttpResponse(e.disclaimer)
 
-def get_services(request):
-   # url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class','_method')
+
+def get_url_types(request):
    url_types = URL_Type.objects.values('name', 'ref', '_class', '_method')
+
+   return HttpResponse(json.dumps(list(url_types)), content_type='application/json')
+
+def get_services(request):
+   url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class','_method')
 
    return HttpResponse(json.dumps(list(url_types)), content_type='application/json')
 

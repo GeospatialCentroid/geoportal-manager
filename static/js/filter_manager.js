@@ -39,7 +39,7 @@ class Filter_Manager {
     this.sort_str=""
     // track the filter query for only showing parents in search results
     this.fq_str=""
-
+    this.mode="data"
     // for showing loading
     // this.progress_interval;
 
@@ -61,14 +61,30 @@ class Filter_Manager {
 //      }, 100);
 
     //
+    $('input[type=radio][name=search_type]').change(function() {
+        $this.mode=this.value
+    });
+
     $("#search").focus();
     $("#search_clear").click(function(){
         $("#search").val("")
 
     })
     $("#search_but").click(function(){
-        filter_manager.add_filter(false,$("#search").val())
-        analytics_manager.track_event("search","filter","text",$("#search").val())
+
+        if($this.mode=="data"){
+           filter_manager.add_filter(false,$("#search").val())
+            analytics_manager.track_event("search","filter","text",$("#search").val())
+        }else{
+         $.get($this.place_url, { q: $("#search").val() }, function(data) {
+                try{
+                    $this.show_place_bounds(data[0].boundingbox)
+                    $("#search").val(data[0].display_name)
+                }catch(e){}
+
+              }
+            )
+        }
     })
 
     $("#search").is(":focus")
@@ -83,7 +99,7 @@ class Filter_Manager {
     //https://stackoverflow.com/questions/895659/how-do-i-block-or-restrict-special-characters-from-input-fields-with-jquery
     $("#search").on('input', function() {
       var c = this.selectionStart,
-          r = /[^a-z0-9\s\+\-\"\'\_\&]/gi,
+          r = /[^a-z0-9\s\+\-\"\'\_\&]\*/gi,
           v = $(this).val();
       if(r.test(v)) {
         $(this).val(v.replace(r, ''));
@@ -94,17 +110,41 @@ class Filter_Manager {
     //
    $("#search").autocomplete({
      source: function(request, response) {
-         $.get('/suggest', { q: encodeURIComponent(request.term) }, function(data) {
-           response($.map( data, function( item ) {
-                return {
-                    label: item.term,
-                    value: item.term
-                }
-            }));
-        })},
+
+          if($this.mode=="data"){
+             $.get('/suggest', { q: encodeURIComponent(request.term) }, function(data) {
+               response($.map( data, function( item ) {
+                    return {
+                        label: item.term,
+                        value: item.term
+                    }
+                }));
+            })
+            }else{
+                 $.get($this.place_url, { q: request.term }, function(data) {
+                   response($.map( data, function( item ) {
+                        return {
+                            label: item.display_name,
+                            value: item.display_name,
+                            lat: item.lat,
+                            lng: item.lon,
+                            boundingbox:item.boundingbox,
+                        }
+                    }));
+                 })
+            }
+            },
       minLength: 2,
       select: function( event, ui ) {
-         $("#search_but").trigger("click")
+
+          if($this.mode=="data"){
+            $("#search_but").trigger("click")
+          }else{
+             $this.show_place_bounds(ui.item.boundingbox)
+
+          }
+
+
       }
     });
     // detect scroll bottom
@@ -168,6 +208,13 @@ class Filter_Manager {
 
          }
     })
+  }
+  show_place_bounds(b){
+        var sw = L.latLng(Number(b[0]), Number(b[2])),
+            ne = L.latLng(Number(b[1]), Number(b[3])),
+            bounds = L.latLngBounds(sw, ne);
+            map_manager.map_zoom_event(bounds)
+
   }
   bounds_change_handler(){
 
@@ -425,8 +472,10 @@ class Filter_Manager {
             if (!f[0]){
                 f_id=''
             }
-            if (f[1]!=''){
-               filter_str_array.push(f_id+ encodeURIComponent(f[1]).replaceAll("'","\\'"))
+            if (f[0]=='locn_geometry'){
+               filter_str_array.push(f_id+ encodeURIComponent(f[1]))
+            }else if (f[1]!=''){
+               filter_str_array.push(f_id+ "%22"+encodeURIComponent(f[1]).replaceAll("'","\\'")+"%22")
             }
 
          }
@@ -508,12 +557,14 @@ class Filter_Manager {
             //todo consider a better fix than arbitrary cut-off.
             if(children.length<100){
                 for(var c in children){
-
-                     temp_array.push("dct_identifier_sm:"+String(children[c]))
-
+                 if (children[c]!=""){
+                 temp_array.push("dct_identifier_sm:"+String(children[c]))
+                 }
                 }
-                  filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
-             }
+            }
+            if(temp_array.length>0){
+                    filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
+                }
 
         }
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
@@ -527,7 +578,7 @@ class Filter_Manager {
 
     }
 
-    show_details(_resource_id,resource){
+    show_details(_resource_id,resource,preview_url){
          // can be called from layer_manager with a resource in mind - required as the all_results is transient
 
          if (!resource){
@@ -543,9 +594,13 @@ class Filter_Manager {
             panel_id = "#child_panel"
             pos_id = "sub_details"
          }
+         var extra = _resource_id
+         if(preview_url){
+            extra+=preview_url
+         }
 
-          $(panel_id).load( "/details/"+_resource_id, function() {
-
+          $(panel_id).load( "/details/"+extra, function() {
+                console.log("We're loading the details")
 
                  setTimeout(function(){
                   $( window ).trigger("resize");
@@ -558,7 +613,7 @@ class Filter_Manager {
                 if(DEBUGMODE){
 
                      $(panel_id).append("<br/><a href='/admin/"+_resource_id+"' target='_blank'>Admin - View Solr Record</a>")
-                     $(panel_id).append("<br/><a href='/admin/resources/resource/?q="+_resource_id.substring(0,_resource_id.lastIndexOf("_"))+"' target='_blank'>Admin - Curate Record</a>")
+                     $(panel_id).append("<br/><a href='/admin/resources/resource/?q="+_resource_id.substring(0,_resource_id.lastIndexOf("-"))+"' target='_blank'>Admin - Curate Record</a>")
                 }else{
                      $(this).find(".page_nav").hide()
                 }

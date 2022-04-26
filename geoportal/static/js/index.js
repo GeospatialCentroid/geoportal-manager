@@ -153,20 +153,18 @@ $( function() {
             //preview mode
             // generate and return json for the record and load it in
             get_preview(usp.get('id'))
-
+            show_mode("Preview")
        }
 
 
 });
 
 function load_language(properties){
-    if (properties.language == "en-US"){
+    if (properties.language.toLowerCase() == "en-us"){
         lang_file_name="en"
     }else{
         console_log("This language is not yet implemented",properties.language)
     }
-    console_log(properties.language,lang_file_name)
-
     $.ajax({
             type: "GET",
             url: properties.path+lang_file_name+".json",
@@ -413,12 +411,17 @@ function window_resize() {
  }
 
 function get_preview(id){
-    console.log("Get the proview")
     //load in the json
-    filter_manager.load_json("/generate_gbl_record/?id="+id,show_preview,id)
+    filter_manager.load_json("/generate_gbl_record/?id="+id,show_preview,"?id="+id)
 }
 function show_preview(data,extra){
     filter_manager.all_results.push(data)
-    filter_manager.show_details(data["id"])
-   
+    filter_manager.show_details(data["id"],false,extra)
+
+}
+function show_mode(_title){
+    $("#mode").html(_title)
+     $("#mode").show();
+      $("#mode").css({display:"inline-block"});
+
 }

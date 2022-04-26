@@ -143,10 +143,12 @@ class ParentFilter(admin.SimpleListFilter):
 # @admin.register(Resource)
 class ResourceAdmin(OSMGeoAdmin):
     list_filter = ('end_point',"type","status_type","owner",ParentFilter,"missing")
-    search_fields = ('title','alt_title','description','resource_id')
+    search_fields = ('title','alt_title','description','resource_id',)
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
     readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count","preview")
+
+    autocomplete_fields =("tag","named_place","owner", "publisher")
     fieldsets = [
         (None, {'fields': [('resource_id','preview'),'year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
@@ -320,7 +322,10 @@ class ResourceAdmin(OSMGeoAdmin):
         print("first point",)
         """pass request to save to distinguish between automation and admin
               """
-        obj.save(request.user)
+        try:
+            obj.save(request.user)
+        except:
+            pass
 
     def preview(self, obj):
         if obj.pk:
@@ -357,11 +362,13 @@ class End_PointAdmin(OSMGeoAdmin):
 admin_site.register(End_Point, End_PointAdmin)
 
 class PublisherAdmin(OSMGeoAdmin):
+    search_fields = ('name',)
     pass
 admin_site.register(Publisher, PublisherAdmin)
 
 class Community_InputAdmin(OSMGeoAdmin):
    list_display = ["resource","date","name", "email"]
+   raw_id_fields = ("resource",)
 admin_site.register(Community_Input, Community_InputAdmin)
 
 class Georeference_RequestAdmin(OSMGeoAdmin):
@@ -394,7 +401,7 @@ class Category_KeywordsInline(admin.StackedInline):
     extra = 0
 
 class Category_KeywordsAdmin(OSMGeoAdmin):
-    pass
+    search_fields = ('name',)
 admin_site.register(Category_Keywords, Category_KeywordsAdmin)
 
 class CategoryAdmin(OSMGeoAdmin):
@@ -405,15 +412,15 @@ admin_site.register(Category, CategoryAdmin)
 
 
 class TagAdmin(OSMGeoAdmin):
-   pass
+    search_fields = ('name',)
 admin_site.register(Tag, TagAdmin)
 
 class PlaceAdmin(OSMGeoAdmin):
-   pass
+    search_fields = ('name',)
 admin_site.register(Place, PlaceAdmin)
 
 class Named_PlaceAdmin(OSMGeoAdmin):
-   pass
+    search_fields = ('name',)
 admin_site.register(Named_Place, Named_PlaceAdmin)
 
 class URL_TypeAdmin(OSMGeoAdmin):

@@ -5,15 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>
-    {% if title %}
+    <title>{% if title %}
         {{title}}
     {% else %}
          Mountain Scholar Geoportal
-    {% endif %}
-
-
-    </title>
+    {% endif %}</title>
 
     {% load static %}
 
@@ -90,6 +86,8 @@
      <script type="text/javascript" src='{% static 'plugins/leaflet/esri-leaflet-cluster.js' %}'></script>
 
      <script type="module" src='{% static 'plugins/leaflet/esri-leaflet-vector.js' %}'></script>
+<!--     <script type="module" src='{% static 'plugins/leaflet/leaflet.ajax.min.js' %}'></script>-->
+
      <!--jquery-->
     <link rel="stylesheet" href="{% static 'plugins/jquery-ui/jquery-ui.css' %}">
     <script src="{% static 'plugins/jquery-ui/external/jquery/jquery.js' %}"></script>
@@ -147,10 +145,10 @@
 </head>
 
 <body>
-
 <div class="page vh-100">
     <div id="header" class="col-lg-12">
-       <a href="/"><img class="logo" src="{{ STATIC_URL }}images/logo.png"/></a>
+        <a href="/"><img class="logo" src="{{ STATIC_URL }}images/logo.png"/></a>
+        <div id="mode" class="alert alert-danger" role="alert" ></div>
     </div>
     <div id="content">
         <div id="side_bar" >

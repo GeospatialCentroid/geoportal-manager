@@ -238,7 +238,7 @@ class Resource(models.Model):
 
         # saving logic - ie. change for change - store a record of the change update the overrides
         print("we are saving!!! by:",user)
-        if self.has_changed:
+        if self.has_changed and self.id:
             for f in self.changed_fields:
                 need_to_track=True
                 print("a change has been made",f,self.get_field_diff(f))
@@ -311,6 +311,7 @@ class Community_Input(models.Model):
    email = models.CharField(max_length=200,null=True, blank=True)
    field_name = models.CharField(max_length=100)
    notes = models.TextField(null=True, blank=True)
+   #approved = models.BooleanField(help_text="Set to true when ingested, or false if rejected and reverted",null=True, blank=True)
 
    def __str__(self):
        _str = ""
