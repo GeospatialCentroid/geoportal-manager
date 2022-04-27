@@ -51,14 +51,16 @@ class Map_Manager {
     var $this=this
 
     this.map.on('click', function(e) {
-            console.log("The map has been clicked",$this.mousedown_time,$this.layer_clicked)
           if ($this.mousedown_time<200){
             if ($this.layer_clicked==false){
+                 $this.click_lat_lng = e.latlng
+                 if(typeof(e.containerPoint)!="undefined"){
+                  $this.click_x_y=e.containerPoint
+                 }
                 $this.map_click_event(e.latlng)
-            }else{
-                $this.layer_clicked==false
             }
           }
+          $this.layer_clicked=false
     });
 
     // keep track of time mouse depressed to control click
@@ -173,37 +175,44 @@ class Map_Manager {
         // retrigger the click event
         // map_manager.map_click_event()
         //turn off other layer
-         for (var i in layer_manager.layers){
-            var l = layer_manager.layers[i]
-            if (l.id!=$this.selected_layer_id){
-             l.layer_obj.setInteractive(false)
-            }
+//         for (var i in layer_manager.layers){
+//            var l = layer_manager.layers[i]
+//            if (l.id!=$this.selected_layer_id){
+//             l.layer_obj.setInteractive(false)
+//            }
+//         }
+    //move the layer in question to the top
+
+    $("#sortable_layers").prepend($("#"+$this.selected_layer_id+"_drag"));
+    layer_manager.update_layer_order();
+        var layer= layer_manager.get_layer_obj($this.selected_layer_id)
+
+
+
+
+         if ($this.highlighted_feature){
+            $this.map.removeLayer($this.highlighted_feature)
          }
 
-        var layer = layer_manager.get_layer_obj($this.selected_layer_id).layer_obj
+         $this.popup_close()
+        if(layer.type=="GeoJSON"){
+          var ev = document.createEvent("MouseEvent");
+          var offset = $("#map").offset()
+          var el = document.elementFromPoint(offset.top+$this.click_x_y["y"],offset.left+$this.click_x_y["x"])
+            ev.initMouseEvent(
+                "click",
+                true, true,
+                window, null,
+                0,0,  offset.left+$this.click_x_y["x"], offset.top+$this.click_x_y["y"], /* coordinates */
+                false, false, false, false, /* modifier keys */
+                0 /*left*/, null
+            );
+            el.dispatchEvent(ev);
+        }else{
+            $this.mousedown_time=0
+            $this.map.fireEvent('click',{latlng:map_manager.click_lat_lng })
+        }
 
-         var ev = document.createEvent("MouseEvent");
-         var offset = $("#map").offset()
-         var el = document.elementFromPoint(offset.top+$this.click_x_y["y"],offset.left+$this.click_x_y["x"])
-         $this.map.removeLayer($this.highlighted_feature)
-           setTimeout(function(){
-
-                ev.initMouseEvent(
-                    "click",
-                    true /* bubble */, true /* cancelable */,
-                    window, null,
-                    0,0,  offset.left+$this.click_x_y["x"], offset.top+$this.click_x_y["y"], /* coordinates */
-                    false, false, false, false, /* modifier keys */
-                    0 /*left*/, null
-                );
-                el.dispatchEvent(ev);
-                // turn back on interactivity
-                for (var i in layer_manager.layers){
-                    var l = layer_manager.layers[i]
-                     l.layer_obj.setInteractive(true)
-                 }
-
-           },1000)
 
     }
      get_selected_layer(){
@@ -237,7 +246,7 @@ class Map_Manager {
         analytics_manager.track_event("web_map","click","layer_id",this.get_selected_layer()?.id)
         //start by using the first loaded layer
         var layer = this.get_selected_layer()
-        console.log("Get selected layer")
+        console.log("Get selected layer",layer)
         if (!layer){
 
             return
@@ -329,11 +338,13 @@ class Map_Manager {
             // show the feature layer
 
             if (_features.length>1){
+              $this.last_click_features=_features
               var prev_link="<a href='javascript:map_manager.show_popup_details_show_num(-1)' id='popup_prev' class='disabled_link'>« "+LANG.IDENTIFY.PREVIOUS+"</a> "
               var next_link=" <a href='javascript:map_manager.show_popup_details_show_num(1)' id='popup_next' class='disabled_link' onclick=''>"+LANG.IDENTIFY.NEXT+" »</a>"
-              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span><br/>"
+              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span> <a href='javascript:table_manager.generate_table(map_manager.last_click_features);table_manager.show_total_records(map_manager.last_click_features.length);$(\"#data_table_spinner\").hide();'>"+LANG.IDENTIFY.SHOW_IN_TABLE+"</a><br/>"
               html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span></th><th>"+next_link+"</th></tr></table>"
             }
+
 
             html += "<div id='popup_scroll'><table id='props_table'>"
             html+="</table></div>"
@@ -342,10 +353,8 @@ class Map_Manager {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
            setTimeout(function(){
-                console.log("set a time out")
                $("#popup_content").html(html)
                 //show the first returned feature
-
                 $this.features =  _features
                 if(typeof(_features)!="undefined" && _features?.length > 0){
                     console_log( $this.features,"Delayed")

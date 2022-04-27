@@ -319,10 +319,11 @@
 
             <div id="data_table_select" class="float-left"></div>
             <div >
-               <div class="item"><input id="table_bounds_checkbox" type="checkbox" value=""> <label class="form-check-label" for="table_bounds_checkbox"></label></div>
-                 <button id='query_button'  type='button' class='btn btn-primary' onclick='table_manager.show_query_panel(this)'></button>
-                 <button id='reset_button'  type='button' class='btn btn-primary' onclick='table_manager.reset_query(this)'></button>
-
+                <span id="advanced_table_filters">
+                    <div class="item"><input id="table_bounds_checkbox" type="checkbox" value=""> <label class="form-check-label" for="table_bounds_checkbox"></label></div>
+                     <button id='query_button'  type='button' class='btn btn-primary' onclick='table_manager.show_query_panel(this)'></button>
+                     <button id='reset_button'  type='button' class='btn btn-primary' onclick='table_manager.reset_query(this)'></button>
+                </span>
                 <div id="data_table_export">
                     <select id="data_table_export_select" >
                         <option selected value='default'></option>

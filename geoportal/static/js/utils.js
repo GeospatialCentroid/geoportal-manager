@@ -168,9 +168,14 @@ class Analytics_Manager {
 
 L.Layer.prototype.setInteractive = function (interactive) {
     if (this.getLayers) {
-        this.getLayers().forEach(layer => {
-            layer.setInteractive(interactive);
-        });
+        try{
+            this.getLayers().forEach(layer => {
+                layer.setInteractive(interactive);
+            });
+        }catch(e){
+            console.log("unable to set setInteractive", e)
+        }
+
         return;
     }
     if (!this._path) {

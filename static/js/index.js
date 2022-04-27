@@ -422,4 +422,6 @@ function show_preview(data,extra){
 function show_mode(_title){
     $("#mode").html(_title)
      $("#mode").show();
+      $("#mode").css({display:"inline-block"});
+
 }

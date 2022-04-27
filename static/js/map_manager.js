@@ -36,7 +36,7 @@ class Map_Manager {
         this.params={}
     }
     console_log("Map_Manager params are:", this.params)
-
+    this.layer_clicked=false
     this.highlighted_feature
     this.highlighted_rect
 
@@ -51,7 +51,7 @@ class Map_Manager {
     var $this=this
 
     this.map.on('click', function(e) {
-
+            console.log("The map has been clicked",$this.mousedown_time,$this.layer_clicked)
           if ($this.mousedown_time<200){
             if ($this.layer_clicked==false){
                 $this.map_click_event(e.latlng)
@@ -196,9 +196,7 @@ class Map_Manager {
                     false, false, false, false, /* modifier keys */
                     0 /*left*/, null
                 );
-                $("#dot").css({top: offset.top+$this.click_x_y["y"]+"px",left:offset.left+$this.click_x_y["x"]+"px"})
                 el.dispatchEvent(ev);
-
                 // turn back on interactivity
                 for (var i in layer_manager.layers){
                     var l = layer_manager.layers[i]
@@ -239,6 +237,7 @@ class Map_Manager {
         analytics_manager.track_event("web_map","click","layer_id",this.get_selected_layer()?.id)
         //start by using the first loaded layer
         var layer = this.get_selected_layer()
+        console.log("Get selected layer")
         if (!layer){
 
             return
@@ -332,9 +331,10 @@ class Map_Manager {
             if (_features.length>1){
               var prev_link="<a href='javascript:map_manager.show_popup_details_show_num(-1)' id='popup_prev' class='disabled_link'>« "+LANG.IDENTIFY.PREVIOUS+"</a> "
               var next_link=" <a href='javascript:map_manager.show_popup_details_show_num(1)' id='popup_next' class='disabled_link' onclick=''>"+LANG.IDENTIFY.NEXT+" »</a>"
-              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span><br/>"
+              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span><a href='javascript:table_manager.generate_table("+_features+")' id='popup_prev'>"+LANG.IDENTIFY.SHOW_IN_TABLE+"</a><br/>"
               html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span></th><th>"+next_link+"</th></tr></table>"
             }
+
 
             html += "<div id='popup_scroll'><table id='props_table'>"
             html+="</table></div>"

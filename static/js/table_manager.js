@@ -173,7 +173,7 @@ class Table_Manager {
         if(layer_manager.layers.length>0){
             this.selected_layer_id=layer_manager.layers[0].id
             trigger_layer_data_load = true
-            console.log("we'll select the firts one instead!!!!!")
+            console.log("we'll select the first one instead!!!!!")
         }else{
             // hide the table
             this.close()

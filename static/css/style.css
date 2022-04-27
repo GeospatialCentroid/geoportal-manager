@@ -891,5 +891,6 @@ body.modal-open {
 }
 
 #mode{
+padding:0;width:75%;text-align: center;
 display:none;
 }

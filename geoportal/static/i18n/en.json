@@ -148,7 +148,8 @@
 		"NEXT": "Next",
 		"SHOWING_RESULT": "Showing",
 		"OF": "of",
-		"FOUND": "Found"
+		"FOUND": "Found",
+		"SHOW_IN_TABLE": "Show in Table"
 	},
 	"TAB_TITLES": {
 		"BROWSE_TAB": 	"Search",
