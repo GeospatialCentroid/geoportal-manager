@@ -237,6 +237,12 @@ class ResourceAdmin(OSMGeoAdmin):
             for f in files:
                 os.remove(f)
 
+        #if a child is selected we should ingest the parent instead
+        for r in queryset:
+            # todo - need a better way than just relying upon the parent status
+            r.layers = Resource.objects.filter(status_type=r.status_type, parent=r.id)
+            print("The layers are:", r.layers)
+        # return
         # associate the children
         for r in queryset:
             #todo - need a better way than just relying upon the parent status
@@ -269,8 +275,8 @@ class ResourceAdmin(OSMGeoAdmin):
         updated =queryset.update(status_type='rs')
         for obj in queryset:
             # remove from solr
-            print("DELETE---", obj.resource_id)
-            deleter.interface.delete_one_record("\""+obj.resource_id+"\"")
+            print("DELETE---", obj.resource_id+"-"+str(obj.end_point.id))
+            deleter.interface.delete_one_record("\""+obj.resource_id+"-"+str(obj.end_point.id)+"\"")
 
         self.message_user(request, ngettext(
             '%d resource was successfully removed from Staging.',

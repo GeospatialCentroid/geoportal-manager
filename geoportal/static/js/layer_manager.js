@@ -38,7 +38,7 @@ class Layer_Manager {
     this.split_right_layers=[];
 
     //  only show the table for specific types
-    this.table_types=["esriSFS","esriPMS","esriSLS","vector","GeoJSON"]
+    this.table_types=["esriSFS","esriPMS","esriSLS","vector","GeoJSON","mapserver"]
     //
     var $this=this;
     // make the map layers sortable
@@ -150,15 +150,17 @@ class Layer_Manager {
                 }
             }
 
-        if ( usable_links.length>0){
+         //choose the preferred viz options
+         var priority = $this.get_priority(usable_links)
+            if ( usable_links.length>0){
             var type =""
-            if (resource?.gbl_resourceType_sm){
-                type = resource.gbl_resourceType_sm
-                if (Array.isArray(type)){
-                    type=type[0]
-                }
-              }
-              var priority = $this.get_priority(usable_links)
+//            if (resource?.gbl_resourceType_sm){
+//                type = resource.gbl_resourceType_sm
+//                if (Array.isArray(type)){
+//                    type=type[0]
+//                }
+//              }
+            type = $this.get_service_method(priority).name
 
             $this.add_layer(_resource_id,json_refs[priority],resource["drawing_info"],z,priority,type)
 
@@ -957,11 +959,11 @@ class Layer_Manager {
     }
     remove_legend(_resource_id){
         $("#legend_"+_resource_id).remove()
-
+        console.log($('#legend').children().length)
         if ( $('#legend').children().length > 0 ) {
-            $('#legend').show()
+            $('.legend').show()
         }else{
-            $('#legend').hide()
+            $('.legend').hide()
         }
 
     }

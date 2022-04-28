@@ -891,8 +891,8 @@ class Filter_Manager {
         //
         //check if the filter being removed in linked to a checkbox
         var filter_name=this.filters[$(elm).parent().index()][0]
-        if ($.inArray(filter_name,["dcat_bbox","dct_issued_s"])>-1){
-            if(filter_name=="dcat_bbox"){
+        if ($.inArray(filter_name,["locn_geometry","dct_issued_s"])>-1){
+            if(filter_name=="locn_geometry"){
                 $('#filter_bounds_checkbox').prop('checked', false);
             }else if(filter_name=="dct_issued_s"){
                  $('#filter_date_checkbox').prop('checked', false);

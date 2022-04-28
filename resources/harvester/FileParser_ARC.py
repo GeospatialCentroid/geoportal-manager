@@ -183,7 +183,7 @@ class FileParser_ARC(FileParser):
                         # store the base url
                         r_type = resource["type"].lower()
                         if r_type == "raster layer":
-                            r_type = "map service"
+                            r_type = "mapservice"
                         resource["urls"].append({'url_type': r_type, 'url': url})
                         # # set the type while we're at it
                         # resource["type"] = "Dataset|Service"

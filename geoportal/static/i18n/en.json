@@ -91,7 +91,8 @@
 		"NUMBER": "Number",
 		"TEXT": "String",
 		"GEOREFERENCE": "Georeference this Image",
-		"RIGHTS": "Rights"
+		"RIGHTS": "Rights",
+		"WEB_SERVICES": "Web Services"
 
 	},
 	"DISCLAIMER": {

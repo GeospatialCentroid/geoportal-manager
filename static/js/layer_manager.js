@@ -38,33 +38,17 @@ class Layer_Manager {
     this.split_right_layers=[];
 
     //  only show the table for specific types
-    this.table_types=["esriSFS","esriPMS","esriSLS","vector"]
+    this.table_types=["esriSFS","esriPMS","esriSLS","vector","GeoJSON","mapserver"]
     //
     var $this=this;
     // make the map layers sortable
     // make the map layers sortable
     $("#sortable_layers").sortable({
         start: function(event, ui) {
-
              $(ui.item).addClass('highlight');
         },
         stop: function(event, ui) {
-            //note that the layer order is reversed
-            var ext ="_drag"
-            var children =  $("#sortable_layers").children('.drag_li').get().reverse()
-            var layers = []
-            for (var i =0; i<children.length;i++){
-                var id = $(children[i]).attr('id')
-                if(typeof(id)!="undefined"){
-                    var _id = id.substring(0,id.length-ext.length);
-                    $this.map.getPane(_id).style.zIndex = i+100;
-                    layers.push($this.get_layer_obj(_id))
-                }
-
-            }
-            // update the layer order and url
-            $this.layers=layers;
-            $this.set_layers_list()
+            $this.update_layer_order();
         },
         update: function(event, ui) {
            $('#sortable_layers li').removeClass('highlight');
@@ -86,7 +70,27 @@ class Layer_Manager {
     });
 
   }
+  update_layer_order(){
+    //based on the sortable
 
+    //note that the layer order is reversed
+    var ext ="_drag"
+    var children =  $("#sortable_layers").children('.drag_li').get().reverse()
+    var layers = []
+    for (var i =0; i<children.length;i++){
+        var id = $(children[i]).attr('id')
+        if(typeof(id)!="undefined"){
+            var _id = id.substring(0,id.length-ext.length);
+            this.map.getPane(_id).style.zIndex = i+100;
+            layers.push(this.get_layer_obj(_id))
+        }
+
+    }
+    // update the layer order and url
+    this.layers=layers;
+    this.set_layers_list()
+
+  }
   toggle_layer(_resource_id,z){
 
     console_log("toggle_layer",_resource_id)
@@ -146,15 +150,17 @@ class Layer_Manager {
                 }
             }
 
-        if ( usable_links.length>0){
+         //choose the preferred viz options
+         var priority = $this.get_priority(usable_links)
+            if ( usable_links.length>0){
             var type =""
-            if (resource?.gbl_resourceType_sm){
-                type = resource.gbl_resourceType_sm
-                if (Array.isArray(type)){
-                    type=type[0]
-                }
-              }
-              var priority = $this.get_priority(usable_links)
+//            if (resource?.gbl_resourceType_sm){
+//                type = resource.gbl_resourceType_sm
+//                if (Array.isArray(type)){
+//                    type=type[0]
+//                }
+//              }
+            type = $this.get_service_method(priority).name
 
             $this.add_layer(_resource_id,json_refs[priority],resource["drawing_info"],z,priority,type)
 
@@ -535,12 +541,23 @@ class Layer_Manager {
 
                     L["geoJSON"](data,{
                         onEachFeature: function(feature, layer){
-                            var geo =L.geoJSON(feature, {pane: _resource_id})
+                            var style = {}
+                            if(feature.properties?.color){
+                                style.fillColor= feature.properties.color
+                                style.color= feature.properties.color
+                                 style.opacity= 0
+                            }
+
+                            var geo =L.geoJSON(feature, {pane: _resource_id, style: style})
 
                              layer_obj.addLayer(geo)
+                             //temp add service options
+                             layer_obj.service= {options:{url:url}}
+
                              geo.on('click', function(e) { $this.layer_click(e,_resource_id) });
                         }
                     })
+                    layer_obj.data = data
                     layer_obj.addTo($this.map);
                     $this.layer_load_complete({layer_id:_resource_id})
                 }
@@ -628,6 +645,7 @@ class Layer_Manager {
             // could be an artificial click
              console.log(e)
         }
+         //map_manager.layer_clicked=false
   }
   layer_load_complete(elm){
     $("."+elm.layer_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated")
@@ -801,7 +819,9 @@ class Layer_Manager {
             }
             var title = this.layers[i].resource_obj.dct_title_s;
             title = title.clip_text(30)
-            html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
+            if ($.inArray(this.layers[i].type,this.table_types)>-1){
+                html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
+            }
         }
         html+="<select>"
 
@@ -939,11 +959,11 @@ class Layer_Manager {
     }
     remove_legend(_resource_id){
         $("#legend_"+_resource_id).remove()
-
+        console.log($('#legend').children().length)
         if ( $('#legend').children().length > 0 ) {
-            $('#legend').show()
+            $('.legend').show()
         }else{
-            $('#legend').hide()
+            $('.legend').hide()
         }
 
     }

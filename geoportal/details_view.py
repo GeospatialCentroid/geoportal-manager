@@ -97,10 +97,13 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
     # generate web service link
     args['webservice_links_html'] = None
     ## todo - there should only be one unique url_type url
-    webservice_links= utils.get_ref_link(d['dct_references_s'], "feature layer")
+    webservice_links= utils.get_service_links(d['dct_references_s'])
     print("webservice_links",webservice_links)
     if webservice_links:
-        args['webservice_links_html']="<input class='' type='text'  disabled value="+webservice_links+">"
+        args['webservice_links_html'] = ""
+        for w in webservice_links:
+
+            args['webservice_links_html']+='<div class="item"><label class ="">'+w['name']+':</label> <input class="web_service_input" type="text" readonly="readonly" value='+w['url']+'></div>'
 
     download_link = None
     if 'dct_references_s' in d:

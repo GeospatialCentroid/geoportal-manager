@@ -894,3 +894,6 @@ body.modal-open {
 padding:0;width:75%;text-align: center;
 display:none;
 }
+.web_service_input{
+    width:100%
+}

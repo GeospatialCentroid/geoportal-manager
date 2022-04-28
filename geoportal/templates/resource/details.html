@@ -45,7 +45,10 @@
     {{get_catelog_link_html|safe}}
 
      {% if webservice_links_html %}
-     <br/>{{webservice_links_html|safe}}
+     <br/>
+    <br/>
+    <span class="font-weight-bold">{{LANG.DETAILS.WEB_SERVICES}}:</span><br/>
+    {{webservice_links_html|safe}}
      {% endif %}
 
     <div class="clearfix"></div><br/>

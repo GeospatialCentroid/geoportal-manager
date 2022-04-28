@@ -208,7 +208,16 @@ class Table_Manager {
     var $this=this
 
     var layer = layer_manager.get_layer_obj(_layer_id)
-
+    if (layer.layer_obj?.data){
+        // when the data is already loaded - i.e geojson
+        $this.generate_table(layer.layer_obj.data)
+        $this.show_total_records(layer.layer_obj.data.length)
+         $this.show_totals()
+        $("#data_table_spinner").hide();
+        $("#advanced_table_filters").hide()
+        return
+    }
+     $("#advanced_table_filters").show()
     // when a mapserver is requested for table view need to specify the layer id in question
     // temporarily look at the first layer todo expand to more more flexible
     var url= layer.layer_obj.service.options.url
@@ -219,7 +228,7 @@ class Table_Manager {
       url: url
     });
 
-    //store the layer obj incase we need to rerun without paging
+    //store the layer obj in case we need to rerun without paging
     $this.layer_id = _layer_id
     $this.func = func
 
@@ -240,7 +249,7 @@ class Table_Manager {
     }
     // get the total number of records from the service layer, make sure to include filters but exclude limits
     query_base.count(function (error, count,response) {
-        $this.page_count = count
+        $this.show_total_records(count)
     });
 
     var query_full;
@@ -254,6 +263,11 @@ class Table_Manager {
         query_full=query_full.orderBy($this.sort_col,$this.sort_dir)
     }
     query_full.run(func);
+  }
+  show_total_records(count){
+      this.page_count = count
+      $("#data_table_total .total_results").text(LANG.RESULT.FOUND+" "+count+" "+LANG.RESULT.RESULTS)
+
   }
   show_response(error, featureCollection, response){
     var $this=table_manager
@@ -270,7 +284,7 @@ class Table_Manager {
         }
         return;
       }
-    $this.results = featureCollection.features
+
     $this.generate_table(featureCollection.features)
     $this.show_totals()
   }
@@ -286,6 +300,8 @@ class Table_Manager {
   }
   //
   generate_table(_features){
+    this.elm_wrap.show()
+    this.results = _features
     //the first call to generated the table
     var html= "<table class='fixed_headers'><thead><tr>"
     // loop through the header elements
@@ -295,6 +311,7 @@ class Table_Manager {
     }
     var first_row = _features[0]
     var csv_array=[]
+    var cols=[]
     for (var p in first_row.properties){
         //todo add domain names (alias) for headers and pass database name to function for sorting
          var sort_icon="<i/>"
@@ -302,7 +319,7 @@ class Table_Manager {
             sort_icon=this.get_sort_icon(this.sort_dir)
          }
          html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
-
+         cols.push(p)
         csv_array.push(p)
     }
     this.csv=csv_array.join(",")+"\n"
@@ -317,22 +334,31 @@ class Table_Manager {
     setTimeout(function(){ $(window).trigger("resize"); }, 100);
 
   }
-  get_rows_html(_rows){
+  get_rows_html(_rows,_cols){
+    if(!_cols){
+        _cols=_rows[0].properties
+    }
+
     var html="";
+
     for(var i =0;i<_rows.length;i++){
+
         var id=0
         var csv_array=[]
         html+="<tr onclick='table_manager.highlight_feature(this,\""+_rows[i].id+"\")' ondblclick='table_manager.zoom_feature(this,\""+_rows[i].id+"\")'>"
-        for (var p in _rows[i].properties){
+        for (var p in _cols){
               var text = _rows[i].properties[p]
 
               if(typeof text === 'string'){
-                text = text.hyper_text()
-                text = text.clip_text(50)
+                csv_array.push(text)
 
+                text = text.hyper_text()
+                if(text.indexOf("<a href")==-1){
+                    text = text.clip_text(50)
+                }
               }
               html+="<td>"+text+"</td>"
-              csv_array.push(text)
+
         }
         html+="</tr>"
         this.csv+=csv_array.join(",")+"\n"
@@ -389,10 +415,9 @@ class Table_Manager {
   }
   show_totals(){
 
-        var totals_results=this.page_count
         var showing_start=1
         var showing_end=this.results.length
-        $("#data_table_total .total_results").text(LANG.RESULT.FOUND+" "+totals_results+" "+LANG.RESULT.RESULTS)
+
         $("#data_table_total .total_showing").text(LANG.RESULT.SHOWING_RESULTS+" "+showing_start+" "+LANG.RESULT.TO+" "+showing_end)
         // when there are no results
         if (showing_end==0){

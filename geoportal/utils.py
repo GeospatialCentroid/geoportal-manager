@@ -42,8 +42,31 @@ def get_ref_link(_json_refs,_type):
     else:
         return None
 
+def get_service_links(_json_refs):
+    """
+        Used to determine if there is a map visualization for the resource
+        :param _json_refs:
+        :return:
+        """
+    service_links=[]
+    json_refs = clean_json(_json_refs)
+    if json_refs:
+        url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class', '_method')
 
-def get_service_link(_json_refs):
+        for j in json_refs:
+            for u in url_types:
+                print("compare:", u["ref"], "to", j)
+                if u["ref"] == j:
+                   service_links.append({"name":u["name"],"url":json_refs[j]})
+    #
+    return service_links
+
+def has_service_link(_json_refs):
+    """
+    Used to determine if there is a map visualization for the resource
+    :param _json_refs:
+    :return:
+    """
 
     json_refs = clean_json(_json_refs)
     if json_refs:
@@ -112,11 +135,10 @@ def get_toggle_but_html(resource,LANG):
     if (add_txt!=LANG["RESULT"]["REMOVE"]):
         extra_class=""
 
-    print(add_txt == LANG["RESULT"]["ADD"],"get_service_link",get_service_link(resource["dct_references_s"]) )
 
     if(add_txt == LANG["RESULT"]["ADD"]):
         # check for add link
-        if "dct_references_s" in resource and not get_service_link(resource["dct_references_s"]):
+        if "dct_references_s" in resource and not has_service_link(resource["dct_references_s"]):
             return ""
 
     #todo support multiple
