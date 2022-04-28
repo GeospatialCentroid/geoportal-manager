@@ -3,7 +3,7 @@ The super class FileCollection is used to handle json file loading/saving and da
 
 """
 
-from resources.models import Resource, Format, Category,Owner,Publisher,Type, Language,Category,Tag,Place,URL,URL_Type,URL_Label,Geometry_Type,Change_Log
+from resources.models import Resource, Format, Category,Owner,Publisher,Type, Language,Category,Tag,Place,Named_Place,URL,URL_Type,URL_Label,Geometry_Type,Change_Log
 
 from django.contrib.gis.geos import GEOSGeometry
 
@@ -30,6 +30,7 @@ class FileCollection:
         self.page = 1
         self.total=None
         self.folder = self.org_name+self.date
+        self.loaded_resource_ids = []
 
         if not path.exists(self.path+self.folder):
             os.mkdir(self.path+self.folder)
@@ -53,7 +54,10 @@ class FileCollection:
                 context = ssl._create_unverified_context()
                 response = urllib.request.urlopen(_url, context=context)
                 with open(_file, 'w', encoding='utf-8') as outfile:
-                    outfile.write(response.read().decode('utf-8'))
+                    try:
+                        outfile.write(json.dumps(json.loads(response.read().decode('utf-8')), indent=4, sort_keys=True))
+                    except:
+                        outfile.write(response.read().decode('utf-8'))
                 self.load_file(_file, _func, parent_obj)
 
             except ssl.CertificateError as e:
@@ -115,12 +119,15 @@ class FileCollection:
         db_format = '%Y-%m-%d %H:%M:%S+00:00'
         if isinstance(date_str, int) :
             if len(str(date_str))==8:
-                return datetime.strptime(str(date_str), '%Y%m%d').strftime(db_format)
+                try:
+                    return datetime.strptime(str(date_str), '%Y%m%d').strftime(db_format)
+                except:
+                    return None
             return datetime.fromtimestamp(date_str/1000.0)
 
 
         if isinstance(date_str, str):
-            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.000Z').strftime(db_format)
+            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ').strftime(db_format)
         else:
             return date_str.strftime(db_format)
 
@@ -133,6 +140,13 @@ class FileCollection:
         :param parent_resource: For saving the parent ID as part of the child record when appropriate
         :return: The saved database record
         """
+        if 'id' not in obj:
+            print("unable to find the id")
+            return
+
+        # remove and weird characters
+        obj["id"] = obj["id"].replace(":","_")
+
         owner=None
         if 'owner' in obj:
             owner, created = Owner.objects.get_or_create(name=obj['owner'])
@@ -201,7 +215,8 @@ class FileCollection:
                        "created": obj['created'],
                        "modified": obj['modified'],
                        "accessioned": datetime.now().strftime("%Y-%m-%d %H:%M:%S+00:00"),  # to remove the milliseconds
-                       "parent": parent_resource}
+                       "missing":False
+                       }
 
         try:
             r = Resource.objects.get(resource_id=obj['id'], end_point=self.end_point)
@@ -233,7 +248,7 @@ class FileCollection:
             r.save()
             print("Already exists!!! But Updated")
         except Resource.DoesNotExist:
-            print("Create a new resource!!!")
+            print("Create a new resource!!! ID:", obj['id'])
             r = Resource.objects.get_or_create(**data_struct)[0]
 
             if owner:
@@ -258,8 +273,10 @@ class FileCollection:
         if 'places' in obj:
             for p in obj['places']:
                 # note the place is unique on two columns so use both to avoid duplicates
-                ps = p.split("|")
-                r.place.add(Place.objects.get_or_create(name=ps[0], name_lsad=ps[1])[0])
+                r.named_place.add(Named_Place.objects.get_or_create(name=p)[0])
+
+        if parent_resource:
+            r.parent.add(parent_resource)
 
         # and lastly - create the urls  by looping over the ones in the resources
         for u in obj['urls']:
@@ -278,6 +295,10 @@ class FileCollection:
             except Exception as e:
                 # print("Except",str(e))
                 pass
+
+        if self.track:
+            self.loaded_resource_ids.append(obj['id'])
+
         return r
 
 

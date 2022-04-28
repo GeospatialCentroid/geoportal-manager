@@ -6,10 +6,13 @@ var layer_manager;
 var table_manager;
 var download_manager;
 var disclaimer_manager;
+var analytics_manager;
 if (typeof(params)=="undefined"){
     var params = {}
 }
+var last_params={}
 var usp={};// the url params object to be populated
+var browser_control=false
 
 //make sure everything is loaded before proceeding.
 class Load_Manager {
@@ -35,6 +38,7 @@ var load_manager = new Load_Manager(
     {call_back:initialize_interface}
 );
 
+
 $( function() {
 
     $( window ).resize( window_resize);
@@ -53,7 +57,14 @@ $( function() {
             filter_manager.update_parent_toggle_buttons(".content_right")
             filter_manager.update_parent_toggle_buttons("#details_panel")
             filter_manager.update_toggle_button()
-            $("#document .page_nav").hide()
+            if(! DEBUGMODE){
+                $("#document .page_nav").hide()
+            }else{
+                //append d=1, so that debug mode remains
+                $("#document .page_nav a").each(function() {
+                   $(this).attr("href",  $(this).attr("href") + '&d=1');
+                });
+            }
     },500)
         //update the height of the results area when a change occurs
         $('#side_header').bind('resize', function(){
@@ -91,9 +102,10 @@ $( function() {
         }
 
 
+
     }
 
-    console.log(params)
+    console_log("index params",params)
 
 
     // setup the filter manager to handle faceting and other functions
@@ -102,6 +114,7 @@ $( function() {
      result_url:'/result?',
      facet_params:'rows=0&facet.mincount=1&facet=on&wt=json&df=text&',
      params:params['f'],
+     place_url:'https://nominatim.openstreetmap.org/search?format=json'
      })
 
      map_manager = new Map_Manager(
@@ -115,7 +128,9 @@ $( function() {
      map_manager.init()
      map_manager.init_image_map()
 
-     console.log("The layers are...",params['l'])
+     analytics_manager = new Analytics_Manager();
+
+     console_log("The layers are...",params['l'])
 
      layer_manager = new Layer_Manager({
         map:map_manager.map,
@@ -133,17 +148,23 @@ $( function() {
 
      filter_manager.init();
 
+     // check for preview mode
+       if(document.URL.indexOf("/preview")>-1){
+            //preview mode
+            // generate and return json for the record and load it in
+            get_preview(usp.get('id'))
+            show_mode("Preview")
+       }
+
 
 });
 
 function load_language(properties){
-    if (properties.language == "en-US"){
+    if (properties.language.toLowerCase() == "en-us"){
         lang_file_name="en"
     }else{
         console_log("This language is not yet implemented",properties.language)
     }
-    console.log(properties.language,lang_file_name)
-
     $.ajax({
             type: "GET",
             url: properties.path+lang_file_name+".json",
@@ -154,8 +175,8 @@ function load_language(properties){
                 console_log("lang loaded")
             },
             error: function (xhr, ajaxOptions, thrownError) {
-                console.log(xhr.status);
-                console.log(thrownError);
+                console_log(xhr.status);
+                console_log(thrownError);
 //                var err = eval("Language Error Loading(" + xhr.responseText + ")");
                 alert(err.Message);
               }
@@ -165,54 +186,20 @@ function load_language(properties){
 
 
 function initialize_interface(){
+
     var sort_str=""
     if(!$.isEmptyObject(usp) && usp.get("sort")){
         sort_str=usp.get("sort")
     }
     filter_manager.generate_sort(sort_str)
-    //
-    //bound search
     $("[for='filter_bounds_checkbox']").text(LANG.SEARCH.LIMIT)
-    $('#filter_bounds_checkbox').change(
-        function(){
-             filter_manager.update_bounds_search($(this))
-     });
-
-    //date search
     $("#filter_date_to").text(LANG.SEARCH.TO)
-    $('#filter_date_checkbox').change(
-        function(){
-          filter_manager.delay_date_change()
-    });
-
     $("[for='filter_date_checkbox']").text(LANG.SEARCH.LIMIT_DATE)
-    var start =new Date("1900-01-01T00:00:00")
-    var end =new Date();
-    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
-    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
 
-    $("#filter_start_date").change( function() {
-        filter_manager.delay_date_change()
+    $("#radio_data_label").text(LANG.SEARCH.RADIO_DATA_LABEL)
 
-    });
-    $("#filter_end_date").change( function() {
-      filter_manager.delay_date_change()
-    });
-
-    var values = [start.getTime(),end.getTime()]
-    $("#filter_date .filter_slider_box").slider({
-            range: true,
-            min: values[0],
-            max: values[1],
-            values:values,
-            slide: function( event, ui ) {
-
-               $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
-               $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
-               filter_manager.delay_date_change()
-
-         }
-    })
+    $("#radio_place_label").text(LANG.SEARCH.RADIO_PLACE_LABEL)
+    //
     disclaimer_manager.init();
     //
     table_manager.init();
@@ -241,8 +228,6 @@ function init_tabs(){
     $("#search_tab").text(LANG.TAB_TITLES.BROWSE_TAB)
     $("#map_tab .label").text(LANG.TAB_TITLES.MAP_TAB)
     $("#download_tab").text(LANG.TAB_TITLES.DOWNLOAD_TAB)
-
-
     $(".tab_but").click(function() {
         $(".tab_but").removeClass("active")
         $(this).addClass("active")
@@ -258,26 +243,30 @@ function init_tabs(){
 
     // click the tab and slide to the panel as appropriate
     if( !$.isEmptyObject(usp) && usp.get("t")){
-          console.log("tab",usp.get("t"))
-        var tab_parts = usp.get("t").split("/")
 
-        // move to the set search panel
-        if(tab_parts.length>1){
-            filter_manager.slide_position(tab_parts[1])
-        }
-        if(tab_parts.length>2){
-           filter_manager.display_resource_id = tab_parts[2]
-        }
-
-       //auto click the tab for state saving
-        $("#"+tab_parts[0]).trigger("click")
+       move_to_tab(usp.get("t"))
     }
+}
+function move_to_tab(tab_str){
+    var tab_parts = tab_str.split("/")
+
+    // move to the set search panel
+    if(tab_parts.length>1){
+        $("#nav").show()
+        filter_manager.slide_position(tab_parts[1])
+    }
+    if(tab_parts.length>2){
+       filter_manager.display_resource_id = tab_parts[2]
+    }
+
+   //auto click the tab for state saving
+   $("#"+tab_parts[0]).trigger("click")
 }
 
 function save_params(){
     // access the managers and store the info URL sharing
 
-    var p = "/?f="+rison.encode_array(filter_manager.filters)
+    var p = "/?f="+encodeURIComponent(rison.encode_array(filter_manager.filters))
     +"&e="+rison.encode(map_manager.params)
 
     if(layer_manager && typeof(layer_manager.layers_list)!="undefined"){
@@ -311,8 +300,42 @@ function save_params(){
         p +="&d=1"
     }
 
-    window.history.replaceState(null, null, p.replaceAll(" ", "+").replaceAll("'", "~"));
+    // before saving the sate, let's make sure they are not the same
+    if(JSON.stringify(p) != JSON.stringify(last_params) && !browser_control){
+        window.history.pushState(p, null, p.replaceAll(" ", "+").replaceAll("'", "~"))
+        last_params = p
+    }
+
 }
+// enable back button support
+window.addEventListener('popstate', function(event) {
+    var _params={}
+    usp = new URLSearchParams(window.location.search.substring(1).replaceAll("~", "'").replaceAll("+", " "))
+
+        if (usp.get('f')!=null){
+            _params['f'] = rison.decode("!("+usp.get("f")+")")
+        }
+        if (usp.get('e')!=null){
+            _params['e'] =  rison.decode(usp.get('e'))
+        }
+
+        if (usp.get('l')!=null && usp.get('l')!="!()"){
+            _params['l'] =  rison.decode(usp.get('l'))
+        }
+        browser_control=true
+        filter_manager.remove_filters()
+        filter_manager.filters=[]
+        $("#filter_bounds_checkbox").prop("checked", false)
+        filter_manager.set_filters(_params['f'])
+        filter_manager.filter()
+
+        move_to_tab( usp.get("t"))
+
+
+        map_manager.move_map_pos( _params['e'])
+        browser_control=false
+
+}, false);
 
 function window_resize() {
         var data_table_height=0
@@ -386,3 +409,19 @@ function window_resize() {
 
 
  }
+
+function get_preview(id){
+    //load in the json
+    filter_manager.load_json("/generate_gbl_record/?id="+id,show_preview,"?id="+id)
+}
+function show_preview(data,extra){
+    filter_manager.all_results.push(data)
+    filter_manager.show_details(data["id"],false,extra)
+
+}
+function show_mode(_title){
+    $("#mode").html(_title)
+     $("#mode").show();
+      $("#mode").css({display:"inline-block"});
+
+}

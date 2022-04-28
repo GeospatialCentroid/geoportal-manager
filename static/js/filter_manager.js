@@ -39,7 +39,7 @@ class Filter_Manager {
     this.sort_str=""
     // track the filter query for only showing parents in search results
     this.fq_str=""
-
+    this.mode="data"
     // for showing loading
     // this.progress_interval;
 
@@ -61,13 +61,30 @@ class Filter_Manager {
 //      }, 100);
 
     //
+    $('input[type=radio][name=search_type]').change(function() {
+        $this.mode=this.value
+    });
+
     $("#search").focus();
     $("#search_clear").click(function(){
         $("#search").val("")
 
     })
     $("#search_but").click(function(){
-        filter_manager.add_filter(false,$("#search").val())
+
+        if($this.mode=="data"){
+           filter_manager.add_filter(false,$("#search").val())
+            analytics_manager.track_event("search","filter","text",$("#search").val())
+        }else{
+         $.get($this.place_url, { q: $("#search").val() }, function(data) {
+                try{
+                    $this.show_place_bounds(data[0].boundingbox)
+                    $("#search").val(data[0].display_name)
+                }catch(e){}
+
+              }
+            )
+        }
     })
 
     $("#search").is(":focus")
@@ -78,8 +95,58 @@ class Filter_Manager {
              $("#search_but").trigger("click")
         }
     })
+    // prevent special characters in search
+    //https://stackoverflow.com/questions/895659/how-do-i-block-or-restrict-special-characters-from-input-fields-with-jquery
+    $("#search").on('input', function() {
+      var c = this.selectionStart,
+          r = /[^a-z0-9\s\+\-\"\'\_\&]\*/gi,
+          v = $(this).val();
+      if(r.test(v)) {
+        $(this).val(v.replace(r, ''));
+        c--;
+      }
+      this.setSelectionRange(c, c);
+    });
     //
+   $("#search").autocomplete({
+     source: function(request, response) {
 
+          if($this.mode=="data"){
+             $.get('/suggest', { q: encodeURIComponent(request.term) }, function(data) {
+               response($.map( data, function( item ) {
+                    return {
+                        label: item.term,
+                        value: item.term
+                    }
+                }));
+            })
+            }else{
+                 $.get($this.place_url, { q: request.term }, function(data) {
+                   response($.map( data, function( item ) {
+                        return {
+                            label: item.display_name,
+                            value: item.display_name,
+                            lat: item.lat,
+                            lng: item.lon,
+                            boundingbox:item.boundingbox,
+                        }
+                    }));
+                 })
+            }
+            },
+      minLength: 2,
+      select: function( event, ui ) {
+
+          if($this.mode=="data"){
+            $("#search_but").trigger("click")
+          }else{
+             $this.show_place_bounds(ui.item.boundingbox)
+
+          }
+
+
+      }
+    });
     // detect scroll bottom
     $("#result_wrapper").scroll( function(e) {
          if (Math.round($(this).scrollTop() + $(this).innerHeight()) >= $(this)[0].scrollHeight-1){
@@ -100,10 +167,58 @@ class Filter_Manager {
             }
          }
     });
+
+     //bound search
+    $('#filter_bounds_checkbox').change(
+        function(){
+             filter_manager.update_bounds_search($(this))
+        }
+    );
+
+    //date search
+    $('#filter_date_checkbox').change(
+        function(){
+          filter_manager.delay_date_change();
+        }
+    );
+    var start =new Date("1800-01-01T00:00:00")
+    var end =new Date();
+    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
+    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
+
+    $("#filter_start_date").change( function() {
+        filter_manager.delay_date_change()
+
+    });
+    $("#filter_end_date").change( function() {
+      filter_manager.delay_date_change()
+    });
+
+    var values = [start.getTime(),end.getTime()]
+    $("#filter_date .filter_slider_box").slider({
+            range: true,
+            min: values[0],
+            max: values[1],
+            values:values,
+            slide: function( event, ui ) {
+
+               $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
+               $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
+               filter_manager.delay_date_change()
+
+         }
+    })
+  }
+  show_place_bounds(b){
+        var sw = L.latLng(Number(b[0]), Number(b[2])),
+            ne = L.latLng(Number(b[1]), Number(b[3])),
+            bounds = L.latLngBounds(sw, ne);
+            map_manager.map_zoom_event(bounds)
+
   }
   bounds_change_handler(){
 
-        // when the map bounds changes and the serach tab is visiable
+        // when the map bounds changes and the search tab is visible
         if ($('#filter_bounds_checkbox').is(':checked') && "search_tab"==$("#tabs").find(".active").attr("id")){
          this.update_bounds_search()
          this.filter()
@@ -115,11 +230,11 @@ class Filter_Manager {
         if ($('#filter_bounds_checkbox').is(':checked')){
             var b =layer_manager.map.getBounds()
             //search lower-left corner as the start of the range and the upper-right corner as the end of the range
-            filter_manager.add_filter("solr_geom","["+b._southWest.lat.toFixed(3)+","+b._southWest.lng.toFixed(3)+" TO "+b._northEast.lat.toFixed(3)+","+b._northEast.lng.toFixed(3)+"]")
+            filter_manager.add_filter("locn_geometry","["+b._southWest.lat.toFixed(3)+","+b._southWest.lng.toFixed(3)+" TO "+b._northEast.lat.toFixed(3)+","+b._northEast.lng.toFixed(3)+"]")
 
         }else{
            //Remove bound filter
-           this.remove_and_update_filters('solr_geom')
+           this.remove_and_update_filters('locn_geometry')
         }
     }
     remove_and_update_filters(_id){
@@ -174,7 +289,7 @@ class Filter_Manager {
                     var err = eval("(" + xhr.responseText + ")");
                     alert(err.Message);
                 }catch(e){
-                    console.log("ERROR",xhr)
+                    console_log("ERROR",xhr)
                 }
 
             }
@@ -186,7 +301,7 @@ class Filter_Manager {
         this.load_list=_list
         for (var i =0;i<this.load_list.length;i++){
            var obj = this.load_list[i]
-           this.load_json(this.base_url+"q=dc_identifier_s:"+obj.id,this.show_layer);
+           this.load_json(this.base_url+"q=dct_identifier_sm:"+obj.id,this.show_layer);
         }
     }
     show_layer(layers_data){
@@ -241,6 +356,7 @@ class Filter_Manager {
             for (var o in LANG.SEARCH.SORT_OPTIONS){
                 if($this.val()==o){
                      filter_manager.sort_str=LANG.SEARCH.SORT_OPTIONS[o].search
+                     analytics_manager.track_event("search","sort","by",$this.val())
                      break
                 }
             }
@@ -280,7 +396,7 @@ class Filter_Manager {
                    if(typeof(translate[list[i]])!='undefined'){
                         title =translate[list[i]]['title']
                     }else{
-                        console.log("no translation for", list[i])
+                        console_log("no translation for", list[i])
                     }
                 }
 
@@ -297,15 +413,17 @@ class Filter_Manager {
      update_facets(data){
         var $this=filter_manager
         var html = LANG.FACET.REFINE_SEARCH
-        html+= $this.get_list_group_html(LANG.FACET.TOPICS,data.facet_counts.facet_fields.dc_subject_sm,"dc_subject_sm", LANG.FACET.CATEGORIES,true)
+        html+= $this.get_list_group_html(LANG.FACET.TOPICS,data.facet_counts.facet_fields.dct_subject_sm,"dct_subject_sm", LANG.FACET.CATEGORIES,true)
         html+= $this.get_list_group_html(LANG.FACET.PLACE,data.facet_counts.facet_fields.dct_spatial_sm,'dct_spatial_sm')
-        html+= $this.get_list_group_html(LANG.FACET.AUTHOR,data.facet_counts.facet_fields.dc_creator_sm,"dc_creator_sm")
+        html+= $this.get_list_group_html(LANG.FACET.AUTHOR,data.facet_counts.facet_fields.dct_creator_sm,"dct_creator_sm")
         $("#result_wrapper .content_left").html(html)
      }
 
-    set_filters(){
+    set_filters(_params){
+        if(_params){
+            this.params =_params
+        }
         // when filter url parameters exist - show them and filter
-         console.log("set_filters",this.params )
         if(this.params){
 
             for(var i =0; i<= this.params.length;i++){
@@ -313,12 +431,14 @@ class Filter_Manager {
                var f = this.params[i]
                console_log(this.params[i],typeof(f)!="undefined")
                if (typeof(f)!="undefined"){
+
+                    if(f[0]=="locn_geometry"){
+                         $("#filter_bounds_checkbox").prop("checked", true)
+                    }
                     this.add_filter(f[0],f[1],false,true)
                 }
             }
-//            if (this.filters.length){
-//                this.filter()
-//            }
+
         }
     }
 
@@ -327,14 +447,14 @@ class Filter_Manager {
         this.slide_position("results");
         this.page_start=0;
         $("#result_wrapper").scrollTop(0)
-        var filter_str = this.get_filter_str()
+
         $("#result_total .spinner-border").show();
-//        // show only parents but search within both parent and children
-//        this.fq_str="{!parent which='solr_type:parent'}"
-//        +"&fq="+this.fq_str
-        var results_url=this.result_url+"f="+rison.encode_array(filter_manager.filters)+"&rows="+this.page_rows+"&start="+this.page_start+"&sort="+this.sort_str
+
+        var results_url=this.result_url+"f="+encodeURIComponent(rison.encode_array(filter_manager.filters))+"&rows="+this.page_rows+"&start="+this.page_start+"&sort="+this.sort_str
         $.get(results_url,this.show_results)
         //update the facets on the first search requests.
+
+        var filter_str = this.get_filter_str()
         var facet_url=this.base_url+this.facet_params+filter_str
         this.load_json(facet_url,this.update_facets)
 
@@ -352,17 +472,16 @@ class Filter_Manager {
             if (!f[0]){
                 f_id=''
             }
-            if (f[1]!=''){
-                filter_str_array.push(f_id+f[1])
+            if (f[0]=='locn_geometry'){
+               filter_str_array.push(f_id+ encodeURIComponent(f[1]))
+            }else if (f[1]!=''){
+               filter_str_array.push(f_id+ "%22"+encodeURIComponent(f[1]).replaceAll("'","\\'")+"%22")
             }
 
          }
 
          //restrict to parent results
-        var fq="&fq={!parent which='solr_type:parent'}"
-        // restrict suppressed
-        //filter_str_array.push("suppressed_b:False")
-
+         var fq="&fq={!parent which='solr_type:parent'}"
          return  'json={query:\''+filter_str_array.join(" AND ")+'\' '+'}'+fq
     }
     show_results(data){
@@ -423,15 +542,33 @@ class Filter_Manager {
         }
 
     }
-    get_layers(_resource_id){
-        //get all the filtered children of the parent
-        //   $.get(this.result_url+"q=path:"+_resource_id+".layer&rows="+1000,this.show_sublayer_details)
-        console.log(filter_manager.filters)
-        var filters_copy = JSON.parse(JSON.stringify(filter_manager.filters));
-        filters_copy.push(["path",String(_resource_id)+".layer"])
+    get_layers(_resource_id,elm){
+
+        // either get all the children or just the filtered one
+        // start with no filters
+         var filters_copy = [["dct_isPartOf_sm",String(_resource_id)]]; // make suret he parent path is present so the search returns the children
+        // when the search is performed from the details page of the parent record - show all the children
+        //otherwise get all the filtered children of the parent
+       if(this.panel_name!="details"){
+
+            var children =$(elm).attr("data-child_arr").split(",")
+            var temp_array=[]
+            // specifying children to maintain filtering can cause really long urls
+            //todo consider a better fix than arbitrary cut-off.
+            if(children.length<100){
+                for(var c in children){
+                 if (children[c]!=""){
+                 temp_array.push("dct_identifier_sm:"+String(children[c]))
+                 }
+                }
+            }
+            if(temp_array.length>0){
+                    filters_copy.push([false,"("+temp_array.join(" OR ")+")"])
+                }
+
+        }
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
         $.get(results_url,this.show_sublayer_details)
-
     }
 
     show_sublayer_details(layers_html,_resource_id){
@@ -441,7 +578,7 @@ class Filter_Manager {
 
     }
 
-    show_details(_resource_id,resource){
+    show_details(_resource_id,resource,preview_url){
          // can be called from layer_manager with a resource in mind - required as the all_results is transient
 
          if (!resource){
@@ -457,17 +594,28 @@ class Filter_Manager {
             panel_id = "#child_panel"
             pos_id = "sub_details"
          }
+         var extra = _resource_id
+         if(preview_url){
+            extra+=preview_url
+         }
 
-          $(panel_id).load( "/details/"+_resource_id, function() {
-                 $( window ).trigger("resize");
+          $(panel_id).load( "/details/"+extra, function() {
+                console.log("We're loading the details")
+
+                 setTimeout(function(){
+                  $( window ).trigger("resize");
+                 },500)
                  filter_manager.slide_position(pos_id);
                  // update the details toggle button
                 filter_manager.update_parent_toggle_buttons(panel_id)
-                $(this).find(".page_nav").hide()
+
 
                 if(DEBUGMODE){
-                    var link ="/admin/"+_resource_id
-                     $(panel_id).append("<br/><a href='"+link+"' target='_blank'>Admin - View Solr Record</a>")
+
+                     $(panel_id).append("<br/><a href='/admin/"+_resource_id+"' target='_blank'>Admin - View Solr Record</a>")
+                     $(panel_id).append("<br/><a href='/admin/resources/resource/?q="+_resource_id.substring(0,_resource_id.lastIndexOf("-"))+"' target='_blank'>Admin - Curate Record</a>")
+                }else{
+                     $(this).find(".page_nav").hide()
                 }
 
             });
@@ -501,7 +649,7 @@ class Filter_Manager {
                                 label = url.substring(url.indexOf('.') + 1).toUpperCase()
                             }
                             if (label && url){
-                                html += "<option value='" + url + "'>" +label+ "</option>"
+                                html += "<option value='" + url + "'>" +label.clip_text(6)+ "</option>"
                             }
                         }
                         html += "</select>"
@@ -526,23 +674,46 @@ class Filter_Manager {
               case 'http://schema.org/downloadUrl':
                     return "download"
               default:
-                console.log("Unassigned ref type",_ref)
+                console_log("Unassigned ref type",_ref)
                 return ""
         }
     }
+    get_bounds(geom){
 
+     if (typeof(geom) !="undefined"){
+        var b = this.get_bound_array(geom)
+        var nw = L.latLng(b[2],b[0])
+        var se =  L.latLng(b[3],b[1])
 
-    zoom_layer(_solr_geom){
-            var b = this.get_bound_array(_solr_geom)
-             var nw = L.latLng(b[2],b[0])
-             var se =  L.latLng(b[3],b[1])
+        return L.latLngBounds(L.latLng(nw), L.latLng(se))
+        }
+    }
 
-             var bounds = L.latLngBounds(L.latLng(nw), L.latLng(se))
-
-            map_manager.zoom_rect(L.latLngBounds(L.latLng(nw), L.latLng(se)))
+    zoom_layer(geom){
+        this.get_bounds(geom)
+        map_manager.zoom_rect( this.get_bounds(geom))
     }
     get_bound_array(geom){
-        return geom.substring(9,geom.length-1).split(",")
+        if (typeof(geom) !="undefined"){
+            //check if we're dealing with an envelop or polygon
+            if (geom.indexOf("POLYGON")>-1){
+                var corners = filter_manager.get_poly_array(geom)
+                var cs=[]
+                for(var i =0;i<4;i++){
+                    var c = corners[i].split(" ")
+                    // not values come in as lng lat
+                    cs.push(L.latLng(c[1],c[0]))
+                }
+                var bounds = L.latLngBounds(cs).toBBoxString().split(",")
+                //shift the 2nd and 3rd value to conform
+                bounds.splice(1, 0, bounds.splice(2, 1)[0]);
+
+                return bounds
+
+            }else{
+                 return geom.substring(9,geom.length-1).split(",")
+            }
+        }
     }
     get_poly_array(geom){
         if (typeof(geom) =="undefined"){
@@ -554,14 +725,14 @@ class Filter_Manager {
     show_bounds(_resource_id){
         var resource = this.get_resource(_resource_id)
         // parse the envelope - remove beginning and end
-        if(resource?.solr_geom){
-             show_bounds_str(resource.solr_geom)
+        if(resource?.dcat_bbox){
+             show_bounds_str(resource.dcat_bbox)
         }
 
     }
-    show_bounds_str(solr_geom){
-        if (solr_geom){
-            var b = this.get_bound_array(solr_geom)
+    show_bounds_str(dcat_bbox){
+        if (dcat_bbox){
+            var b = this.get_bound_array(dcat_bbox)
             map_manager.show_highlight_rect([[b[2],b[0]],[b[3],b[1]]])
         }
     }
@@ -574,13 +745,13 @@ class Filter_Manager {
 
         for (var i=0;i<this.all_results.length;i++){
             var obj = this.all_results[i];
-            if (obj.dc_identifier_s==_resource_id){
+            if (obj.dct_identifier_sm==_resource_id){
                 return obj
             }
          }
 
-         console.log("unable to locate resource :(",_resource_id)
-         console.log( this.all_results)
+         console_log("unable to locate resource :(",_resource_id)
+         console_log( this.all_results)
 
     }
 
@@ -619,7 +790,7 @@ class Filter_Manager {
 
     }
     go_back(){
-        console.log("A generic function to handle the panel movement",this.panel_name)
+
         // based on the panel position choose the movement
         var go_to_panel=""
         if(this.panel_name == 'results'){
@@ -634,7 +805,6 @@ class Filter_Manager {
             go_to_panel = "layers"
         }else{
             //trigger a search
-            console.log("trigger search")
             // $("#search_but").trigger("click");
              return
         }
@@ -647,13 +817,13 @@ class Filter_Manager {
         save_params()
     }
     add_filter(id,value,reset,no_filter){
-        console.log("Check the filters:",this.filters)
+        console_log("Check the filters:",this.filters)
         //if the facet filter is from the browse screen reset the lot
         if (reset){
             this.reset()
         }
         // remove the filter if it doesn't make sense to have more than one ( i.e main search)
-        var single_filters = [false,"solr_geom","dct_issued_s"]
+        var single_filters = [false,"locn_geometry","dct_issued_s"]
          for (var i =0;i<this.filters.length;i++){
                  if ($.inArray(id, single_filters)>-1){
                     if(this.filters[i][0]==id){
@@ -674,6 +844,7 @@ class Filter_Manager {
         var text = id
         if (LANG.FACET.FACET_FIELD[id]){
             text=LANG.FACET.FACET_FIELD[id]
+            analytics_manager.track_event("search","filter","facet",text)
         }
         if (text ==false){
             text = LANG.SEARCH.CHIP_SUBMIT_BUT_LABEL
@@ -682,13 +853,11 @@ class Filter_Manager {
         }
         //shorten the date
          //todo map the text to use translated value
-         this.show_filter_selection(id,text+": "+value,this.filters)
+         this.show_filter_selection(id,text+": "+value.clip_text(30),this.filters)
          save_params()
 
         // now that we've adjusted the height of the search area - update the height of the results area
         $('#side_header').trigger("resize");
-
-        console.log("the filters are:",this.filters)
 
         if (!no_filter){
              this.filter()
@@ -702,6 +871,7 @@ class Filter_Manager {
         // add a close button
         text+="<a class='fa fa-times btn chip_x' onclick='filter_manager.remove_filter_index(this)'></a>"
         //create a list of selected filters to easily keep track
+        console.log()
         var html="<div class='chip blue' >"+text+"</div>"
 
         $("#filter_box").append(html)
@@ -717,12 +887,12 @@ class Filter_Manager {
         return false
     }
     remove_filter_index(elm){
-        console.log("remove_filter_index",elm, $(elm).parent().index())
+        console_log("remove_filter_index",elm, $(elm).parent().index())
         //
         //check if the filter being removed in linked to a checkbox
         var filter_name=this.filters[$(elm).parent().index()][0]
-        if ($.inArray(filter_name,["solr_geom","dct_issued_s"])>-1){
-            if(filter_name=="solr_geom"){
+        if ($.inArray(filter_name,["locn_geometry","dct_issued_s"])>-1){
+            if(filter_name=="locn_geometry"){
                 $('#filter_bounds_checkbox').prop('checked', false);
             }else if(filter_name=="dct_issued_s"){
                  $('#filter_date_checkbox').prop('checked', false);
@@ -748,7 +918,11 @@ class Filter_Manager {
     remove_filter_selection(index){
       $("#filter_box").children().eq(index).remove()
     }
-
+    remove_filters(){
+        for (var i =this.filters.length-1;i>=0;i--){
+            $("#filter_box").children().eq(i).remove()
+         }
+    }
 
      //
      update_parent_but(_resource_id){

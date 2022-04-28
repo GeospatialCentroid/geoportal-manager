@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.contrib.gis.admin import OSMGeoAdmin
+
+
 from django.views.decorators.cache import never_cache
 from django.contrib.admin import SimpleListFilter
-from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type
+from .models import Resource,End_Point,Publisher,Tag,URL,Status_Log,Owner,Type,Geometry_Type,Format,Place,Named_Place, Category,Category_Keywords,Change_Log,Community_Input, Georeference_Request,URL_Type,URL
 
 from django.utils.safestring import mark_safe
 
@@ -17,12 +19,16 @@ from django.utils.translation import ngettext
 
 from django.http import HttpResponseRedirect
 import resources.ingester.Delete_From_Solr as Delete_From_Solr
+import resources.ingester.DB_ToGBL as db_to_gbl
+import resources.ingester.Publish_ToGBL as publish_to_gbl
 from django.shortcuts import render
 
 import decimal
 from django.contrib.gis.geos import Point, WKTWriter
 from django.contrib.gis.geos import GEOSGeometry
 
+import os
+import glob
 import sys
 sys.setrecursionlimit(10000)
 
@@ -98,19 +104,23 @@ class Change_LogInline(admin.StackedInline):
     ]
     extra = 0
 
-class ResourceInline(admin.StackedInline):
-    model = Resource
+class ParentInline(admin.StackedInline):
+    model = Resource.parent.through
+    fk_name = "from_resource" # not work "parent_resource" "resource_id", "parent_id", from_resource_id, to_resource_id
     classes = ['collapse']
-    # fields = ('title','type', 'geometry_type', "format")
-    fieldsets = [
-        (None, {'fields': ['title']}),
-        (None, {'fields': [('type', 'geometry_type', "format")]}),
-        (None, {'fields': ['status_type']})
-    ]
-
+    verbose_name = "Parent Resource"
+    verbose_name_plural = "Parent Resources"
     extra = 0
     show_change_link=True
 
+class ChildrenInline(admin.StackedInline):
+    model = Resource.parent.through
+    fk_name = "to_resource" # not work "parent_resource" "resource_id", "parent_id", from_resource_id, to_resource_id
+    classes = ['collapse']
+    verbose_name = "Child Resource"
+    verbose_name_plural = "Child Resources"
+    extra = 0
+    show_change_link=True
 
 class ParentFilter(admin.SimpleListFilter):
     title = 'Root Resource'
@@ -132,15 +142,18 @@ class ParentFilter(admin.SimpleListFilter):
 
 # @admin.register(Resource)
 class ResourceAdmin(OSMGeoAdmin):
-    list_filter = ('end_point',"type","status_type","owner",ParentFilter)
-    search_fields = ('title','alt_title','description','resource_id')
+    list_filter = ('end_point',"type","status_type","owner",ParentFilter,"missing")
+    search_fields = ('title','alt_title','description','resource_id',)
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
-    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_places","get_category","child_count")
+    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count","preview")
+
+    autocomplete_fields =("tag","named_place","owner", "publisher")
     fieldsets = [
-        (None, {'fields': ['resource_id','year','temporal_coverage']}),
+        (None, {'fields': [('resource_id','preview'),'year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
-        (None, {'fields': ['status_type','end_point']}),
+        (None, {'fields': ['status_type','end_point',"missing"]}),
+        (None, {'fields': [('resource_type')]}),
         (None, {'fields': [('type', 'geometry_type', "format")]}),
 
         (None, {'fields': ["get_thumb", "thumbnail"]}),
@@ -152,28 +165,29 @@ class ResourceAdmin(OSMGeoAdmin):
 
         (None, {'fields': ["languages","category"]}),
         (None, {'fields': [( "get_tags","tag")]}),
-        (None, {'fields': [("get_places","place")]}),
+        (None, {'fields': [("get_named_places","named_place")]}),
 
 
         (None, {'fields': ["_raw_json"]}),
         (None, {'fields': ["_layer_json"]}),
         (None, {'fields': ["license_info"]}),
-        (None, {'fields': ["parent"]}),
 
     ]
 
     def child_count(self, obj=None):
-        return len(Resource.objects.filter(parent=obj.id))
+        with connection.cursor() as cursor:
+            cursor.execute("Select count(id) from resources_resource_parent where to_resource_id={};".format(obj.id))
 
-    def parent_filter(self, obj=None):
-        return obj.parent==None
+            return (cursor.fetchone()[0])
+
+
 
     def get_tags(self, obj=None):
          print(obj.tag.all())
          return ", ".join([t.name for t in obj.tag.all()])
 
-    def get_places(self, obj=None):
-        return ", ".join([p.name for p in obj.place.all()])
+    def get_named_places(self, obj=None):
+        return ", ".join([p.name for p in obj.named_place.all()])
 
     def get_category(self, obj):
         return ",".join([p.name for p in obj.category.all()])
@@ -194,7 +208,8 @@ class ResourceAdmin(OSMGeoAdmin):
         return mark_safe(get_pretty_json(obj.layer_json)) if obj.layer_json else ""
 
     inlines = [
-        ResourceInline,
+        ParentInline,
+        ChildrenInline,
         URLInline,
         Status_LogInline,
         Change_LogInline
@@ -206,8 +221,53 @@ class ResourceAdmin(OSMGeoAdmin):
             del actions['delete_selected']
         return actions
 
-    actions = ["delete_selected_resources", 'remove_selected_resources_from_index_staging']
+    actions = ["add_selected_resources_to_staging","delete_selected_resources", 'remove_selected_resources_from_index_staging']
 
+    def add_selected_resources_to_staging(self, request, queryset):
+        # first export
+
+        directory = os.path.dirname(os.path.realpath(__file__)) + "/ingester"
+        verbosity=1
+        # clear the directory
+        if os.path.exists(directory + "/json"):
+            files = glob.glob(directory + "/json/*")
+            if (verbosity>1):
+                print("removing existing files from past ingest for a fresh start!")
+
+            for f in files:
+                os.remove(f)
+
+        #if a child is selected we should ingest the parent instead
+        for r in queryset:
+            # todo - need a better way than just relying upon the parent status
+            r.layers = Resource.objects.filter(status_type=r.status_type, parent=r.id)
+            print("The layers are:", r.layers)
+        # return
+        # associate the children
+        for r in queryset:
+            #todo - need a better way than just relying upon the parent status
+            r.layers = Resource.objects.filter(status_type=r.status_type,parent=r.id)
+            print("The layers are:",r.layers)
+
+        exporter = db_to_gbl.DB_ToGBL({
+            "resources": queryset,
+            "path": directory + "/",
+            "verbosity": verbosity
+        })
+        # then ingest
+        publish_to_gbl.Publish_ToGBL({
+            "path": directory + "/json",
+            "verbosity": verbosity
+        })
+        # set status to remove from staging
+        updated =queryset.update(status_type='is')
+        self.message_user(request, ngettext(
+            '%d resource was successfully ingested to Staging.',
+            '%d resources were successfully ingested to Staging.',
+            updated,
+        ) % updated, messages.SUCCESS)
+
+    add_selected_resources_to_staging.short_description = "Ingest to Staging"
 
     def remove_selected_resources_from_index_staging(self, request, queryset):
         deleter = Delete_From_Solr.Delete_From_Solr({})
@@ -215,11 +275,12 @@ class ResourceAdmin(OSMGeoAdmin):
         updated =queryset.update(status_type='rs')
         for obj in queryset:
             # remove from solr
-            deleter.interface.delete_one_record(obj.resource_id)
+            print("DELETE---", obj.resource_id+"-"+str(obj.end_point.id))
+            deleter.interface.delete_one_record("\""+obj.resource_id+"-"+str(obj.end_point.id)+"\"")
 
         self.message_user(request, ngettext(
             '%d resource was successfully removed from Staging.',
-            '%d stories were successfully removed from Staging.',
+            '%d resources were successfully removed from Staging.',
             updated,
         ) % updated, messages.SUCCESS)
 
@@ -267,7 +328,21 @@ class ResourceAdmin(OSMGeoAdmin):
         print("first point",)
         """pass request to save to distinguish between automation and admin
               """
-        obj.save(request.user)
+        try:
+            obj.save(request.user)
+        except:
+            pass
+
+    def preview(self, obj):
+        if obj.pk:
+
+            html = "<a href='/preview?id="+obj.resource_id+"' target='_blank' >Preview</a>"
+            return mark_safe(html)
+        else:
+            return '-'
+
+    preview.short_description = ("Preview")
+    preview.allow_tags = True
 
 
 
@@ -276,21 +351,13 @@ def get_pretty_json(_json):
     # Convert the data to sorted, indented JSON
     response = json.dumps(_json, sort_keys=True, indent=2)
 
-
-    # Truncate the data. Alter as needed
-    # response = response[:5000]
-
     # Get the Pygments formatter
     formatter = HtmlFormatter(style='colorful')
-
     # Highlight the data
     response = highlight(response, JsonLexer(), formatter)
 
     # Get the stylesheet
-
     return  "<style>" + formatter.get_style_defs() + "</style><br><div style='max-height: 500px; overflow: scroll;'>" + response+"</div>"
-
-
 
 
 admin_site.register(Resource, ResourceAdmin)
@@ -301,11 +368,13 @@ class End_PointAdmin(OSMGeoAdmin):
 admin_site.register(End_Point, End_PointAdmin)
 
 class PublisherAdmin(OSMGeoAdmin):
-   pass
+    search_fields = ('name',)
+    pass
 admin_site.register(Publisher, PublisherAdmin)
 
 class Community_InputAdmin(OSMGeoAdmin):
-   pass
+   list_display = ["resource","date","name", "email"]
+   raw_id_fields = ("resource",)
 admin_site.register(Community_Input, Community_InputAdmin)
 
 class Georeference_RequestAdmin(OSMGeoAdmin):
@@ -338,7 +407,7 @@ class Category_KeywordsInline(admin.StackedInline):
     extra = 0
 
 class Category_KeywordsAdmin(OSMGeoAdmin):
-    pass
+    search_fields = ('name',)
 admin_site.register(Category_Keywords, Category_KeywordsAdmin)
 
 class CategoryAdmin(OSMGeoAdmin):
@@ -349,15 +418,24 @@ admin_site.register(Category, CategoryAdmin)
 
 
 class TagAdmin(OSMGeoAdmin):
-   pass
+    search_fields = ('name',)
 admin_site.register(Tag, TagAdmin)
 
 class PlaceAdmin(OSMGeoAdmin):
-   pass
+    search_fields = ('name',)
 admin_site.register(Place, PlaceAdmin)
+
+class Named_PlaceAdmin(OSMGeoAdmin):
+    search_fields = ('name',)
+admin_site.register(Named_Place, Named_PlaceAdmin)
 
 class URL_TypeAdmin(OSMGeoAdmin):
     list_display = ('name', 'ref', 'service', '_class', '_method')
 
 admin_site.register(URL_Type,URL_TypeAdmin)
+
+class URLAdmin(OSMGeoAdmin):
+    list_filter = ("url_type",)
+
+admin_site.register(URL,URLAdmin)
 

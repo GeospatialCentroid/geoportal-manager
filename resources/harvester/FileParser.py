@@ -33,7 +33,10 @@ class FileParser:
             categories = r["categories"] # most likely an empty list
         else:
             categories=[]
-        text = r['description']
+
+        text = ''
+        if 'description' in r:
+            text = r['description']
         # append the keywords
 
         if 'tags' in r:
@@ -77,7 +80,9 @@ class FileParser:
         :return:
         """
         # -- get the year --
-        text = r['description']
+        text = None
+        if 'description' in r:
+            text = r['description']
 
         year = ""
 
@@ -132,7 +137,7 @@ class FileParser:
                         all_values.append("")
                 csvout.writerow(all_values)
 
-    def get_places(self,r):
+    def get_places(self,r,tags=[]):
         '''
         Look through the places file and see if there are any matches with the tags lists
         todo - make this more robust
@@ -140,19 +145,17 @@ class FileParser:
         :return:
         '''
         places=[]
-        tags =[]
         if 'tags' in r:
             tags=r['tags']
             print('tags',tags)
         for t in tags:
             # look for a match
             for p in self.places:
-                if t.lower() == p.name.lower() or t.lower() == p.name_lsad.lower():
-                    val = p.name.lower()+"|"+p.name_lsad
-                    if val not in places and t.lower() not in ["trail","basin","wells","hydro","forest"]:
-                        # so that we can map to the same place - use both the name and lsad
-                        places.append(val)
-
+                if t.lower() not in ["trail","basin","wells","hydro","forest"]:
+                    if t.lower() == p.name.lower():
+                        places.append(p.name)
+                    elif t.lower() == p.name_lsad.lower():
+                        places.append(p.name_lsad)
         return places
 
 # https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python

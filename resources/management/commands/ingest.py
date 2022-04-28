@@ -95,7 +95,7 @@ class Command(BaseCommand):
         # ('ip', 'In Production'),
 
         for r in resources:
-            print("Getting child layers for:",r.id,"with status",kwargs['status'])
+            print("Getting child layers for:",r.resource_id,"with status",kwargs['status'])
             r.layers = Resource.objects.filter(status_type=kwargs['status'],parent=r.id)
             print("The layers are:",r.layers)
 

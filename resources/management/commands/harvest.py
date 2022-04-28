@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from resources.models import End_Point, Place, Category,Harvest
+from resources.models import End_Point, Place, Category,Harvest,Resource
 from datetime import datetime
 
 import os.path
@@ -37,6 +37,9 @@ class Command(BaseCommand):
         parser.add_argument("-r", "--resource_ids", type=str,
                             help="(Optional) If there are one or more resource ids you would like choose to harvest from a known endpoint. Use comma separation.", )
 
+        parser.add_argument("-t", "--track_missing", action="store_true",
+                            help="(Optional) Look at the local collection of active items and flag those that have been removed from the harvest endpoint", )
+
 
     def handle(self, *args, **kwargs):
         print(kwargs)
@@ -50,6 +53,8 @@ class Command(BaseCommand):
 
         if (kwargs['resource_ids']):
             kwargs['resource_ids'] = kwargs['resource_ids'].split(",")
+        if (not kwargs['track_missing']):
+            kwargs['track_missing'] =None
 
         harvest, created= Harvest.objects.get_or_create(trigger_type='u', date =datetime.now())
         file_manager = fm.FileManager({
@@ -57,6 +62,7 @@ class Command(BaseCommand):
             "num": 100,  # the number of records to collect with each iteration (max 100 determined by Esri)
             "date": _date,
             "overwrite": kwargs['overwrite'],
+            "track": kwargs['track_missing'],
             "resource_ids": kwargs['resource_ids'],
             "path": directory + "/",
             "categories": Category.objects.all(),
@@ -76,6 +82,9 @@ class Command(BaseCommand):
                 # load each end_point
                 # inject the data
                 print(e)
+                existing_resource_ids=[]
+                if file_manager.track:
+                    existing_resource_ids = Resource.objects.filter( end_point=kwargs['end_point_id'] ).values_list('resource_id', flat=True)
 
                 row ={}
                 row["date"]=file_manager.date
@@ -87,13 +96,36 @@ class Command(BaseCommand):
                 row["publisher"] = e.publisher
                 row["end_point"] = e
                 row["overwrite"] = file_manager.overwrite
+                row["track"] = file_manager.track
+                row["existing_resource_ids"]=existing_resource_ids
                 row["resource_ids"] = file_manager.resource_ids
                 row["harvest"] = harvest # a reference to the database harvest record to track the progress
                 row["end_point_type"] = e.end_point_type
                 # create the file collection
                 print(row)
-                file_manager.load(row)
+                _file_collection = file_manager.load(row)
+                # when complete compare the lists
+                if file_manager.track:
+                    check_missing(existing_resource_ids, _file_collection.loaded_resource_ids)
+
         else:
             print("No end points found")
 
         print("directory:",directory)
+
+def check_missing(existing_resource_ids,loaded_resource_ids):
+    missing=[]
+    for e in existing_resource_ids:
+        found = False
+
+        for l in loaded_resource_ids:
+
+            if e == l:
+                found = True
+                break
+        if not found:
+            missing.append(e)
+
+    for m in missing:
+        Resource.objects.filter(resource_id=m).update(missing=True)
+

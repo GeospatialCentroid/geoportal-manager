@@ -32,6 +32,20 @@ function componentToHex(c) {
     return hex.length == 1 ? "0" + hex : hex;
 }
 
+String.prototype.clip_text=function(limit){
+    if(this.length>limit){
+       return "<div class='d-inline' title='"+this.toString()+"'>"+this.substring(0,limit)+"...</div>"
+    }
+    return this
+}
+String.prototype.hyper_text=function(){
+
+    if(this.startsWith("http")){
+        return "<a href='"+this.toString()+"' target='_blank'>"+this.toString()+"</a>"
+    }
+    return this
+}
+
 //set via url params
 var DEBUGMODE=false
 console_log = (function (methods, undefined) {
@@ -106,3 +120,73 @@ console_log = (function (methods, undefined) {
 
 		return result; // expose
     })(['error', 'debug', 'info', 'warn']);//--- _log
+
+
+class Analytics_Manager {
+    constructor(properties,_resource_id) {
+        // for events that might happen really frequently, like zooming into the map or changing the transparency
+        // prevent more then one event from being tracking within a time frame
+        this.sent_events=[]
+    }
+    track_event(category,action,label,value,delay){
+        // not the delay prevents the same event from being submitted with a certain number of seconds
+        var trigger=true
+        if (delay){
+            // check the events sent to see if there is a match
+            var match=false
+            for(var i=0;i<this.sent_events.length;i++){
+                var s = this.sent_events[i]
+                if(s.category==category && s.label==label && s.value==value){
+                     //if match - check if enough time has surpassed to send another event
+                     // if so - send a new event and update the time
+                     if ((Date.now()-s.time)/1000>delay){
+                        match=true
+                     }else{
+                        trigger=false
+                     }
+                     //update the time to extend the clock
+                     s.time=Date.now()
+
+                }
+            }
+            if(!match){
+                 this.sent_events.push({category:category,label:label,value:value,time:Date.now()})
+            }
+        }
+        if (trigger){
+            console_log("trigger",category, action,label,value)
+
+            gtag('event', action, {
+              'event_category': category,
+              'event_label': label,
+              'value': value
+            })
+        }
+
+    }
+}
+
+L.Layer.prototype.setInteractive = function (interactive) {
+    if (this.getLayers) {
+        try{
+            this.getLayers().forEach(layer => {
+                layer.setInteractive(interactive);
+            });
+        }catch(e){
+            console.log("unable to set setInteractive", e)
+        }
+
+        return;
+    }
+    if (!this._path) {
+        return;
+    }
+
+    this.options.interactive = interactive;
+
+    if (interactive) {
+        L.DomUtil.addClass(this._path, 'leaflet-interactive');
+    } else {
+        L.DomUtil.removeClass(this._path, 'leaflet-interactive');
+    }
+};

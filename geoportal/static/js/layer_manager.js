@@ -18,6 +18,7 @@ class Layer_Manager {
     // manage the
     // keep track of the layers that are added to the map
     this.layers=[]
+    this.image_layers=[]
 
     this.service_method = []
     $this=this
@@ -36,32 +37,18 @@ class Layer_Manager {
     this.split_left_layers=[];
     this.split_right_layers=[];
 
+    //  only show the table for specific types
+    this.table_types=["esriSFS","esriPMS","esriSLS","vector","GeoJSON","mapserver"]
     //
     var $this=this;
     // make the map layers sortable
     // make the map layers sortable
     $("#sortable_layers").sortable({
         start: function(event, ui) {
-
              $(ui.item).addClass('highlight');
         },
         stop: function(event, ui) {
-            //note that the layer order is reversed
-            var ext ="_drag"
-            var children =  $("#sortable_layers").children('.drag_li').get().reverse()
-            var layers = []
-            for (var i =0; i<children.length;i++){
-                var id = $(children[i]).attr('id')
-                if(typeof(id)!="undefined"){
-                    var _id = id.substring(0,id.length-ext.length);
-                    $this.map.getPane(_id).style.zIndex = i+100;
-                    layers.push($this.get_layer_obj(_id))
-                }
-
-            }
-            // update the layer order and url
-            $this.layers=layers;
-            $this.set_layers_list()
+            $this.update_layer_order();
         },
         update: function(event, ui) {
            $('#sortable_layers li').removeClass('highlight');
@@ -83,14 +70,34 @@ class Layer_Manager {
     });
 
   }
+  update_layer_order(){
+    //based on the sortable
 
+    //note that the layer order is reversed
+    var ext ="_drag"
+    var children =  $("#sortable_layers").children('.drag_li').get().reverse()
+    var layers = []
+    for (var i =0; i<children.length;i++){
+        var id = $(children[i]).attr('id')
+        if(typeof(id)!="undefined"){
+            var _id = id.substring(0,id.length-ext.length);
+            this.map.getPane(_id).style.zIndex = i+100;
+            layers.push(this.get_layer_obj(_id))
+        }
+
+    }
+    // update the layer order and url
+    this.layers=layers;
+    this.set_layers_list()
+
+  }
   toggle_layer(_resource_id,z){
 
-    console.log("toggle_layer",_resource_id)
+    console_log("toggle_layer",_resource_id)
     var $this=layer_manager;
 
     if(!disclaimer_manager.check_status(_resource_id,z,$this.toggle_layer)){
-         console.log("Accept disclaimer first")
+         console_log("Accept disclaimer first")
          return
     }
     // either add or hide a layer
@@ -98,15 +105,16 @@ class Layer_Manager {
 
     if(!resource){
          // we need to load the resource information
-         filter_manager.load_json(filter_manager.base_url+"q=dc_identifier_s:"+_resource_id,filter_manager.loaded_resource,_resource_id);
-         console.log("try again!!!")
+         console.log("please load")
+         filter_manager.load_json(filter_manager.base_url+"q=dct_identifier_sm:"+_resource_id,filter_manager.loaded_resource,_resource_id);
+         console_log("try again!!!")
          return
     }
     try{
         var json_refs = JSON.parse(resource.dct_references_s)
     }catch(e){
-        console.log("Error parsing JSON")
-        console.log(resource.dct_references_s)
+        console_log("Error parsing JSON")
+        console_log(resource.dct_references_s)
     }
 
     if($this.is_on_map(_resource_id)){
@@ -114,12 +122,11 @@ class Layer_Manager {
         $("#"+_resource_id+"_drag").remove();
         $this.remove_legend(_resource_id);
         filter_manager.update_parent_toggle_buttons(".content_right");
+
+        analytics_manager.track_event("side_bar","remove_layer","layer_id",_resource_id)
         return
     }
 
-
-    //$.inArray(type,feature_types)>-1
-    console.log(resource["drawing_info"])
     if (resource["drawing_info"] && typeof(resource["drawing_info"][0])!="undefined"){
             var drawing_info = $this.convert_text_to_json(resource["drawing_info"][0])
             resource["drawing_info"]=drawing_info
@@ -131,69 +138,94 @@ class Layer_Manager {
             }
 
         }
-    //find the link in the array of links
-    for (var r in json_refs){
-            //check if it's an acceptable format
-            for (var i=0;i<$this.service_method.length;i++){
-               if (r==$this.service_method[i].ref){
+        //find the link in the array of links
+         var usable_links=[]
+            for (var r in json_refs){
+                //check if it's an acceptable format
+                for (var i=0;i<$this.service_method.length;i++){
+                   if (r==$this.service_method[i].ref){
+                        usable_links.push(r)
+                   }
 
-                    var type =""
-                    if (resource?.layer_geom_type_s)
-                        type = resource.layer_geom_type_s
-                    console.log("And the type is: ",type)
+                }
+            }
 
-                    $this.add_layer(_resource_id,json_refs[r],resource["drawing_info"],z,r,type)
-                    $this.add_to_map_tab(_resource_id,z);
-                    filter_manager.update_parent_toggle_buttons(".content_right");
-                    return
-               }
+         //choose the preferred viz options
+         var priority = $this.get_priority(usable_links)
+            if ( usable_links.length>0){
+            var type =""
+//            if (resource?.gbl_resourceType_sm){
+//                type = resource.gbl_resourceType_sm
+//                if (Array.isArray(type)){
+//                    type=type[0]
+//                }
+//              }
+            type = $this.get_service_method(priority).name
 
+            $this.add_layer(_resource_id,json_refs[priority],resource["drawing_info"],z,priority,type)
+
+            $this.add_to_map_tab(_resource_id,z);
+            filter_manager.update_parent_toggle_buttons(".content_right");
+
+            analytics_manager.track_event("side_bar","add_layer","layer_id",_resource_id)
+        }else{
+            console_log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
+        }
+  }
+  get_priority(usable_links){
+        //pick the best one - for now just image before iiif since we can map images
+        var link_priority=["urn:x-esri:serviceType:ArcGIS#DynamicMapLayer",
+        "urn:x-esri:serviceType:ArcGIS#TiledMapLayer",
+        "https://www.ogc.org/standards/wmts",
+        "https://schema.org/ImageObject",
+        "http://iiif.io/api/image"]
+        for(var p in link_priority){
+            for (var l in usable_links){
+                if (usable_links[l]==link_priority[p]){
+                    return usable_links[l]
+                }
             }
         }
-        console.log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
-
+        return usable_links[0]
   }
     add_to_map_tab(_resource_id,_z){
         var $this = this;
         // use this.layers[] for reference since filter_manager can change with filter response.
-        //        console.log(this.layers)
         var layer = this.get_layer_obj(_resource_id)
         if (!layer){
-
-            console.log("No layer to show")
+            console_log("No layer to show")
             return
         }
         var resource = layer.resource_obj
         var o = layer.layer_obj.options
-        var id = resource.dc_identifier_s
-        var title = resource.dc_title_s
+        var id = resource.dct_identifier_sm
+        var title = resource.dct_title_s
         var title_limit=25
         if(title.length>title_limit){
             title = title.substring(0,title_limit)+"..."
         }
         var download_link = filter_manager.get_download_link(resource)
-        var solr_geom = resource.solr_geom
+        var dcat_bbox = resource.dcat_bbox
         var add_func = "toggle_layer"
         var add_txt=LANG.RESULT.REMOVE
         var html = "<li class='ui-state-default drag_li' id='"+id+"_drag'>"
         html+="<div class='grip'><i class='fas fa-grip-vertical'></i></div>"
         html +="<div class='item_title font-weight-bold'>"+title+"</span></div>"
-        console_log(layer.layer_obj.options)
-        console_log(layer.type)
-        if (layer.type !="esriPMS"){
-            html += this.get_slider_html(id)
-        }
+
+         html += this.get_slider_html(id)
         //
         html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
         //
-        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+solr_geom+"\")'>"+LANG.RESULT.ZOOM+"</button>"
+        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+dcat_bbox+"\")'>"+LANG.RESULT.ZOOM+"</button>"
         if(download_link){
               html +=download_link;
          }
         html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_details(\""+id+"\")'>"+LANG.RESULT.DETAILS+"</button>"
 
-        html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='fa fa-table'></i></button>"
-
+        console.log("the type is ",layer.type)
+        if ($.inArray(layer.type,$this.table_types)>-1){
+            html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='fa fa-table'></i></button>"
+        }
 
         if (typeof(o.color)!="undefined"){
           html += "<div class='color_box'><input type='text' id='"+id+"_line_color' value='"+o.color+"'/><br/><label for='"+id+"_line_color' >"+LANG.MAP.OUTLINE_COLOR+"</label></div>"
@@ -201,7 +233,7 @@ class Layer_Manager {
         if (typeof(o.fillColor)!="undefined"){
          html += "<div class='color_box'><input type='text' id='"+id+"_fill_color' value='"+o.fillColor+"'/><br/><label for='"+id+"_fill_color' >"+LANG.MAP.Fill_COLOR+"</label></div>"
         }
-        if (layer.type !="esriPMS"){
+        if ($.inArray(layer.type,["esriPMS","esriSMS"])==-1){
             html+=this.get_slit_cell_control(id)
         }
 
@@ -216,18 +248,15 @@ class Layer_Manager {
         this.make_color_palette(id+'_line_color',"color")
         this.make_color_palette(id+'_fill_color',"fillColor")
 
-        if (layer.type !="esriPMS"){
-            // markers not able to be made transparent
-            this.make_slider(id+'_slider',100)
-        }
-
+        this.make_slider(id+'_slider',100)
 
   }
   show_details(_resource_id){
-   var resource =  this.get_layer_obj(_resource_id).resource_obj
+    var resource =  this.get_layer_obj(_resource_id).resource_obj
 
     filter_manager.show_details(_resource_id,resource)
 
+    analytics_manager.track_event("side_bar","show_details","layer_id",_resource_id)
   }
   get_slit_cell_control(_id){
     return '<table class="split_table"><tr><td class="split_left split_cell" onclick="layer_manager.split_map(this,\''+_id+'\',\'left\')"></td><td class="split_middle"></td><td class="split_right split_cell" onclick="layer_manager.split_map(this,\''+_id+'\',\'right\')"></td></tr></table>'
@@ -297,6 +326,7 @@ class Layer_Manager {
     //and show/hide the control
     this.toggle_split_control()
 
+    analytics_manager.track_event("map_tab","split_view","layer_id",_resource_id)
   }
   toggle_split_control(){
     if (this.split_right_layers.length>0 || this.split_left_layers.length>0 ){
@@ -323,6 +353,20 @@ class Layer_Manager {
             temp_obj[_attr]=hexcolor
             layer.layer_obj.setStyle(temp_obj)
 
+            //make exception for markers
+            if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
+                //update existing and new markers
+                if(_attr=="fillColor"){
+                    $("._marker_class"+_id).css({"background-color":hexcolor})
+                    $("<style type='text/css'> ._marker_class"+_id+"{ background-color:"+hexcolor+";} </style>").appendTo("head");
+                }else{
+                    $("._marker_class"+_id).css({"border-color":hexcolor})
+                     $("<style type='text/css'> ._marker_class"+_id+"{border-color:"+hexcolor+";} </style>").appendTo("head");
+                }
+
+            }
+            analytics_manager.track_event("map_tab","change_"+_attr,"layer_id",_id)
+
         })
         // make sure the panel shows-up on top
         $("#"+elm_id).next().next().css({"z-index": 10001});
@@ -341,21 +385,31 @@ class Layer_Manager {
             value:value,
             range: "min",
             slide: function( event, ui ) {
-
-                var ext ="_slider"
-                var id = $(this).attr('id')
-                var _id= id.substring(0,id.length-ext.length)
+                 var ext ="_slider"
+                 var id = $(this).attr('id')
+                 var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
-                      console.log(layer)
-                     if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms"){
-                        layer.layer_obj.setOpacity(ui.value/100)
-                     }else{
-                        layer.layer_obj.setStyle({
-                        opacity: ui.value/100,
-                        fillOpacity: ui.value/100
-                      })
+                 var val =ui.value/100
+                 if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
+                    layer.layer_obj.setOpacity(val)
+                 }else if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
+                       $("._marker_class"+_id).css({"opacity":val})
+                 }else if($.inArray(layer.type,["GeoJSON"])>-1){
+                    layer.layer_obj.eachLayer(function (layer) {
+                        layer.setStyle({
+                            opacity: val,
+                            fillOpacity: val
+                          })
+                    });
 
-                     }
+                 }else{
+                    layer.layer_obj.setStyle({
+                    opacity: val,
+                    fillOpacity: val
+                  })
+
+                 }
+                 analytics_manager.track_event("map_tab","transparency_slider","layer_id",_id,3)
               }
 
          })
@@ -395,8 +449,7 @@ class Layer_Manager {
 
   add_layer(_resource_id,url,_drawing_info,_z,service_type,_type){
 
-
-    console.log("Adding",_resource_id,url,_drawing_info,_z,service_type)
+    console_log("Adding",_resource_id,url,_drawing_info,_z,service_type)
     var $this=this
     var update_url=false
     // create layer at pane
@@ -418,17 +471,20 @@ class Layer_Manager {
      //check for a legend
     if(service_method._method=="tiledMapLayer" || service_method._method=="dynamicMapLayer" ){
 
-        filter_manager.load_json(layer_options.url+'/legend?f=json',layer_manager.create_legend,_resource_id)
+        // if the last character is a 0
         if (layer_options.url.substring(layer_options.url.length-1) =='0'){
             layer_options.url=layer_options.url.substring(0,layer_options.url.length-1)
         }
-
+        // might need a forward slash
+        if (layer_options.url.substring(layer_options.url.length-1) !='/'){
+            layer_options.url+="/"
+        }
+        filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
-
 
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
-        var corners = filter_manager.get_poly_array(resource["solr_poly_geom"])
+        var corners = filter_manager.get_poly_array(resource["locn_geometry"])
         var cs=[]
         if (corners){
             for(var i =0;i<4;i++){
@@ -436,48 +492,94 @@ class Layer_Manager {
                 // not values come in as lng lat
                 cs.push(L.latLng(c[1],c[0]))
             }
-             //shift the last value into the second position to conform with distortableImageOverlay
-             cs.splice(1, 0, cs.splice(3, 1)[0]);
-             var layer_obj =  L[service_method._class](url,{
-                actions:[L.LockAction],mode:"lock",
-                corners: cs,
-                    }).addTo(this.map);
+            //shift the last value into the second position to conform with distortableImageOverlay
+            cs.splice(1, 0, cs.splice(3, 1)[0]);
+
+             // zoom in first for images as they are often quite small
+             filter_manager.zoom_layer(resource.dcat_bbox)
+
+             // delay showing image as it may not appear correctly ad higher scales
+             setTimeout(1000,function(){
+                  var layer_obj =  L[service_method._class](url,{
+                    actions:[L.LockAction],mode:"lock",editable:false,
+                    corners: cs,
+                   }).addTo(this.map);
+             })
+
 
         }else{
             //we have no coordinates, just show the image in a separate leaflet
-             this.show_image_viewer_layer(L[service_method._class](url))
+             this.show_image_viewer_layer(L[service_method._class](url,{ actions:[L.LockAction],mode:"lock",editable:false}))
+              map_manager.image_map.attributionControl._attributions = {};
+              map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
              return
         }
 
 
     }else if(service_method._method=="iiif"){
-
         this.show_image_viewer_layer(L[service_method._class][service_method._method](url))
+         map_manager.image_map.attributionControl._attributions = {};
+         map_manager.image_map.attributionControl.addAttribution(this.get_attribution(resource));
         return
-    }else if(service_method._method==""){
+    }else if(service_method._method=="" || service_method._method==null){
         //todo - get this from the service
         layer_options.maxZoom= 21
-
+        console.log(service_method,service_method._class,service_method._method)
         var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
-    }else if(service_method._method.indexOf(".")>-1){
+    }else if(service_method?._method && service_method._method.indexOf(".")>-1){
         var method_parts=service_method._method.split(".")
-        console.log(layer_options)
         var layer_obj =  L[service_method._class][method_parts[0]][method_parts[1]](layer_options.url).addTo(this.map);
+
     }else{
-        //todo make the adjustment in the metadata
-//        if (resource.layer_geom_type_s=="Point"){
-        var layer_obj =  L[service_method._class][service_method._method](layer_options).addTo(this.map);
+      if (service_method._method=="ajax"){
+
+            var layer_obj = L.layerGroup();
+            $.ajax({
+                dataType: "json",
+                url: url,
+                success: function(data) {
+
+                    L["geoJSON"](data,{
+                        onEachFeature: function(feature, layer){
+                            var style = {}
+                            if(feature.properties?.color){
+                                style.fillColor= feature.properties.color
+                                style.color= feature.properties.color
+                                 style.opacity= 0
+                            }
+
+                            var geo =L.geoJSON(feature, {pane: _resource_id, style: style})
+
+                             layer_obj.addLayer(geo)
+                             //temp add service options
+                             layer_obj.service= {options:{url:url}}
+
+                             geo.on('click', function(e) { $this.layer_click(e,_resource_id) });
+                        }
+                    })
+                    layer_obj.data = data
+                    layer_obj.addTo($this.map);
+                    $this.layer_load_complete({layer_id:_resource_id})
+                }
+            }).error(function() {});
+
+      }else{
+        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
+      }
+
     }
 
 
+    try{
+        layer_obj.setBounds(filter_manager.get_bounds(resource.locn_geometry))
+        console_log("Success",resource)
+    }catch(e){
+        console_log(e)
+    }
+
     layer_obj.on('click', function (e) {
-//        console.log("you clicked a layer",_resource_id,e)
-//        console.log(e.layer.feature.properties)
+        $this.layer_click(e,_resource_id);
 
-        map_manager.selected_layer_id=_resource_id
-
-        map_manager.click_lat_lng = e.latlng
-        map_manager.show_popup_details([e.layer.feature])
     });
 
 
@@ -488,8 +590,8 @@ class Layer_Manager {
         if(_drawing_info.renderer?.symbol){
             type=_drawing_info.renderer.symbol.type
         }else{
-            console.log("We don't know what this is!!!")
-            console.log(_drawing_info)
+            console_log("We don't know what this is!!!")
+            console_log(_drawing_info)
         }
 
      }
@@ -516,31 +618,59 @@ class Layer_Manager {
      }
 
      layer_obj.on('load', function (e) {
+        $this.layer_load_complete(this);
 
-         $("."+this.layer_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated")
-         $("."+this.layer_id+"_toggle").text(LANG.RESULT.REMOVE)
-         // update the maps ta
-         $this.update_layer_count();
-          download_manager.add_downloadable_layers()
     });
 
     this.layer_list_change();
   }
+
+  get_attribution(resource){
+
+   return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["id"]+"')\" >"+resource["dct_title_s"]+"</a>"
+
+  }
+  layer_click(e,_resource_id){
+        map_manager.layer_clicked=true
+        map_manager.selected_layer_id=_resource_id
+
+        map_manager.click_lat_lng = e.latlng
+        map_manager.click_x_y=e.containerPoint
+
+        map_manager.popup_show();
+         console.log(e)
+        try{
+              map_manager.show_popup_details([e.layer.feature])
+        }catch(error){
+            // could be an artificial click
+             console.log(e)
+        }
+         //map_manager.layer_clicked=false
+  }
+  layer_load_complete(elm){
+    $("."+elm.layer_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated")
+    $("."+elm.layer_id+"_toggle").text(LANG.RESULT.REMOVE)
+    // update the maps ta
+    this.update_layer_count();
+    download_manager.add_downloadable_layers()
+  }
+
   show_image_viewer_layer(_layer){
+        var  $this = this
         $("#image_map").width("75%")
         $("#image_map").show();
         map_manager.update_map_size()
 
-         // remove existing layers
-         map_manager.image_map.eachLayer(function (layer) {
-                console.log(layer)
-                if (typeof(layer._corner)=="undefined"){
-                    layer.remove();
-                }
-         });
+        // remove existing layers
+        for (var i in $this.image_layers){
+            map_manager.image_map.removeLayer($this.image_layers[i]);
+        }
 
+         $(".leaflet-spinner").show();
          setTimeout(function(){
-             _layer.addTo(map_manager.image_map)
+             _layer.addTo(map_manager.image_map);
+             _layer.on("load",function() {  $(".leaflet-spinner").hide(); });
+            $this.image_layers.push(_layer)
          },500);
 
   }
@@ -548,12 +678,15 @@ class Layer_Manager {
       var layer_options ={
         url: url,
         pane:_resource_id,
+        // to enable cursor and click events on raster images
+        interactive:true,
+        bubblingMouseEvents: false
       }
       var type;
       var symbol;
       var renderer_type
       if (_drawing_info){
-            console.log("_drawing_info",_drawing_info)
+            console_log("_drawing_info",_drawing_info)
           if(_drawing_info.renderer?.symbol){
              symbol = _drawing_info.renderer.symbol
              type = symbol.type
@@ -566,8 +699,6 @@ class Layer_Manager {
             }
 
           }
-            console.log("*****************")
-            console.log(_drawing_info)
           if (_drawing_info && symbol){
             if(renderer_type=="simple"){
               if(symbol.outline || (type == "esriSLS" && symbol.color)){
@@ -591,7 +722,7 @@ class Layer_Manager {
 
              // in the case of polygons the renderer.symbol.color refers to fill
              if(symbol.color && type != "esriSLS"){
-                 var color_arr=symbol.color
+                     var color_arr=symbol.color
                      layer_options.fillColor = rgbToHex(color_arr[0], color_arr[1], color_arr[2])
                      layer_options.fillOpacity = 255/Number(color_arr[2])
 
@@ -599,19 +730,23 @@ class Layer_Manager {
                         layer_options.fill=false
                      }
                 }
-                // we are dealing with a simple somethings
-                //TEST - to see about creating  custom points
+                // we are dealing with markers
                 var resource_marker_class = "_marker_class"+_resource_id
+                if(typeof(layer_options.color)=="undefined"){
+                    layer_options.color="#ffffff"
+                }
+                 if(typeof(layer_options.fillColor)=="undefined"){
+                    layer_options.fillColor="#0290ce"
+                }
 
-                //todo add controls to make this class editable
-                $("<style type='text/css'> ."+resource_marker_class+"{ border: 1px solid #FFFFFF; background-color:rgba(0, 120, 168, 1);} </style>").appendTo("head");
+                $("<style type='text/css'> ."+resource_marker_class+"{ border: "+layer_options.weight+"px solid "+layer_options.color+"; background-color:"+layer_options.fillColor+";} </style>").appendTo("head");
 
                 layer_options.pointToLayer = function (geojson, latlng) {
                   return L.marker(latlng, {
                     icon: map_manager.get_marker_icon(resource_marker_class)
                   });
                 }
-                // END TEST
+
              }
 
           }
@@ -668,6 +803,7 @@ class Layer_Manager {
   show_table_data(_layer_id){
     //todo check if we already have a table object
     table_manager.get_layer_data(_layer_id)
+    analytics_manager.track_event("map_tab","show_table","layer_id",_layer_id)
 
   }
 
@@ -681,11 +817,11 @@ class Layer_Manager {
             if (this.layers[i].id==_layer_id){
                 selected += "selected"
             }
-            var title = this.layers[i].resource_obj.dc_title_s;
-            if(title.length>30){
-                title = title.substring(0,30)+"..."
+            var title = this.layers[i].resource_obj.dct_title_s;
+            title = title.clip_text(30)
+            if ($.inArray(this.layers[i].type,this.table_types)>-1){
+                html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
             }
-            html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
         }
         html+="<select>"
 
@@ -754,8 +890,6 @@ class Layer_Manager {
         //solr stores the json structure of nested elements as a smi usable string
         // convert the string to json for use!
         // returns a usable json object
-//        console.log("-----------------")
-//        console.log(text)
         var reg = new RegExp(/(\w+)=([^\s|\[|,|\{|\}]+)/, 'gi');// get words between { and =
         text=text.replace(reg,'"$1"="$2"')
 
@@ -776,8 +910,8 @@ class Layer_Manager {
         try {
             return JSON.parse(text)
         } catch(e) {
-           console.log("error",e)
-           console.log(text)
+           console_log("error",e)
+           console_log(text)
         }
 
 
@@ -806,9 +940,7 @@ class Layer_Manager {
         for (var i=0;i<data['layers'].length;i++){
             var l = data['layers'][i]
             var layer_name=l.layerName
-            if(layer_name.length>15){
-                layer_name=layer_name.substring(0,15)+"..."
-            }
+            layer_name = layer_name.clip_text(15)
             html += '<span class="legend_title">'+layer_name+'</span>'
 
             for (var j=0;j<l['legend'].length;j++){
@@ -827,11 +959,11 @@ class Layer_Manager {
     }
     remove_legend(_resource_id){
         $("#legend_"+_resource_id).remove()
-
+        console.log($('#legend').children().length)
         if ( $('#legend').children().length > 0 ) {
-            $('#legend').show()
+            $('.legend').show()
         }else{
-            $('#legend').hide()
+            $('.legend').hide()
         }
 
     }

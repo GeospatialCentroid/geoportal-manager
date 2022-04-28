@@ -75,7 +75,6 @@ class FileCollection_CDM(FileCollection):
             if self.resource_ids:
                 # only load specified resource ids
                 for r_id in self.resource_ids:
-
                     if r_id == id:
                         print("Loading", r_id)
                         self.load_data(id, r, layers_path)
@@ -110,15 +109,24 @@ class FileCollection_CDM(FileCollection):
         parent = self.ingest_parent_record(data, parent_obj)
 
         layers_path = self.path + self.folder + "/layers"
-
-        if "page" in data['objectInfo']:
-            print("There are children here")
+        print(data['objectInfo'],"????????")
+        if "page" in data['objectInfo'] or "node" in data['objectInfo'] :
+            print("There are children here ---------------")
 
             # todo - associate the children - all details exist in the 'data'
             #generate urls for all children
             root_path = self.open_prefix+data['thumbnailUri'][:data['thumbnailUri'].index("/id/")+4]
 
-            for index, p in enumerate(data['objectInfo']["page"]):
+            if "node" in data['objectInfo']:
+                child_list = data['objectInfo']["node"]["page"]
+            else:
+                #make sure there are more than 1 pages
+                if isinstance(data['objectInfo']["page"], list):
+                    child_list=data['objectInfo']["page"]
+                else:
+                    child_list = [data['objectInfo']["page"]]
+
+            for index, p in enumerate(child_list):
 
                 # todo get the parent id
                 # create a child resource with only new information - the ingest should take the parent info and combine it with the child
@@ -127,6 +135,7 @@ class FileCollection_CDM(FileCollection):
                 _file = layers_path + "/" + parent_id + "_sub_"+item_id+".json"
                 _url = root_path+item_id
                 # todo - decide if we want to save the 3  metadata files
+                print("About to load child url",_url)
                 self.load_file_call_func(_file, _url, 'check_sub_sub_loaded', parent)
 
 

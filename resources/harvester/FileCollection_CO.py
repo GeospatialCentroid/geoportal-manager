@@ -135,8 +135,15 @@ class FileCollection_CO(FileCollection):
         :return:
         """
         root_domain = self.end_point_url[:self.end_point_url.rindex("/")]
-        # put what we have in it's place
+
         obj=data.copy()
+
+        # if there are child records just create the parent
+        if len(data["layers"]) == 1:
+            data["id"] = parent_data["id"]
+            obj = self.file_parser.create_record(parent_data,data, self)
+
+        # put what we have in it's place
         obj['description']=self.convert_urls(parent_data["Layer Description"],root_domain)
         obj['title'] = parent_data["Title"]
 
@@ -152,6 +159,8 @@ class FileCollection_CO(FileCollection):
 
 
         obj = self.add_details(parent_data, obj)
+
+
 
         # create a parent object
         r = self.save_record(obj, parent_data, data)
@@ -197,7 +206,7 @@ class FileCollection_CO(FileCollection):
 
         child_obj = self.file_parser.create_record(parent_data,data, self)
         child_obj['id']=str(parent_data['id'])+"_"+str(data['id'])
-        child_obj["urls"].append({'url_type': data["type"], 'url': parent_data["url"]+"/"+str(data['id'])})
+        child_obj["urls"].append({'url_type': data["type"].lower(), 'url': parent_data["url"]+"/"+str(data['id'])})
         child_obj['title']= data['name']
         # retain the parent outside of the object
         r = parent_data['parent_resource']

@@ -19,6 +19,8 @@ from resources.admin import admin_site ##! Important..Import your object (admin_
 
 urlpatterns = [
     path('admin/', admin_site.urls),
+    path('accounts/login/', admin.site.urls),
     path('', include('geoportal.urls')),
+    path('', include('geo_reference.urls')),
 
 ]

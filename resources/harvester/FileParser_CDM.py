@@ -106,6 +106,11 @@ class FileParser_CDM(FileParser):
 
         resource['year'] =  resource['date']
 
+        if resource['year'] and resource['year'].isdigit():
+            resource['year']=int(resource['year'])
+
+        if isinstance( resource['year'] , str):
+            resource['year']=None
 
         #########
         
@@ -131,23 +136,40 @@ class FileParser_CDM(FileParser):
                resource["format"] = "PDF"
 
         if resource['filetype'] != "cpd":
-            resource["urls"].append({'url_type': "iiif", 'url': self.open_prefix + child_obj["iiifInfoUri"]})
+            url=child_obj["iiifInfoUri"]
+            if not url.startswith("http"):
+                url = self.open_prefix + url
+            resource["urls"].append({'url_type': "iiif", 'url': url })
             resource["type"] = "iiif"
             resource["format"] = "JPEG"
 
         resource["geometry_type"] = "Raster"
 
+
         if resource['filetype'] != "cpd" or r==None:
-            # singleitems have images - parents do not - we have 3 cases - upper level no children and children have images
-            # todo - investigate further about image for compound files - current just support jp2 and tif
-            # e.g https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
-            # we have https://fchc.contentdm.oclc.org/digital/api/singleitem/image/hm/1434/default.jpg
-            # for compound artifacts we need to load the child information
-            # take the 'objectInfo'>'page' items and the 'pageptr' id. Append this to current url address
-            # https://fchc.contentdm.oclc.org/digital/api/singleitem/collection/hm/id/1405
-            resource["urls"].append({'url_type': "image", 'url': self.open_prefix + child_obj["imageUri"]})
+            #     # singleitems have images - parents do not - we have 3 cases - upper level no children and children have images
+            #     # todo - investigate further about image for compound files - current just support jp2 and tif
+            #     # e.g https://fchc.contentdm.oclc.org/digital/api/singleitem/image/pdf/hm/1404/default.png
+            #     # we have https://fchc.contentdm.oclc.org/digital/api/singleitem/image/hm/1434/default.jpg
+            #     # for compound artifacts we need to load the child information
+            #     # take the 'objectInfo'>'page' items and the 'pageptr' id. Append this to current url address
+            #     # https://fchc.contentdm.oclc.org/digital/api/singleitem/collection/hm/id/1405
 
+            url = child_obj["imageUri"]
+            if not url.startswith("http"):
+                url = self.open_prefix + url
+            resource["urls"].append({'url_type': "image", 'url': url})
 
+            if "iiifInfoUri" in child_obj:
+                url = child_obj["iiifInfoUri"]
+                if not url.startswith("http"):
+                    url = self.open_prefix + url
+                resource["urls"].append({'url_type': "iiif", 'url': url})
+
+            # add historic category for CONTENTdm
+            resource["categories"]=['historic']
+            if "coveraa" in resource:
+                resource["places"] = self.get_places(resource, resource["coveraa"].split(";"))
 
         # print(*resource["urls"])
 

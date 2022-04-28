@@ -49,6 +49,7 @@ class SolrInterface(object):
             print(resp)
         except pysolr.SolrError as e:
             print("Solr Error: {e}".format(e=e))
+            pass
 
     def search(self,query):
        return self.solr.search(self.escape_query(query))

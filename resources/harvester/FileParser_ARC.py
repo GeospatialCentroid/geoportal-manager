@@ -10,6 +10,7 @@ from .FileParser import FileParser
 
 class FileParser_ARC(FileParser):
     def __init__(self,props):
+        print("FileParser_ARC init!")
         for p in props:
             setattr(self,p, props[p])
 
@@ -98,7 +99,7 @@ class FileParser_ARC(FileParser):
         # try to get the year
         resource["year"] = self.get_year(resource)
 
-        if resource["description"] == "" and "snippet" in resource:
+        if "description" in resource and resource["description"] == "" and "snippet" in resource:
             resource["description"]=resource["snippet"]
 
 
@@ -113,12 +114,25 @@ class FileParser_ARC(FileParser):
 
         resource["bounding_box"] = None
         # reformat extent
-        if 'extent' in resource:
-            spatial_reference = False
-            if "spatialReference" in resource:
-                spatial_reference=resource["spatialReference"]
+        extent=None
+        spatial_reference = False
 
-            resource["bounding_box"] = utils.get_extent(resource['extent'],spatial_reference)
+
+
+        if 'extent' in resource:
+            extent = resource["extent"]
+
+        if "spatialReference" in resource:
+            spatial_reference = resource["spatialReference"]
+
+        if 'fullExtent' in resource:
+            extent = resource["fullExtent"]
+            if "spatialReference" in extent:
+                spatial_reference = extent["spatialReference"]
+
+        if extent:
+            resource["bounding_box"] = utils.get_extent(extent,spatial_reference)
+
         if 'spatial' in resource:
             resource["bounding_box"]=resource["spatial"].split(",")
 
@@ -135,7 +149,7 @@ class FileParser_ARC(FileParser):
 
         # store the urls for easy access
         resource["urls"] = []
-        if _r and not child_obj:
+        if _r and not child_obj and 'id' in resource:
             # generate a link to the landing page - only do this on parent objects
             resource["info_page"] = file_collection.open_prefix + str(resource['id'])
             resource["urls"].append({'url_type': "info_page", 'url': resource["info_page"]})
@@ -153,26 +167,32 @@ class FileParser_ARC(FileParser):
                 url =resource["url"]
                 if resource["type"].lower().find("feature")>-1:
                     url+="/0/"
-                resource["urls"].append({'url_type': resource["type"], 'url': url})
+                resource["urls"].append({'url_type': resource["type"].lower(), 'url': url})
         else:
             # we are working with a child object which has all the urls
             if "landingPage" in resource:
                 resource["info_page"] = resource['landingPage']
-            # loop over the distributions
 
+            # loop over the distributions
             if "distribution" in resource:
                 for d in resource['distribution']:
+                    url =d["accessURL"]
+                    # quick fix for broken ESRI DCAT urls
+                    url=url.replace("/maps/","/datasets/")
                     if d["title"] in file_collection.api_types:
                         # store the base url
-                        resource["urls"].append({'url_type': resource["type"], 'url': d["accessURL"]})
+                        r_type = resource["type"].lower()
+                        if r_type == "raster layer":
+                            r_type = "mapservice"
+                        resource["urls"].append({'url_type': r_type, 'url': url})
                         # # set the type while we're at it
                         # resource["type"] = "Dataset|Service"
                     elif "mediaType" in d and d["mediaType"] == "text/html":
-                        resource["urls"].append({'url_type': "info_page", 'url': d["accessURL"]})
+                        resource["urls"].append({'url_type': "info_page", 'url': url})
                     elif d["title"]:
-                        resource["urls"].append({'url_type': "download", 'url': d["accessURL"], 'label': d["title"]})
+                        resource["urls"].append({'url_type': "download", 'url': url, 'label': d["title"]})
                     else:
-                        resource["urls"].append({'url_type': "html", 'url': d["accessURL"]})
+                        resource["urls"].append({'url_type': "html", 'url': url})
 
 
 

@@ -25,6 +25,7 @@ class Table_Manager {
      this.page_rows=10;
      this.query="1=1"
      this.sort_col;
+     this.csv=""
 
 
 
@@ -35,7 +36,9 @@ class Table_Manager {
     $("[for='table_bounds_checkbox']").text(LANG.DATA_TABLE.LIMIT)
     $('#table_bounds_checkbox').change(
         function(){
-            $this.get_layer_data()
+            $this.get_layer_data().change()
+
+            analytics_manager.track_event("table","filter_bounds_"+$('#table_bounds_checkbox').is(':checked'),"layer_id",$this.selected_layer_id)
         });
     // detect scroll bottom
     $("#"+this.elm).scroll( function(e) {
@@ -45,7 +48,7 @@ class Table_Manager {
                 // load the next page
                  $this.page_start+=$this.page_rows;//start where we left off
                  $this.get_data($this.selected_layer_id,$this.append_to_table)
-
+                 analytics_manager.track_event("table","scroll_load_start_"+$this.page_start,"layer_id",$this.selected_layer_id)
             }
          }
     });
@@ -57,14 +60,17 @@ class Table_Manager {
 
     $("#data_table_export_select option[value='default']").html(LANG.DATA_TABLE.EXPORT_RESULT)
     $("#data_table_export_select option[value='csv']").text(LANG.DATA_TABLE.AS_CSV)
-    $("#data_table_export_select option[value='xls']").text(LANG.DATA_TABLE.AS_XLS)
-    $("#data_table_export_select option[value='shp']").text(LANG.DATA_TABLE.AS_SHP)
+//    $("#data_table_export_select option[value='xls']").text(LANG.DATA_TABLE.AS_XLS)
+//    $("#data_table_export_select option[value='shp']").text(LANG.DATA_TABLE.AS_SHP)
 
     $('#data_table_export_select').change(
         function(){
 
-            console.log("trigger export",$(this).val())
+           if ($(this).val() =='csv'){
+                $this.download('export.csv',  $this.csv);
+           }
             $("#data_table_export_select").val("default");
+            analytics_manager.track_event("table","export_data_"+$(this).val(),"layer_id",$this.selected_layer_id)
         });
 
     // setup the query panel
@@ -76,7 +82,7 @@ class Table_Manager {
      $("#table_query_fields").click(function(){
         var index = $(this).find(":hover").last().index();
         var layer = layer_manager.get_layer_obj( $this.selected_layer_id)
-        table_manager.add_query_field(layer.resource_obj.fields[index].alias)
+        table_manager.add_query_field(layer.resource_obj.fields[0][index].alias)
 
     });
 
@@ -99,20 +105,20 @@ class Table_Manager {
     var layer = layer_manager.get_layer_obj( this.selected_layer_id)
      var html ="";
      for(var i in layer.resource_obj.fields){
-        var f =layer.resource_obj.fields[i]
-         var type=LANG.DETAILS.TEXT
-         if(int_type.indexOf(f.type) > -1 ){
-              var type=LANG.DETAILS.NUMBER
-         }
+         for(var j in layer.resource_obj.fields[i]){
+             var f = layer.resource_obj.fields[i][j]
+             var type=LANG.DETAILS.TEXT
+             if(int_type.indexOf(f.type) > -1 ){
+                  var type=LANG.DETAILS.NUMBER
+             }
 
-         html +='<a href="#" class="list-group-item list-group-item-action">'+f.name+": "+type+'</a>';
+             html +='<a href="#" class="list-group-item list-group-item-action">'+f.name+": "+type+'</a>';
+         }
      }
 
      //
 
      $("#table_query_fields").html(html)
-
-
 
   }
   add_query_field(val){
@@ -129,14 +135,14 @@ class Table_Manager {
    $("#table_query_text").val("1=1")
   }
   reset_query(){
-     reset_query_text()
+     this.reset_query_text()
      this.execute_query()
   }
   execute_query(){
      $("#table_query").modal("hide");
      this.query= $("#table_query_text").val()
      this.get_layer_data()
-
+     analytics_manager.track_event("table","custom_query_"+this.query,"layer_id",this.selected_layer_id)
   }
   get_layer_data(_layer_id){
      // perform an initial search using the specified layer_id or the previously selected one
@@ -161,11 +167,13 @@ class Table_Manager {
     if (typeof(_layer_id)!="undefined"){
         this.selected_layer_id = _layer_id
      }
+     console.log("the layer select ID is ", this.selected_layer_id)
      // if the _layer_id is not set and the this.selected_layer_id is no longer on the map trigger a new map click with the first layer
      if ((!_layer_id || !layer_manager.is_on_map(this.selected_layer_id)) && this.elm_wrap.is(":visible")){
         if(layer_manager.layers.length>0){
             this.selected_layer_id=layer_manager.layers[0].id
             trigger_layer_data_load = true
+            console.log("we'll select the first one instead!!!!!")
         }else{
             // hide the table
             this.close()
@@ -200,7 +208,16 @@ class Table_Manager {
     var $this=this
 
     var layer = layer_manager.get_layer_obj(_layer_id)
-
+    if (layer.layer_obj?.data){
+        // when the data is already loaded - i.e geojson
+        $this.generate_table(layer.layer_obj.data)
+        $this.show_total_records(layer.layer_obj.data.length)
+         $this.show_totals()
+        $("#data_table_spinner").hide();
+        $("#advanced_table_filters").hide()
+        return
+    }
+     $("#advanced_table_filters").show()
     // when a mapserver is requested for table view need to specify the layer id in question
     // temporarily look at the first layer todo expand to more more flexible
     var url= layer.layer_obj.service.options.url
@@ -211,7 +228,7 @@ class Table_Manager {
       url: url
     });
 
-    //store the layer obj incase we need to rerun without paging
+    //store the layer obj in case we need to rerun without paging
     $this.layer_id = _layer_id
     $this.func = func
 
@@ -224,14 +241,15 @@ class Table_Manager {
 
     // passing options
     // https://esri.github.io/esri-leaflet/api-reference/tasks/query.html
-    var query_base=query.where($this.query);//maintain a base query for getting totals
+    var query_text=$this.query.replaceAll('"',"'")
+    var query_base=query.where(query_text);//maintain a base query for getting totals
     if ($('#table_bounds_checkbox').is(':checked')){
         // add map bounds
         query_base=query_base.intersects(layer_manager.map.getBounds())
     }
     // get the total number of records from the service layer, make sure to include filters but exclude limits
     query_base.count(function (error, count,response) {
-        $this.page_count = count
+        $this.show_total_records(count)
     });
 
     var query_full;
@@ -245,6 +263,11 @@ class Table_Manager {
         query_full=query_full.orderBy($this.sort_col,$this.sort_dir)
     }
     query_full.run(func);
+  }
+  show_total_records(count){
+      this.page_count = count
+      $("#data_table_total .total_results").text(LANG.RESULT.FOUND+" "+count+" "+LANG.RESULT.RESULTS)
+
   }
   show_response(error, featureCollection, response){
     var $this=table_manager
@@ -261,7 +284,7 @@ class Table_Manager {
         }
         return;
       }
-    $this.results = featureCollection.features
+
     $this.generate_table(featureCollection.features)
     $this.show_totals()
   }
@@ -277,6 +300,8 @@ class Table_Manager {
   }
   //
   generate_table(_features){
+    this.elm_wrap.show()
+    this.results = _features
     //the first call to generated the table
     var html= "<table class='fixed_headers'><thead><tr>"
     // loop through the header elements
@@ -285,15 +310,19 @@ class Table_Manager {
         return
     }
     var first_row = _features[0]
-
+    var csv_array=[]
+    var cols=[]
     for (var p in first_row.properties){
-    //todo add domain names (alias) for headers and pass database name to function for sorting
-     var sort_icon="<i/>"
-     if(this.sort_col ==p){
-        sort_icon=this.get_sort_icon(this.sort_dir)
-     }
-     html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
+        //todo add domain names (alias) for headers and pass database name to function for sorting
+         var sort_icon="<i/>"
+         if(this.sort_col ==p){
+            sort_icon=this.get_sort_icon(this.sort_dir)
+         }
+         html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
+         cols.push(p)
+        csv_array.push(p)
     }
+    this.csv=csv_array.join(",")+"\n"
 
     html +="</tr></thead><tbody>";
     html+=this.get_rows_html(_features)
@@ -305,15 +334,34 @@ class Table_Manager {
     setTimeout(function(){ $(window).trigger("resize"); }, 100);
 
   }
-  get_rows_html(_rows){
+  get_rows_html(_rows,_cols){
+    if(!_cols){
+        _cols=_rows[0].properties
+    }
+
     var html="";
+
     for(var i =0;i<_rows.length;i++){
+
         var id=0
+        var csv_array=[]
         html+="<tr onclick='table_manager.highlight_feature(this,\""+_rows[i].id+"\")' ondblclick='table_manager.zoom_feature(this,\""+_rows[i].id+"\")'>"
-        for (var p in _rows[i].properties){
-              html+="<td>"+_rows[i].properties[p]+"</td>"
+        for (var p in _cols){
+              var text = _rows[i].properties[p]
+
+              if(typeof text === 'string'){
+                csv_array.push(text)
+
+                text = text.hyper_text()
+                if(text.indexOf("<a href")==-1){
+                    text = text.clip_text(50)
+                }
+              }
+              html+="<td>"+text+"</td>"
+
         }
         html+="</tr>"
+        this.csv+=csv_array.join(",")+"\n"
     }
     return html
   }
@@ -331,6 +379,8 @@ class Table_Manager {
     //take the currently selected layer and the id to make a selection
     var feature = this.get_feature(_id)
     map_manager.map_zoom_event(L.geoJSON(feature.geometry).getBounds())
+
+    analytics_manager.track_event("table","zoom_feature_"+_id,"layer_id",this.selected_layer_id)
   }
 
   sort(elm,col){
@@ -348,6 +398,7 @@ class Table_Manager {
     this.page_start=0;
     this.get_layer_data()
 
+    analytics_manager.track_event("table","sort_"+col+"_"+direction,"layer_id",this.selected_layer_id)
   }
   get_sort_icon(direction){
     var icon = "up"
@@ -364,10 +415,9 @@ class Table_Manager {
   }
   show_totals(){
 
-        var totals_results=this.page_count
         var showing_start=1
         var showing_end=this.results.length
-        $("#data_table_total .total_results").text(LANG.RESULT.FOUND+" "+totals_results+" "+LANG.RESULT.RESULTS)
+
         $("#data_table_total .total_showing").text(LANG.RESULT.SHOWING_RESULTS+" "+showing_start+" "+LANG.RESULT.TO+" "+showing_end)
         // when there are no results
         if (showing_end==0){
@@ -376,14 +426,26 @@ class Table_Manager {
         $("#data_table_total .spinner-border").hide();
   }
   close(){
-     this.elm_wrap.hide();
-     delete this.sort_col;
-     $( window ).trigger("resize");
-     if (map_manager.highlighted_feature) {
-      $(".fixed_headers tr").removeClass('highlight');
-      // remove the map highlight
-      map_manager.map.removeLayer(map_manager.highlighted_feature);
+    this.elm_wrap.hide();
+    delete this.sort_col;
+    $( window ).trigger("resize");
+    if (map_manager.highlighted_feature) {
+        $(".fixed_headers tr").removeClass('highlight');
+        // remove the map highlight
+        map_manager.map.removeLayer(map_manager.highlighted_feature);
     }
+    analytics_manager.track_event("table","close_table","layer_id",this.selected_layer_id)
   }
+  download(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
 
+      element.style.display = 'none';
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+    }
 }

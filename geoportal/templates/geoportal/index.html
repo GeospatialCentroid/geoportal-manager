@@ -5,15 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>
-    {% if title %}
+    <title>{% if title %}
         {{title}}
     {% else %}
          Mountain Scholar Geoportal
-    {% endif %}
-
-
-    </title>
+    {% endif %}</title>
 
     {% load static %}
 
@@ -90,6 +86,8 @@
      <script type="text/javascript" src='{% static 'plugins/leaflet/esri-leaflet-cluster.js' %}'></script>
 
      <script type="module" src='{% static 'plugins/leaflet/esri-leaflet-vector.js' %}'></script>
+<!--     <script type="module" src='{% static 'plugins/leaflet/leaflet.ajax.min.js' %}'></script>-->
+
      <!--jquery-->
     <link rel="stylesheet" href="{% static 'plugins/jquery-ui/jquery-ui.css' %}">
     <script src="{% static 'plugins/jquery-ui/external/jquery/jquery.js' %}"></script>
@@ -135,12 +133,22 @@
     DJANGO_STATIC_URL = '{{ STATIC_URL }}';
 </script>
 
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ GOOGLE_ANALYTICS_ID }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '{{ GOOGLE_ANALYTICS_ID }}');
+</script>
+</head>
 
 <body>
-
 <div class="page vh-100">
     <div id="header" class="col-lg-12">
-       <a href="/"><img class="logo" src="{{ STATIC_URL }}images/logo.png"/></a>
+        <a href="/"><img class="logo" src="{{ STATIC_URL }}images/logo.png"/></a>
+        <div id="mode" class="alert alert-danger" role="alert" ></div>
     </div>
     <div id="content">
         <div id="side_bar" >
@@ -172,11 +180,16 @@
                 <div id='downloadable_layers'></div>
                 <div class='download_but_wrapper'></div>
                 <br/>
-                <button id='download_button'  type='button' class='btn btn-primary' onclick='download_manager.download(this)'></button>
+                <button id='download_button'  type='button' class='btn btn-primary' data-toggle="popover" title="" data-content="" data-trigger="manual" onclick='download_manager.download(this)' ></button>
             </div>
 
             <div id="search_panel_wrapper" class="tab_panel">
                 <div id="side_header">
+                    <div id="search_types">
+                        <div class="inline"><input name="search_type" type="radio" checked=""  value="data" id="radio_data" tabindex="0" aria-pressed="true"></div> <label id="radio_data_label" for="radio_data"></label>
+                        &nbsp&nbsp<div class="inline"><input name="search_type" type="radio" value="place" id="radio_place" tabindex="0"></div> <label id="radio_place_label" for="radio_place"></label>
+                    </div>
+
                     <div class="input-group search_wrapper">
                       <input id="search" type="text" class="form-control" placeholder="">
                       <div class="input-group-append">
@@ -191,7 +204,7 @@
                         </div>
                      </div>
                     <br/>
-                     <div id="filter_date">
+                     <div id="filter_date" class="inline">
                          <input  id="filter_date_checkbox" type="checkbox" value="">
                           <label class="form-check-label" for="filter_date_checkbox"></label>
                          <input id="filter_start_date" type="text" class="date_field"/>
@@ -306,10 +319,11 @@
 
             <div id="data_table_select" class="float-left"></div>
             <div >
-               <div class="item"><input id="table_bounds_checkbox" type="checkbox" value=""> <label class="form-check-label" for="table_bounds_checkbox"></label></div>
-                 <button id='query_button'  type='button' class='btn btn-primary' onclick='table_manager.show_query_panel(this)'></button>
-                 <button id='reset_button'  type='button' class='btn btn-primary' onclick='table_manager.reset_query(this)'></button>
-
+                <span id="advanced_table_filters">
+                    <div class="item"><input id="table_bounds_checkbox" type="checkbox" value=""> <label class="form-check-label" for="table_bounds_checkbox"></label></div>
+                     <button id='query_button'  type='button' class='btn btn-primary' onclick='table_manager.show_query_panel(this)'></button>
+                     <button id='reset_button'  type='button' class='btn btn-primary' onclick='table_manager.reset_query(this)'></button>
+                </span>
                 <div id="data_table_export">
                     <select id="data_table_export_select" >
                         <option selected value='default'></option>
@@ -342,6 +356,7 @@
 
       </div>
       <div class="modal-footer">
+          <span><label id="disclaimer_dont_show_again" for="disclaimer_dont_show_again_checkbox"></label> <input id="disclaimer_dont_show_again_checkbox" type="checkbox" value=""/></span>
         <button type="button" class="btn btn-secondary" data-dismiss="modal" id="disclaimer_disagree"></button>
         <button type="button" class="btn btn-primary" id="disclaimer_agree"></button>
       </div>

@@ -38,15 +38,16 @@
 			"historic":{"code":"000", "name":"historic","title":"Historical Scanned Maps", "desc":"Non-digital maps that have been scanned"}
 		},
 	  "FACET_FIELD": {
-		  "dc_subject_sm": "Subject",
+		  "dct_subject_sm": "Subject",
 		  "dct_spatial_sm": "Place",
-		  "dc_creator_sm": "Author",
-		  "solr_geom": "Bounds",
-		  "layer_modified_dt": "Modified Date",
+		  "dct_creator_sm": "Author",
+		  "locn_geometry": "Bounds",
+		  "gbl_mdModified_dt": "Modified Date",
 		  "dct_issued_s": "Publish Date",
-		  "b1g_keyword_sm": "Keyword",
-		  "layer_geom_type_s": "Data Type",
-		  "dc_format_s": "Format"
+		  "dcat_keyword_sm": "Keyword",
+		  "gbl_resourceType_sm": "Data Type",
+		  "dct_format_s": "Format",
+		  "dct_publisher_sm": "Publisher"
 	  }
 	},
 	"RESULT": {
@@ -89,7 +90,9 @@
 		"TYPE": "Type",
 		"NUMBER": "Number",
 		"TEXT": "String",
-		"GEOREFERENCE": "Georeference this Image"
+		"GEOREFERENCE": "Georeference this Image",
+		"RIGHTS": "Rights",
+		"WEB_SERVICES": "Web Services"
 
 	},
 	"DISCLAIMER": {
@@ -115,9 +118,9 @@
 		"TO": "to",
 		"SORT_OPTIONS": {
 			"RELEVANCE": 		{"name": "Relevance", "search": "score asc"},
-			"TITLE":            {"name": "Alphabetical", "search": "dc_title_s asc"},
-			"NEWEST":			{"name": "Publish date: newest", "search": "layer_modified_dt desc"},
-			"OLDEST":			{"name": "Publish date: oldest", "search": "layer_modified_dt asc"},
+			"TITLE":            {"name": "Alphabetical", "search": "dct_title_s asc"},
+			"NEWEST":			{"name": "Publish date: newest", "search": "gbl_mdModified_dt desc"},
+			"OLDEST":			{"name": "Publish date: oldest", "search": "gbl_mdModified_dt asc"},
 			"LARGEST":			{"name": "Area: largest", "search": "geom_area desc"},
 			"SMALLEST":			{"name": "Area: smallest", "search": "geom_area asc"}
 		}
@@ -133,7 +136,9 @@
 			"CSV": { "name": "CSV", "ext": "csv"},
 			"KML": { "name": "KML", "ext": "kml"},
 			"GEOJSON": { "name": "GeoJSON", "ext": "geojson"}
-		}
+		},
+		"NO_DOWNLOAD_TITLE": "No Dynamic Downloadable Layers",
+		"NO_DOWNLOAD_CONTENT": "Please view layer details for alternate download methods."
 	},
 
 	"IDENTIFY": {
@@ -144,7 +149,8 @@
 		"NEXT": "Next",
 		"SHOWING_RESULT": "Showing",
 		"OF": "of",
-		"FOUND": "Found"
+		"FOUND": "Found",
+		"SHOW_IN_TABLE": "Show in Table"
 	},
 	"TAB_TITLES": {
 		"BROWSE_TAB": 	"Search",
@@ -232,7 +238,7 @@
 		"QUERY_ERROR":			"There was an error in the query. Please adjust the query and try again.",
 		"EXECUTE": 				"Execute",
 		"QUERY_PANEL_TITLE":	"Custom query",
-		"QUERY_PANEL_TIP":		"Click a field name for use in query statement. Next, select and operator. <b>Use numeric or string values, and wrap strings with single quotes ' '.</b>",
+		"QUERY_PANEL_TIP":		"Click a field name for use in query statement. Next, select and operator. Use numeric or string values, and wrap strings quotes.",
 
 		"MORE_HELP":			"More help",
 		"exportQueryTooltip":	"Export the query results as an Excel (.xls) table",

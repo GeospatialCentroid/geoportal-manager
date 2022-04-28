@@ -25,11 +25,41 @@
 
 
 
-
+    <script src="{% static 'plugins/leaflet/leaflet-iiif.js' %}"></script>
     <script type="text/javascript" src='{% static 'plugins/leaflet/leaflet-geosearch/geo-search.min.js' %}'></script>
     <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet-geosearch/geo-search.css' %}" />
 
-     <script src="{% static 'plugins/urlon.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'plugins/jquery/jquery.cookie.js' %}"></script>
+
+     <script src="{% static 'plugins/fontawesome.min.js' %}"></script>
+     <link rel="stylesheet" href="{% static 'plugins/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/all.min.css' %}" />
+
+     <!--leaflet draw-->
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/Leaflet.draw/leaflet.draw.css' %}" />
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Leaflet.draw.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/Edit.Poly.js' %}"></script>
+   <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Feature.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Polyline.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/handler/Draw.Polygon.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/TouchEvents.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/LatLngUtil.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/GeometryUtil.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/LineUtil.Intersect.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/Polyline.Intersect.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/ext/Polygon.Intersect.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Control.Draw.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Tooltip.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Toolbar.js' %}"></script>
+
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/draw/DrawToolbar.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/EditToolbar.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/EditToolbar.Edit.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/edit/handler/EditToolbar.Delete.js' %}"></script>
+    <script src="{% static 'plugins/leaflet/Leaflet.draw/Leaflet.Draw.Event.js' %}"></script>
 
     <script src="{% static 'geo_reference/js/index.js' %}?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
     <script src="{% static 'geo_reference/js/slider_control.js' %}?v={% now "SHORT_DATETIME_FORMAT" %}"></script>
@@ -88,6 +118,8 @@
 
         <li>When the image is positioned appropriately on the map, <b>click</b> the <i>disk icon</i> to save the map coordinates</li>
     </ol>
+
+     <span><label id="dont_show_again" for="dont_show_again_checkbox">Do not show me this again</label> <input id="dont_show_again_checkbox" type="checkbox" value=""/></span>
 </div>
 <div id="dialog_save" title="Submit Map Coordinates" class="hide">
     <p>
@@ -110,8 +142,8 @@
 
 
 <div id="dialog_resp" title="Saved"  class="hide">
-    Thank you for taking the time to georeference this scanned image! Your contribution has been saved and you can now close this window.
-
+    Thank you for taking the time to georeference this scanned image! Your contribution has been saved and you can now close this window.<br/>
+    <a  href="/admin/resources/resource/?q={{id}}">View in Admin</a>
 </div>
 
 </body>

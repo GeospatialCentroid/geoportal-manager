@@ -93,8 +93,12 @@ class Place(models.Model):
     class Meta:
         unique_together = (("name", "name_lsad"),)
     def __str__(self):
-        return str(self.name)
+        return str(self.name)+", "+str(self.name_lsad)
 
+class Named_Place(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return str(self.name)
 
 class Type(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -110,14 +114,15 @@ class Geometry_Type(models.Model):
     name = models.CharField(max_length=100, unique=True)
     def __str__(self):
         return str(self.name)
-# class Service_Type(models.Model):
-#     name = models.CharField(max_length=100, unique=True)
-#     def __str__(self):
-#         return str(self.name)
+
+class Resource_Type(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return str(self.name)
 
 class Owner(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    full_name = models.CharField(max_length=150, null=True, blank=True)
+    name = models.CharField(max_length=300, unique=True)
+    full_name = models.CharField(max_length=500, null=True, blank=True)
     def __str__(self):
         return str(self.name)
 
@@ -136,7 +141,7 @@ class Resource(models.Model):
     '''
     id = models.AutoField(primary_key=True)
     resource_id = models.CharField(max_length=100)
-    title= models.CharField(max_length=200)
+    title= models.CharField(max_length=400)
     alt_title = models.CharField(max_length=200, null=True, blank=True)
     description = RichTextField(null=True, blank=True)
     bounding_box = models.PolygonField(null=True, blank=True)#,srid = 4326
@@ -154,11 +159,11 @@ class Resource(models.Model):
 
     year = models.IntegerField(null=True,blank=True, validators=[MaxValueValidator(9999)])
     temporal_coverage = models.CharField(help_text="The time period data collected or intended to represent. E.g '2001-2012'", max_length=500, null=True, blank=True)
-    place = models.ManyToManyField(Place, blank=True)
-
+    # place = models.ManyToManyField(Place, blank=True)
+    named_place = models.ManyToManyField(Named_Place, blank=True)
     type = models.ForeignKey(Type, on_delete=models.SET_NULL,null=True, blank=True, help_text="The service type used to visualize the data in the browser")
     geometry_type = models.ForeignKey(Geometry_Type, on_delete=models.SET_NULL, null=True, blank=True, help_text="To differentiate between vector (Point, Line, Polygon), raster (Raster, Image), and nonspatial formats (table), or a combination (Mixed). Used as icon within interface")
-    # service_type = models.ForeignKey(Service_Type, on_delete=models.SET_NULL, null=True, blank=True)
+    resource_type = models.ManyToManyField(Resource_Type, blank=True)
     format = models.ForeignKey(Format, on_delete=models.SET_NULL, null=True, blank=True, help_text="The format of the data. E.g Shapefile, GeoTIFF, JPEG, TIFF, ArcGRID, Paper Map, Geodatabase, E00 Cartographic Material, ESRI Geodatabase, SQLite Database, GeoJSON, Raster Dataset, Scanned Map, etc. Used in Facet search")
 
     license_info=RichTextField(null=True, blank=True)
@@ -172,9 +177,11 @@ class Resource(models.Model):
     layer_json = models.JSONField(null=True, blank=True)
     # Note -  when deleting parent - system hangs - need to delete each child first - a work around has been implemented
     # see admin delete override.
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='resource')
+    parent = models.ManyToManyField('self', blank=True, related_name='parent_resource', symmetrical=False)
 
     access_information = models.TextField(null=True, blank=True)
+
+    missing = models.BooleanField(help_text="Should the endpoint no longer list this resource", null=True, blank=True)
 
     Status_Type = (
         ('as', 'Approved for Staging'),
@@ -231,11 +238,15 @@ class Resource(models.Model):
 
         # saving logic - ie. change for change - store a record of the change update the overrides
         print("we are saving!!! by:",user)
-        if self.has_changed:
+        if self.has_changed and self.id:
             for f in self.changed_fields:
+                need_to_track=True
                 print("a change has been made",f,self.get_field_diff(f))
                 d1=str(self.get_field_diff(f)[0])
                 d2=str(self.get_field_diff(f)[1])
+                print(d1,"VS",d2)
+                #make sure a change has been made
+                # if d1 !=None :
                 limit =250
                 change_type='a'
                 if user and user =='c':
@@ -243,21 +254,31 @@ class Resource(models.Model):
                     change_type='c'
                 elif user:
                     change_type='u'
-                Change_Log.objects.get_or_create(
-                    change_type=change_type,
-                    community_input=community_input,
-                    resource=self,
-                    field_name=f,
-                    # truncate really long values
-                    old=(d1[:limit-2] + '..') if len(d1) > limit else d1,
-                    new = (d2[:limit - 2] + '..') if len(d2) > limit else d2
-                )
-                #if the field is status - create a status log record
-                if f =="status_type":
-                    Status_Log.objects.get_or_create(
+
+                # the boundary box changes slightly when saved - lets skip if we're in the admin
+                if f == "bounding_box" and change_type=='u':
+                    need_to_track=False
+
+                #skip if going from None to ''
+                if d2 == "None" and d1=='':
+                    need_to_track=False
+
+                if need_to_track:
+                    Change_Log.objects.get_or_create(
+                        change_type=change_type,
+                        community_input=community_input,
                         resource=self,
-                        status_desc="From: "+d1+" to: "+d2
+                        field_name=f,
+                        # truncate really long values
+                        old=(d1[:limit-2] + '..') if len(d1) > limit else d1,
+                        new = (d2[:limit - 2] + '..') if len(d2) > limit else d2
                     )
+                    #if the field is status - create a status log record
+                    if f =="status_type":
+                        Status_Log.objects.get_or_create(
+                            resource=self,
+                            status_desc="From: "+d1+" to: "+d2
+                        )
 
 
         super(Resource, self).save(*args, **kwargs)
@@ -279,7 +300,7 @@ class Status_Log(models.Model):
 class Georeference_Request(models.Model):
    date = models.DateTimeField('Date requested', default=datetime.now, blank=True)
    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
-   name = models.CharField(max_length=200,null=True, blank=True)
+   name = models.CharField(max_length=400,null=True, blank=True)
    email = models.CharField(max_length=200,null=True, blank=True)
    notes = models.TextField(null=True, blank=True)
 
@@ -290,6 +311,7 @@ class Community_Input(models.Model):
    email = models.CharField(max_length=200,null=True, blank=True)
    field_name = models.CharField(max_length=100)
    notes = models.TextField(null=True, blank=True)
+   #approved = models.BooleanField(help_text="Set to true when ingested, or false if rejected and reverted",null=True, blank=True)
 
    def __str__(self):
        _str = ""

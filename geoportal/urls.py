@@ -3,8 +3,9 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('geo_reference', views.geo_reference, name='geo_reference'),
-    path('set_geo_reference', views.set_geo_reference, name='set_geo_reference'),
+    path('preview/', views.preview, name='preview'),
+    path('generate_gbl_record/', views.generate_gbl_record, name='generate_gbl_record'),
+
     path('fetch_solr', views.fetch_solr, name='fetch_solr'),
 
     # path('catalog', views.index, name='index'),
@@ -20,8 +21,10 @@ urlpatterns = [
     #
     # path('admin/delete/', views.resource_admin_delete_page, name='delete_page'),
     path('disclaimer/', views.get_disclaimer, name='get_disclaimer'),
+    path('url_types/', views.get_url_types, name='get_url_types'),
     path('services/', views.get_services, name='get_services'),
-
+    path('suggest/', views.get_suggest, name='get_suggest'),
+    path('rss/', views.get_rss, name='get_rss'),
 ]
 
 
