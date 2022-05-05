@@ -110,7 +110,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         download_link = utils.get_ref_link(d['dct_references_s'], "download")
     if download_link:
         print(download_link, type(download_link), "download_link")
-        if  isinstance(download_link, list) and len(download_link) > 1:
+        if isinstance(download_link, list) and len(download_link) > 1:
             html = "<select class='form-control btn btn-primary' onchange='download_manager.download_select(this)'>"
             html += "<option selected value='0'>" + args['LANG']["DOWNLOAD"]["DOWNLOAD_BUT"] + "</option>"
 

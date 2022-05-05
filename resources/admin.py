@@ -115,7 +115,9 @@ class ParentInline(admin.StackedInline):
 
 class ChildrenInline(admin.StackedInline):
     model = Resource.parent.through
+    # list_display = ('title','status_type')
     fk_name = "to_resource" # not work "parent_resource" "resource_id", "parent_id", from_resource_id, to_resource_id
+    autocomplete_fields=["to_resource"]
     classes = ['collapse']
     verbose_name = "Child Resource"
     verbose_name_plural = "Child Resources"
@@ -142,6 +144,7 @@ class ParentFilter(admin.SimpleListFilter):
 
 # @admin.register(Resource)
 class ResourceAdmin(OSMGeoAdmin):
+    save_as = True
     list_filter = ('end_point',"type","status_type","owner",ParentFilter,"missing")
     search_fields = ('title','alt_title','description','resource_id',)
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")

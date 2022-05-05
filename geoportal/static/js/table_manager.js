@@ -183,7 +183,7 @@ class Table_Manager {
 
      }
       // create a dropdown to enable layer selection
-    $("#data_table_select").html(layer_manager.get_layer_select_html( this.selected_layer_id,"table_manager.set_selected_layer_id"))
+    $("#data_table_select").html(layer_manager.get_layer_select_html( this.selected_layer_id,"table_manager.set_selected_layer_id",true))
     if(trigger_layer_data_load){
         this.get_layer_data( this.selected_layer_id)
     }
@@ -335,7 +335,7 @@ class Table_Manager {
 
   }
   get_rows_html(_rows,_cols){
-    if(!_cols){
+    if(!_cols && _rows.length>0){
         _cols=_rows[0].properties
     }
 

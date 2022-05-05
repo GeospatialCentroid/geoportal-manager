@@ -104,6 +104,13 @@ warning: #ff1b28
 #tabs{
     margin-left:3px;
 }
+.tabs_line{
+    margin-top: -2px;
+    width:100%;
+    border-top: 3px solid #01395c;
+    content: '';
+}
+
 .tab_but{
     margin: 0rem;
 }

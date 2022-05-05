@@ -41,7 +41,8 @@ class End_Point(models.Model):
         ('a', 'arc_gis_rest'),
         ('c', 'CONTENTdm'),
         ('ds', 'dspace'),
-        ('co', 'codex')
+        ('co', 'codex'),
+        ('o', 'other')
     )
     end_point_type = models.CharField(max_length=2, choices=End_Point_Type, default='a')
     thumbnail = models.CharField(help_text="The URL to a static image of the publisher", max_length=512, null=True,
@@ -196,9 +197,10 @@ class Resource(models.Model):
 
     class Meta:
         unique_together = ("resource_id", "end_point")
+        ordering = ['title']
 
     def __str__(self):
-        return str(self.title)
+        return str(self.title)+" ["+str(self.status_type)+"]"
 
     """
         A model mixin that tracks model fields' values and provide some useful api

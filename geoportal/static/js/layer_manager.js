@@ -38,7 +38,7 @@ class Layer_Manager {
     this.split_right_layers=[];
 
     //  only show the table for specific types
-    this.table_types=["esriSFS","esriPMS","esriSLS","vector","GeoJSON","mapserver"]
+    this.table_types=["esriSFS","esriSMS","esriPMS","esriSLS","vector","GeoJSON","mapserver","feature layer"]
     //
     var $this=this;
     // make the map layers sortable
@@ -390,7 +390,8 @@ class Layer_Manager {
                  var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
                  var val =ui.value/100
-                 if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
+                 var set_opacity=["basemap","Map Service","Raster Layer","tms","","mapserver","map service"]
+                 if($.inArray( layer.type,set_opacity)>-1){
                     layer.layer_obj.setOpacity(val)
                  }else if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
                        $("._marker_class"+_id).css({"opacity":val})
@@ -808,7 +809,7 @@ class Layer_Manager {
   }
 
     //
-    get_layer_select_html(_layer_id,_change_event){
+    get_layer_select_html(_layer_id,_change_event,is_table){
 
         var html="<span>"+LANG.IDENTIFY.IDENTIFY_SELECT_LAYER+"</span> <select onchange='"+_change_event+"(this)'>"
 
@@ -819,7 +820,7 @@ class Layer_Manager {
             }
             var title = this.layers[i].resource_obj.dct_title_s;
             title = title.clip_text(30)
-            if ($.inArray(this.layers[i].type,this.table_types)>-1){
+            if ($.inArray(this.layers[i].type,this.table_types)>-1 || !is_table){
                 html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
             }
         }
