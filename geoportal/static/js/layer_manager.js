@@ -482,7 +482,7 @@ class Layer_Manager {
         }
         filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
-
+    console.log(service_method,"service_method")
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
         var corners = filter_manager.get_poly_array(resource["locn_geometry"])
@@ -499,14 +499,11 @@ class Layer_Manager {
              // zoom in first for images as they are often quite small
              filter_manager.zoom_layer(resource.dcat_bbox)
 
-             // delay showing image as it may not appear correctly ad higher scales
-             setTimeout(1000,function(){
-                  var layer_obj =  L[service_method._class](url,{
+            
+            var layer_obj =  L[service_method._class](url,{
                     actions:[L.LockAction],mode:"lock",editable:false,
                     corners: cs,
                    }).addTo(this.map);
-             })
-
 
         }else{
             //we have no coordinates, just show the image in a separate leaflet
@@ -578,11 +575,14 @@ class Layer_Manager {
         console_log(e)
     }
 
-    layer_obj.on('click', function (e) {
-        $this.layer_click(e,_resource_id);
+    try{
+        layer_obj.on('click', function (e) {
+            $this.layer_click(e,_resource_id);
 
-    });
-
+        });
+    }catch(e){
+        console_log(e)
+    }
 
     //todo keep reference, update button on load
     // store the resource_obj as a copy for future use
