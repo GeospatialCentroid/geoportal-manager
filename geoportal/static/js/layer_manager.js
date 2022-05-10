@@ -499,7 +499,7 @@ class Layer_Manager {
              // zoom in first for images as they are often quite small
              filter_manager.zoom_layer(resource.dcat_bbox)
 
-            
+
             var layer_obj =  L[service_method._class](url,{
                     actions:[L.LockAction],mode:"lock",editable:false,
                     corners: cs,

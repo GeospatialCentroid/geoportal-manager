@@ -30,6 +30,9 @@ from django.contrib.gis.geos import GEOSGeometry
 import os
 import glob
 import sys
+
+from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
+
 sys.setrecursionlimit(10000)
 
 # # Register the models
@@ -143,13 +146,13 @@ class ParentFilter(admin.SimpleListFilter):
         return queryset
 
 # @admin.register(Resource)
-class ResourceAdmin(OSMGeoAdmin):
+class ResourceAdmin(DjangoObjectActions, OSMGeoAdmin):
     save_as = True
     list_filter = ('end_point',"type","status_type","owner",ParentFilter,"missing")
     search_fields = ('title','alt_title','description','resource_id',)
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
-    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count","preview")
+    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count","preview",'add_selected_resources_to_staging')
 
     autocomplete_fields =("tag","named_place","owner", "publisher")
     fieldsets = [
@@ -225,7 +228,8 @@ class ResourceAdmin(OSMGeoAdmin):
         return actions
 
     actions = ["add_selected_resources_to_staging","delete_selected_resources", 'remove_selected_resources_from_index_staging']
-
+    change_actions = ('add_selected_resources_to_staging', 'remove_selected_resources_from_index_staging')
+    @takes_instance_or_queryset
     def add_selected_resources_to_staging(self, request, queryset):
         # first export
 
@@ -271,7 +275,9 @@ class ResourceAdmin(OSMGeoAdmin):
         ) % updated, messages.SUCCESS)
 
     add_selected_resources_to_staging.short_description = "Ingest to Staging"
+    add_selected_resources_to_staging.label = "Ingest to Staging"
 
+    @takes_instance_or_queryset
     def remove_selected_resources_from_index_staging(self, request, queryset):
         deleter = Delete_From_Solr.Delete_From_Solr({})
         # set status to remove from staging
@@ -288,6 +294,7 @@ class ResourceAdmin(OSMGeoAdmin):
         ) % updated, messages.SUCCESS)
 
     remove_selected_resources_from_index_staging.short_description = "Remove from Staging"
+    remove_selected_resources_from_index_staging.label = "Remove from Staging"
 
     def delete_selected_resources(self, request, queryset):
 
@@ -314,6 +321,8 @@ class ResourceAdmin(OSMGeoAdmin):
         return render(request,
                       'admin/delete.html',
                       context={'resources':queryset})
+
+
 
     def save_model(self, request, obj, form, change):
 

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'geoportal',
     'geo_reference',
     'ckeditor',# for richtext editor in admin
+    'django_object_actions',
 
 ]
 
