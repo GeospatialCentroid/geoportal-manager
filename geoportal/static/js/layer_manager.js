@@ -105,7 +105,6 @@ class Layer_Manager {
 
     if(!resource){
          // we need to load the resource information
-         console.log("please load")
          filter_manager.load_json(filter_manager.base_url+"q=dct_identifier_sm:"+_resource_id,filter_manager.loaded_resource,_resource_id);
          console_log("try again!!!")
          return
@@ -222,7 +221,7 @@ class Layer_Manager {
          }
         html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_details(\""+id+"\")'>"+LANG.RESULT.DETAILS+"</button>"
 
-        console.log("the type is ",layer.type)
+        console_log("the type is ",layer.type)
         if ($.inArray(layer.type,$this.table_types)>-1){
             html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='fa fa-table'></i></button>"
         }
@@ -482,7 +481,7 @@ class Layer_Manager {
         }
         filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
-    console.log(service_method,"service_method")
+    console_log(service_method,"service_method")
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
         var corners = filter_manager.get_poly_array(resource["locn_geometry"])
@@ -532,34 +531,7 @@ class Layer_Manager {
       if (service_method._method=="ajax"){
 
             var layer_obj = L.layerGroup();
-            $.ajax({
-                dataType: "json",
-                url: url,
-                success: function(data) {
-
-                    L["geoJSON"](data,{
-                        onEachFeature: function(feature, layer){
-                            var style = {}
-                            if(feature.properties?.color){
-                                style.fillColor= feature.properties.color
-                                style.color= feature.properties.color
-                                 style.opacity= 0
-                            }
-
-                            var geo =L.geoJSON(feature, {pane: _resource_id, style: style})
-
-                             layer_obj.addLayer(geo)
-                             //temp add service options
-                             layer_obj.service= {options:{url:url}}
-
-                             geo.on('click', function(e) { $this.layer_click(e,_resource_id) });
-                        }
-                    })
-                    layer_obj.data = data
-                    layer_obj.addTo($this.map);
-                    $this.layer_load_complete({layer_id:_resource_id})
-                }
-            }).error(function() {});
+            this.load_ajax(url,layer_obj,_resource_id)
 
       }else{
         var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
@@ -625,11 +597,59 @@ class Layer_Manager {
 
     this.layer_list_change();
   }
+  load_ajax(url,layer_obj,_resource_id){
+    var $this = this
+    $.ajax({
+            dataType: "json",
+            url: url,
+            success: function(data) {
+                 var markers = L.markerClusterGroup();
+                L["geoJSON"](data,{
+                    onEachFeature: function(feature, layer){
+
+                        var style = {}
+                        if(feature.properties?.color){
+                            style.fillColor= feature.properties.color
+                            style.color= feature.properties.color
+                             style.opacity= 0
+                        }
+                        var geo =L.geoJSON(feature, {pane: _resource_id, style: style})
+                        // force a layer id for access
+
+                         geo._leaflet_id = feature.id;
+
+                         //temp add service options
+                         layer_obj.service= {options:{url:url}}
+
+                         geo.on('click', function(e) { $this.layer_click(e,_resource_id) });
+
+
+
+                          markers.addLayer(geo);
+
+                    }
+                })
+                 layer_obj.addLayer(markers)
+                layer_obj.data = data
+                layer_obj.addTo($this.map);
+
+
+                $this.layer_load_complete({layer_id:_resource_id})
+            }
+        }).error(function() {
+             console.log("Lets overcome CORS!!!")
+             var prefix="/sr/?url="
+             if(url.indexOf(prefix)==-1){
+                $this.load_ajax(prefix+url,layer_obj,_resource_id)
+
+             }else{
+                // show load error
+             }
+        });
+  }
 
   get_attribution(resource){
-
-   return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["id"]+"')\" >"+resource["dct_title_s"]+"</a>"
-
+    return "<a href='javascript:void(0);' onclick=\"filter_manager.show_details('"+resource["id"]+"')\" >"+resource["dct_title_s"]+"</a>"
   }
   layer_click(e,_resource_id){
         map_manager.layer_clicked=true
@@ -641,6 +661,7 @@ class Layer_Manager {
         map_manager.popup_show();
          console.log(e)
         try{
+              map_manager.selected_feature_id=e.layer.feature.id
               map_manager.show_popup_details([e.layer.feature])
         }catch(error){
             // could be an artificial click

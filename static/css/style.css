@@ -104,6 +104,13 @@ warning: #ff1b28
 #tabs{
     margin-left:3px;
 }
+.tabs_line{
+    margin-top: -1px;
+    width:100%;
+    border-top: 3px solid #01395c;
+    content: '';
+}
+
 .tab_but{
     margin: 0rem;
 }
@@ -484,6 +491,12 @@ position: absolute;
 .slider_box label{
     margin-bottom: 0px;
 
+}
+
+.webservice label{
+
+     margin-bottom: 0px;
+      padding-top: 3px;
 }
 
 .color_box {
@@ -893,4 +906,14 @@ body.modal-open {
 #mode{
 padding:0;width:75%;text-align: center;
 display:none;
+}
+.web_service_input{
+    width:100%
+}
+
+a[aria-disabled="true"] {
+  color: currentColor;
+  display: inline-block;  /* For IE11/ MS Edge bug */
+  pointer-events: none;
+  text-decoration: none;
 }

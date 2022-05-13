@@ -103,7 +103,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         args['webservice_links_html'] = ""
         for w in webservice_links:
 
-            args['webservice_links_html']+='<div class="item"><label class ="">'+w['name']+':</label> <input class="web_service_input" type="text" readonly="readonly" value='+w['url']+'></div>'
+            args['webservice_links_html']+='<div class="item"><label class ="webservice">'+w['name']+':</label> <input class="web_service_input" type="text" readonly="readonly" value='+w['url']+'></div>'
 
     download_link = None
     if 'dct_references_s' in d:
@@ -141,7 +141,7 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         args['download_link_html'] = html
 
     # create nav
-    # if we have the item count don't worry about it.
+    # todo if we have the item current num don't worry about it.
     all_records = views.get_solr_data("q=*:*&fl=id&rows=1421747930")
 
     args['cur_num']=1
@@ -149,9 +149,9 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
         # find out where we're at
         ds = all_records['response']['docs']
         args['num_found'] = all_records['response']['numFound']
-        print("We've found this many records+++++=======",len(ds))
+        print("We've found this many records+++++=======",len(ds),args["resource_id"])
         for i in range(len(ds)):
-            if ds[i]['id'] == str(args["resource_id"]):
+            if ds[i]['id'] == str(args["resource_id"][0]):
                 if i>0:
                     prev_resource_data = utils.get_reference_data(ds[i - 1]['id'])
                     args['prev_resource_url'] = utils.get_catelog_url(prev_resource_data['response']['docs'][0])
@@ -163,6 +163,8 @@ def get_details_args(result_data,_LANG,is_sub=False,base_url=False):
                 args['cur_num'] = i+1
 
                 break
+
+
 
     args['pub_icon'] = utils.get_publisher_icon(d, utils.get_endpoints(),"pub_icon_med")
 

@@ -152,11 +152,11 @@ class ResourceAdmin(DjangoObjectActions, OSMGeoAdmin):
     search_fields = ('title','alt_title','description','resource_id',)
     list_display = ('title', 'year','end_point','get_thumb_small','type','get_category','status_type',"child_count","accessioned")
 
-    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count","preview",'add_selected_resources_to_staging')
+    readonly_fields = ('get_thumb',"_layer_json","_raw_json","get_tags","get_named_places","get_category","child_count","preview","view",'add_selected_resources_to_staging')
 
     autocomplete_fields =("tag","named_place","owner", "publisher")
     fieldsets = [
-        (None, {'fields': [('resource_id','preview'),'year','temporal_coverage']}),
+        (None, {'fields': [('resource_id','preview','view'),'year','temporal_coverage']}),
         (None, {'fields': [('title', 'alt_title')]}),
         (None, {'fields': ['status_type','end_point',"missing"]}),
         (None, {'fields': [('resource_type')]}),
@@ -228,7 +228,7 @@ class ResourceAdmin(DjangoObjectActions, OSMGeoAdmin):
         return actions
 
     actions = ["add_selected_resources_to_staging","delete_selected_resources", 'remove_selected_resources_from_index_staging']
-    change_actions = ('add_selected_resources_to_staging', 'remove_selected_resources_from_index_staging')
+    change_actions = ('add_selected_resources_to_staging',"delete_selected_resources", 'remove_selected_resources_from_index_staging')
     @takes_instance_or_queryset
     def add_selected_resources_to_staging(self, request, queryset):
         # first export
@@ -355,6 +355,26 @@ class ResourceAdmin(DjangoObjectActions, OSMGeoAdmin):
 
     preview.short_description = ("Preview")
     preview.allow_tags = True
+
+    def view(self, obj):
+        if obj.pk:
+            panel = "details"
+            # for child layers
+            parents=0
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "Select count(id) from resources_resource_parent where from_resource_id={};".format(obj.id))
+
+                parents = cursor.fetchone()[0]
+            if parents>0:
+                panel = "sub_details"
+            html = "<a href='/?t=search_tab/"+panel+"/"+ obj.resource_id+"-"+str(obj.end_point.id)+ "' target='_blank' >View in Site</a>"
+            return mark_safe(html)
+        else:
+            return '-'
+
+    view.short_description = ("View in Site")
+    view.allow_tags = True
 
 
 

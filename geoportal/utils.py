@@ -52,10 +52,8 @@ def get_service_links(_json_refs):
     json_refs = clean_json(_json_refs)
     if json_refs:
         url_types = URL_Type.objects.filter(service=True).values('name', 'ref', '_class', '_method')
-
         for j in json_refs:
             for u in url_types:
-                print("compare:", u["ref"], "to", j)
                 if u["ref"] == j:
                    service_links.append({"name":u["name"],"url":json_refs[j]})
     #
@@ -74,7 +72,6 @@ def has_service_link(_json_refs):
         print(url_types)
         for j in json_refs:
             for u in url_types:
-                print("compare:",u["ref"],"to",j)
                 if u["ref"]==j:
                     return True
 

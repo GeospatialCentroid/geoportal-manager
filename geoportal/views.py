@@ -1,5 +1,6 @@
 from django.shortcuts import render
 import urllib.request, json
+import requests
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.response import TemplateResponse
@@ -199,3 +200,12 @@ def get_rss(request):
     args["docs"] = get_solr_data("q=*:*%20AND%20solr_type:parent&sort=gbl_mdModified_dt%20desc")["response"]["docs"]
     args["base_url"] = settings.BASE_URL
     return TemplateResponse(request, 'geoportal/rss.html', args, content_type="application/xml")
+
+def spoof_request(request):
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+
+    response = requests.get(request.GET.get('url'), headers=headers)
+
+    return HttpResponse(response.content)

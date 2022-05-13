@@ -493,6 +493,12 @@ position: absolute;
 
 }
 
+.webservice{
+
+     margin-bottom: 0px;
+      padding-top: 3px;
+}
+
 .color_box {
      float:right;
       margin-top:-20px;
@@ -903,4 +909,11 @@ display:none;
 }
 .web_service_input{
     width:100%
+}
+
+a[aria-disabled="true"] {
+  color: currentColor;
+  display: inline-block;  /* For IE11/ MS Edge bug */
+  pointer-events: none;
+  text-decoration: none;
 }

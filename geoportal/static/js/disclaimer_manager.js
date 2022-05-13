@@ -93,7 +93,7 @@ class Disclaimer_Manager {
   }
   show_disclaimer(html,end_point_id){
     var $this=disclaimer_manager
-    console.log(end_point_id,$this.disclaimers)
+    console_log(end_point_id,$this.disclaimers)
     $this.disclaimers[end_point_id].html=html
     if (html=="None" || html ==""){
         //no disclaimer - automatic accept
@@ -119,8 +119,8 @@ class Disclaimer_Manager {
     // when the researcher clicks accept we need to know what disclaimer was accepted and show all the queued layers
     this.disclaimers[end_point_id].status="a"
     for(var i=0;i<this.disclaimers[end_point_id].queue.length;i++){
-        console.log(this.disclaimers)
-        console.log("We have acceptance for",end_point_id, "load", this.disclaimers[end_point_id].queue[i])
+        console_log(this.disclaimers)
+        console_log("We have acceptance for",end_point_id, "load", this.disclaimers[end_point_id].queue[i])
         this.disclaimers[end_point_id].queue[i].callback( this.disclaimers[end_point_id].queue[i].resource_id, this.disclaimers[end_point_id].queue[i].z)
     }
   }

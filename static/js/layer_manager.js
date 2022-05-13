@@ -38,7 +38,7 @@ class Layer_Manager {
     this.split_right_layers=[];
 
     //  only show the table for specific types
-    this.table_types=["esriSFS","esriPMS","esriSLS","vector","GeoJSON","mapserver"]
+    this.table_types=["esriSFS","esriSMS","esriPMS","esriSLS","vector","GeoJSON","mapserver","feature layer"]
     //
     var $this=this;
     // make the map layers sortable
@@ -390,7 +390,8 @@ class Layer_Manager {
                  var _id= id.substring(0,id.length-ext.length)
                  var layer =  $this.get_layer_obj(_id)
                  var val =ui.value/100
-                 if(layer.type=="basemap" || layer.type=="Map Service"|| layer.type=="Raster"  || layer.type=="Raster Layer" || layer.type=="tms" || layer.type==""){
+                 var set_opacity=["basemap","Map Service","Raster Layer","tms","","mapserver","map service"]
+                 if($.inArray( layer.type,set_opacity)>-1){
                     layer.layer_obj.setOpacity(val)
                  }else if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
                        $("._marker_class"+_id).css({"opacity":val})
@@ -481,7 +482,7 @@ class Layer_Manager {
         }
         filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
-
+    console.log(service_method,"service_method")
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
         var corners = filter_manager.get_poly_array(resource["locn_geometry"])
@@ -498,14 +499,11 @@ class Layer_Manager {
              // zoom in first for images as they are often quite small
              filter_manager.zoom_layer(resource.dcat_bbox)
 
-             // delay showing image as it may not appear correctly ad higher scales
-             setTimeout(1000,function(){
-                  var layer_obj =  L[service_method._class](url,{
+
+            var layer_obj =  L[service_method._class](url,{
                     actions:[L.LockAction],mode:"lock",editable:false,
                     corners: cs,
                    }).addTo(this.map);
-             })
-
 
         }else{
             //we have no coordinates, just show the image in a separate leaflet
@@ -547,9 +545,10 @@ class Layer_Manager {
                                 style.color= feature.properties.color
                                  style.opacity= 0
                             }
-
                             var geo =L.geoJSON(feature, {pane: _resource_id, style: style})
+                            // force a layer id for access
 
+                             geo._leaflet_id = feature.id;
                              layer_obj.addLayer(geo)
                              //temp add service options
                              layer_obj.service= {options:{url:url}}
@@ -577,11 +576,14 @@ class Layer_Manager {
         console_log(e)
     }
 
-    layer_obj.on('click', function (e) {
-        $this.layer_click(e,_resource_id);
+    try{
+        layer_obj.on('click', function (e) {
+            $this.layer_click(e,_resource_id);
 
-    });
-
+        });
+    }catch(e){
+        console_log(e)
+    }
 
     //todo keep reference, update button on load
     // store the resource_obj as a copy for future use
@@ -640,6 +642,7 @@ class Layer_Manager {
         map_manager.popup_show();
          console.log(e)
         try{
+              map_manager.selected_feature_id=e.layer.feature.id
               map_manager.show_popup_details([e.layer.feature])
         }catch(error){
             // could be an artificial click
@@ -808,7 +811,7 @@ class Layer_Manager {
   }
 
     //
-    get_layer_select_html(_layer_id,_change_event){
+    get_layer_select_html(_layer_id,_change_event,is_table){
 
         var html="<span>"+LANG.IDENTIFY.IDENTIFY_SELECT_LAYER+"</span> <select onchange='"+_change_event+"(this)'>"
 
@@ -819,7 +822,7 @@ class Layer_Manager {
             }
             var title = this.layers[i].resource_obj.dct_title_s;
             title = title.clip_text(30)
-            if ($.inArray(this.layers[i].type,this.table_types)>-1){
+            if ($.inArray(this.layers[i].type,this.table_types)>-1 || !is_table){
                 html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
             }
         }

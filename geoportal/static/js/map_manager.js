@@ -37,8 +37,9 @@ class Map_Manager {
     }
     console_log("Map_Manager params are:", this.params)
     this.layer_clicked=false
-    this.highlighted_feature
-    this.highlighted_rect
+    this.selected_feature_id;
+    this.highlighted_feature;
+    this.highlighted_rect;
 
    var options ={}
 
@@ -246,7 +247,7 @@ class Map_Manager {
         analytics_manager.track_event("web_map","click","layer_id",this.get_selected_layer()?.id)
         //start by using the first loaded layer
         var layer = this.get_selected_layer()
-        console.log("Get selected layer",layer)
+        console_log("Get selected layer",layer)
         if (!layer){
 
             return
@@ -321,7 +322,7 @@ class Map_Manager {
     }
 
     show_popup_details(_features){
-           console.log("show pop up details")
+           console_log("show pop up details",_features)
            var $this =this
            var layer = this.get_selected_layer()
            if(!layer){
@@ -341,14 +342,19 @@ class Map_Manager {
               $this.last_click_features=_features
               var prev_link="<a href='javascript:map_manager.show_popup_details_show_num(-1)' id='popup_prev' class='disabled_link'>« "+LANG.IDENTIFY.PREVIOUS+"</a> "
               var next_link=" <a href='javascript:map_manager.show_popup_details_show_num(1)' id='popup_next' class='disabled_link' onclick=''>"+LANG.IDENTIFY.NEXT+" »</a>"
-              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span> <a href='javascript:table_manager.generate_table(map_manager.last_click_features);table_manager.show_total_records(map_manager.last_click_features.length);$(\"#data_table_spinner\").hide();'>"+LANG.IDENTIFY.SHOW_IN_TABLE+"</a><br/>"
-              html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span></th><th>"+next_link+"</th></tr></table>"
+              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span> <a href='javascript:table_manager.generate_table(map_manager.last_click_features);table_manager.page_start="+_features.length+";table_manager.show_total_records(map_manager.last_click_features.length);$(\"#data_table_spinner\").hide();$(\"#advanced_table_filters\").hide();'>"+LANG.IDENTIFY.SHOW_IN_TABLE+"</a><br/>"
+              html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span> "+LANG.IDENTIFY.OF+" "+_features.length+"</th><th>"+next_link+"</th></tr></table>"
             }
 
 
             html += "<div id='popup_scroll'><table id='props_table'>"
             html+="</table></div>"
             html+= "<a href='javascript:map_manager.map_zoom_event()'>"+LANG.IDENTIFY.ZOOM_TO+"</a><br/>"
+
+            // if we are working with GeoJSON - all sending layer to back
+            if (layer.type == 'GeoJSON'){
+                html+= "<a id='send_to_back_link' href='javascript:map_manager.send_back_event()'>"+LANG.IDENTIFY.SEND_BACK+"</a><br/>"
+            }
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
@@ -372,6 +378,7 @@ class Map_Manager {
         }else{
             this.result_num=this.result_num+num
         }
+
         this.show_highlight_geo_json(this.features[this.result_num])
         var props= this.features[this.result_num].properties
 
@@ -508,6 +515,12 @@ class Map_Manager {
      hide_highlight_feature(){
         this.map.removeLayer(this.highlighted_feature);
         delete this.highlighted_feature;
+    }
+    send_back_event(){
+       var feature = this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id)
+       this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id).bringToBack()
+        $("#send_to_back_link").attr("aria-disabled","true")
+
     }
      map_zoom_event(_bounds){
         if (_bounds){

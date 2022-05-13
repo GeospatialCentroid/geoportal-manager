@@ -25,6 +25,7 @@ urlpatterns = [
     path('services/', views.get_services, name='get_services'),
     path('suggest/', views.get_suggest, name='get_suggest'),
     path('rss/', views.get_rss, name='get_rss'),
+    path('sr/', views.spoof_request, name='spoof_request'),
 ]
 
 

@@ -26,7 +26,7 @@ class Table_Manager {
      this.query="1=1"
      this.sort_col;
      this.csv=""
-
+     this.id="id" // to map the rows to the features
 
 
   }
@@ -44,6 +44,7 @@ class Table_Manager {
     $("#"+this.elm).scroll( function(e) {
          if (Math.round($(this).scrollTop() + $(this).innerHeight()) >= $(this)[0].scrollHeight){
             // check if there are more to load
+            console.log($this.page_count,$this.page_start)
             if( $this.page_count> $this.page_start){
                 // load the next page
                  $this.page_start+=$this.page_rows;//start where we left off
@@ -167,7 +168,7 @@ class Table_Manager {
     if (typeof(_layer_id)!="undefined"){
         this.selected_layer_id = _layer_id
      }
-     console.log("the layer select ID is ", this.selected_layer_id)
+     console_log("the layer select ID is ", this.selected_layer_id)
      // if the _layer_id is not set and the this.selected_layer_id is no longer on the map trigger a new map click with the first layer
      if ((!_layer_id || !layer_manager.is_on_map(this.selected_layer_id)) && this.elm_wrap.is(":visible")){
         if(layer_manager.layers.length>0){
@@ -211,10 +212,11 @@ class Table_Manager {
     if (layer.layer_obj?.data){
         // when the data is already loaded - i.e geojson
         $this.generate_table(layer.layer_obj.data)
-        $this.show_total_records(layer.layer_obj.data.length)
-         $this.show_totals()
+        $this.show_totals()
+        $this.show_total_records($this.results.length)
+
         $("#data_table_spinner").hide();
-        $("#advanced_table_filters").hide()
+        $("#advanced_table_filters").hide();
         return
     }
      $("#advanced_table_filters").show()
@@ -300,7 +302,14 @@ class Table_Manager {
   }
   //
   generate_table(_features){
+    this.id="id";//reset
     this.elm_wrap.show()
+
+    if(_features?.features){
+        //drop down a level if the features ar buried
+        _features= _features.features
+
+    }
     this.results = _features
     //the first call to generated the table
     var html= "<table class='fixed_headers'><thead><tr>"
@@ -309,9 +318,12 @@ class Table_Manager {
         $("#"+this.elm).html(LANG.DATA_TABLE.NO_QUERY_RESULT)
         return
     }
+
+
     var first_row = _features[0]
     var csv_array=[]
     var cols=[]
+
     for (var p in first_row.properties){
         //todo add domain names (alias) for headers and pass database name to function for sorting
          var sort_icon="<i/>"
@@ -341,16 +353,28 @@ class Table_Manager {
 
     var html="";
 
+    //determine the id, which isn;t always the same for each geojson
+    var num=0
+    if(typeof(_rows[0][this.id])=="undefined"){
+        //use the second attribute - needs to be unique
+        //todo this should maybe me assigned during curation
+         for (var p in _cols){
+            num++
+            if(num>=2){
+             this.id = p
+             break
+            }
+          }
+    }
     for(var i =0;i<_rows.length;i++){
 
-        var id=0
+        var id=_rows[i].properties[this.id ]
         var csv_array=[]
-        html+="<tr onclick='table_manager.highlight_feature(this,\""+_rows[i].id+"\")' ondblclick='table_manager.zoom_feature(this,\""+_rows[i].id+"\")'>"
+        html+="<tr onclick='table_manager.highlight_feature(this,\""+id+"\")' ondblclick='table_manager.zoom_feature(this,\""+id+"\")'>"
         for (var p in _cols){
               var text = _rows[i].properties[p]
-
+              csv_array.push(String(text))
               if(typeof text === 'string'){
-                csv_array.push(text)
 
                 text = text.hyper_text()
                 if(text.indexOf("<a href")==-1){
@@ -378,6 +402,7 @@ class Table_Manager {
   zoom_feature(elm,_id){
     //take the currently selected layer and the id to make a selection
     var feature = this.get_feature(_id)
+    console.log(feature)
     map_manager.map_zoom_event(L.geoJSON(feature.geometry).getBounds())
 
     analytics_manager.track_event("table","zoom_feature_"+_id,"layer_id",this.selected_layer_id)
@@ -408,7 +433,7 @@ class Table_Manager {
 
   get_feature(_id){
     for (var i =0;i<this.results.length;i++){
-        if(this.results[i].id==_id){
+        if(this.results[i]?.properties[this.id]==_id || this.results[i][this.id]){
             return this.results[i]
         }
     }

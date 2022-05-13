@@ -543,7 +543,8 @@ class Filter_Manager {
 
     }
     get_layers(_resource_id,elm){
-
+        var $this=this
+         $("."+_resource_id+"_toggle").addClass("progress-bar-striped progress-bar-animated")
         // either get all the children or just the filtered one
         // start with no filters
          var filters_copy = [["dct_isPartOf_sm",String(_resource_id)]]; // make suret he parent path is present so the search returns the children
@@ -568,14 +569,18 @@ class Filter_Manager {
 
         }
         var results_url=this.result_url+"f="+rison.encode_array(filters_copy)+"&rows=1000"
-        $.get(results_url,this.show_sublayer_details)
+        $.get(results_url)
+        .done(function( data ) {
+           $this.show_sublayer_details(data,_resource_id)
+          })
     }
 
     show_sublayer_details(layers_html,_resource_id){
-        $("#layers").html(layers_html)
-         filter_manager.update_toggle_button()
-        filter_manager.slide_position("layers");
 
+        $("."+_resource_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated");
+        $("#layers").html(layers_html)
+        filter_manager.update_toggle_button()
+        filter_manager.slide_position("layers");
     }
 
     show_details(_resource_id,resource,preview_url){
@@ -608,7 +613,7 @@ class Filter_Manager {
                  filter_manager.slide_position(pos_id);
                  // update the details toggle button
                 filter_manager.update_parent_toggle_buttons(panel_id)
-
+                filter_manager.update_toggle_button()
 
                 if(DEBUGMODE){
 

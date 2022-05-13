@@ -37,8 +37,9 @@ class Map_Manager {
     }
     console_log("Map_Manager params are:", this.params)
     this.layer_clicked=false
-    this.highlighted_feature
-    this.highlighted_rect
+    this.selected_feature_id;
+    this.highlighted_feature;
+    this.highlighted_rect;
 
    var options ={}
 
@@ -321,7 +322,7 @@ class Map_Manager {
     }
 
     show_popup_details(_features){
-           console.log("show pop up details")
+           console.log("show pop up details",_features)
            var $this =this
            var layer = this.get_selected_layer()
            if(!layer){
@@ -349,6 +350,11 @@ class Map_Manager {
             html += "<div id='popup_scroll'><table id='props_table'>"
             html+="</table></div>"
             html+= "<a href='javascript:map_manager.map_zoom_event()'>"+LANG.IDENTIFY.ZOOM_TO+"</a><br/>"
+
+            // if we are working with GeoJSON - all sending layer to back
+            if (layer.type == 'GeoJSON'){
+                html+= "<a id='send_to_back_link' href='javascript:map_manager.send_back_event()'>"+LANG.IDENTIFY.SEND_BACK+"</a><br/>"
+            }
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
           }
@@ -372,6 +378,7 @@ class Map_Manager {
         }else{
             this.result_num=this.result_num+num
         }
+
         this.show_highlight_geo_json(this.features[this.result_num])
         var props= this.features[this.result_num].properties
 
@@ -508,6 +515,12 @@ class Map_Manager {
      hide_highlight_feature(){
         this.map.removeLayer(this.highlighted_feature);
         delete this.highlighted_feature;
+    }
+    send_back_event(){
+       var feature = this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id)
+       this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id).bringToBack()
+        $("#send_to_back_link").attr("aria-disabled","true")
+
     }
      map_zoom_event(_bounds){
         if (_bounds){
