@@ -390,6 +390,8 @@ class Filter_Manager {
         // we only
         for (var i = 0; i < list.length; i++) {
             if(i % 2 == 0) {
+
+
                 html +='<a href="javascript:filter_manager.add_filter(\''+facet_name+'\',\''+list[i]+'\','+reset+')"  class="list-group-item d-flex justify-content-between align-items-center lil_pad">'
                 var title =list[i]
                 if (translate){
@@ -400,7 +402,7 @@ class Filter_Manager {
                     }
                 }
 
-                html +=title
+                html +="<label>"+title+"</label>"
                 html +='<span class="badge badge-primary badge-pill">'+list[i+1]+'</span>'
                 html +='</a>'
             }

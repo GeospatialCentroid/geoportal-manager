@@ -539,6 +539,7 @@ class Map_Manager {
          this.scroll_to_map()
      }
      zoom_rect(bounds){
+        this.hide_highlight_rect()
          this.map.flyToBounds(bounds);
           this.scroll_to_map()
      }
