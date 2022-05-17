@@ -113,6 +113,7 @@ warning: #ff1b28
 
 .tab_but{
     margin: 0rem;
+    border-radius: 3px     3px      0           0 !important;
 }
 #side_header{
     padding:3px;

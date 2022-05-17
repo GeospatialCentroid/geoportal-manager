@@ -402,9 +402,7 @@ class Table_Manager {
   zoom_feature(elm,_id){
     //take the currently selected layer and the id to make a selection
     var feature = this.get_feature(_id)
-    console.log(feature)
     map_manager.map_zoom_event(L.geoJSON(feature.geometry).getBounds())
-
     analytics_manager.track_event("table","zoom_feature_"+_id,"layer_id",this.selected_layer_id)
   }
 
@@ -421,9 +419,39 @@ class Table_Manager {
     this.sort_col = col
     this.sort_dir = direction
     this.page_start=0;
-    this.get_layer_data()
+
+    if (layer_manager.get_layer_obj(this.selected_layer_id).layer_obj?.data){
+        console_log("Manual sort")
+        this.manual_sort(layer_manager.get_layer_obj(this.selected_layer_id).layer_obj.data,col,direction)
+    }else{
+        this.get_layer_data()
+    }
 
     analytics_manager.track_event("table","sort_"+col+"_"+direction,"layer_id",this.selected_layer_id)
+  }
+  manual_sort(data,col,direction){
+      if( !Array.isArray(data) ){
+        data=data.features
+
+      }
+
+    data.sort(function(a, b) {
+      const col_a = a.properties[col]
+      const col_b = b.properties[col]
+      if (col_a < col_b) {
+        return -1;
+      }else if (col_a > col_b) {
+        return 1;
+      }else{
+        return 0;//equal
+      }
+
+
+    });
+    if(direction=="DESC"){
+       data.reverse()
+    }
+    this.get_layer_data(this.selected_layer_id)
   }
   get_sort_icon(direction){
     var icon = "up"
