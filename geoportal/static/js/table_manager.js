@@ -326,13 +326,15 @@ class Table_Manager {
 
     for (var p in first_row.properties){
         //todo add domain names (alias) for headers and pass database name to function for sorting
-         var sort_icon="<i/>"
-         if(this.sort_col ==p){
-            sort_icon=this.get_sort_icon(this.sort_dir)
-         }
-         html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
-         cols.push(p)
-        csv_array.push(p)
+          if(p!="_id"){
+             var sort_icon="<i/>"
+             if(this.sort_col ==p){
+                sort_icon=this.get_sort_icon(this.sort_dir)
+             }
+             html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
+             cols.push(p)
+            csv_array.push(p)
+            }
     }
     this.csv=csv_array.join(",")+"\n"
 
@@ -354,35 +356,26 @@ class Table_Manager {
     var html="";
 
     //determine the id, which isn;t always the same for each geojson
-    var num=0
     if(typeof(_rows[0][this.id])=="undefined"){
-        //use the second attribute - needs to be unique
-        //todo this should maybe me assigned during curation
-         for (var p in _cols){
-            num++
-            if(num>=2){
-             this.id = p
-             break
-            }
-          }
+             this.id = "_id"
     }
     for(var i =0;i<_rows.length;i++){
 
-        var id=_rows[i].properties[this.id ]
+        var id=_rows[i].properties[this.id]
         var csv_array=[]
         html+="<tr onclick='table_manager.highlight_feature(this,\""+id+"\")' ondblclick='table_manager.zoom_feature(this,\""+id+"\")'>"
         for (var p in _cols){
-              var text = _rows[i].properties[p]
-              csv_array.push(String(text))
-              if(typeof text === 'string'){
-
-                text = text.hyper_text()
-                if(text.indexOf("<a href")==-1){
-                    text = text.clip_text(50)
-                }
+            if(p!="_id"){
+                  var text = _rows[i].properties[p]
+                  csv_array.push(String(text))
+                  if(typeof text === 'string'){
+                    text = text.hyper_text()
+                    if(text.indexOf("<a href")==-1){
+                        text = text.clip_text(50)
+                    }
+                  }
+                  html+="<td>"+text+"</td>"
               }
-              html+="<td>"+text+"</td>"
-
         }
         html+="</tr>"
         this.csv+=csv_array.join(",")+"\n"

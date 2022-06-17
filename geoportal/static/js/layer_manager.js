@@ -604,6 +604,7 @@ class Layer_Manager {
             url: url,
             success: function(data) {
                  var markers = L.markerClusterGroup();
+                 var unique_id=0;
                 L["geoJSON"](data,{
                     onEachFeature: function(feature, layer){
 
@@ -613,6 +614,12 @@ class Layer_Manager {
                             style.color= feature.properties.color
                              style.opacity= 0
                         }
+                        // if we don't have an id, add one artificially called '_id'
+                        // be sure to exclude this from export
+                        if (!feature.properties?.id){
+                            feature.properties._id=unique_id++
+                        }
+
                         var geo =L.geoJSON(feature, {pane: _resource_id, style: style})
                         // force a layer id for access
 
@@ -629,7 +636,7 @@ class Layer_Manager {
 
                     }
                 })
-                 layer_obj.addLayer(markers)
+                layer_obj.addLayer(markers)
                 layer_obj.data = data
                 layer_obj.addTo($this.map);
 
