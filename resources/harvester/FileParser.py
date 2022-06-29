@@ -35,14 +35,15 @@ class FileParser:
             categories=[]
 
         text = ''
-        if 'description' in r:
+        if 'description' in r and r["description"] is not None:
             text = r['description']
         # append the keywords
 
         if 'tags' in r:
             text += ', '.join(r['tags'])
 
-        if 'title' in r:
+        if 'title' in r and r["title"] is not None:
+            print(text,"-----------",r["title"])
             text += ' '+r["title"]
 
         text = text.lower()

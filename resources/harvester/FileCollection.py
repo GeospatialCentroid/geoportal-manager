@@ -49,6 +49,8 @@ class FileCollection:
         if not path.exists(_file) or self.overwrite:
             # setup the url to load each request
             print("loading file", _url)
+            if _url.startswith("//"):
+                _url="https:"+_url
             urllib.request.urlretrieve(_url, _file)
             try:
                 context = ssl._create_unverified_context()

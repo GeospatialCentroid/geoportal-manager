@@ -67,10 +67,10 @@ class FileCollection_AGO(FileCollection):
         # if there's more data to download - increment the page num and start values
         # todo - uncomment below to load all pages.
         #  Note: there could be thousands of records for academic institutions!!!
-        # if (data["nextStart"] !=-1):
-        #     self.start=data["nextStart"]
-        #     self.page+=1
-        #     self.load_results()
+        if (data["nextStart"] !=-1):
+            self.start=data["nextStart"]
+            self.page+=1
+            self.load_results()
 
         self.drill_loaded_data(data)
 
@@ -177,13 +177,14 @@ class FileCollection_AGO(FileCollection):
         # loop over the layers
         # and generate the url to the sub service
         layers_path = self.path + self.folder + "/layers"
-        for l in data["layers"]:
-            # make sure there is than 1 child
-            if len(data["layers"]) > 1:
-                _id=str(l["id"])
-                child_url=parent_data["url"]+"/"+_id+"?f=pjson"
-                _file = layers_path+"/"+parent_data['id']+"_"+ _id+"_service.json"
-                self.load_file_call_func(_file, child_url, 'ingest_child_record', parent_data.copy())
+        if "layers" in data:
+            for l in data["layers"]:
+                # make sure there is than 1 child
+                if len(data["layers"]) > 1:
+                    _id=str(l["id"])
+                    child_url=parent_data["url"]+"/"+_id+"?f=pjson"
+                    _file = layers_path+"/"+parent_data['id']+"_"+ _id+"_service.json"
+                    self.load_file_call_func(_file, child_url, 'ingest_child_record', parent_data.copy())
 
 
     def ingest_child_record(self, data, parent_data):

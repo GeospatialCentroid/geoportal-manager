@@ -153,7 +153,7 @@ class FileParser_ARC(FileParser):
             # generate a link to the landing page - only do this on parent objects
             resource["info_page"] = file_collection.open_prefix + str(resource['id'])
             resource["urls"].append({'url_type': "info_page", 'url': resource["info_page"]})
-            if "thumbnail" in resource:
+            if "thumbnail" in resource and resource["thumbnail"] is not None:
                 resource["thumb"] = file_collection.arc_item_prefix + str(resource['id']) + "/info/" + resource["thumbnail"]
             else:
                 resource["thumb"] = None
