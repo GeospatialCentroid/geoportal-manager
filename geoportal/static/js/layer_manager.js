@@ -599,6 +599,17 @@ class Layer_Manager {
   }
   load_ajax(url,layer_obj,_resource_id){
     var $this = this
+
+    // custom points
+    var layer_options ={}
+    layer_options.color="#ffffff";
+    layer_options.fillColor="#0290ce";
+    layer_options.weight=1;
+    var resource_marker_class = "_marker_class"+_resource_id
+
+    $("<style type='text/css'> ."+resource_marker_class+"{ border: "+layer_options.weight+"px solid "+layer_options.color+"; background-color:"+layer_options.fillColor+";} </style>").appendTo("head");
+
+
     $.ajax({
             dataType: "json",
             url: url,
@@ -606,6 +617,7 @@ class Layer_Manager {
                  var markers = L.markerClusterGroup();
                  var unique_id=0;
                 L["geoJSON"](data,{
+
                     onEachFeature: function(feature, layer){
 
                         var style = {}
@@ -620,7 +632,13 @@ class Layer_Manager {
                             feature.properties._id=unique_id++
                         }
 
-                        var geo =L.geoJSON(feature, {pane: _resource_id, style: style})
+                        var geo =L.geoJSON(feature, {pane: _resource_id, style: style,
+                            pointToLayer: function(feature, latlng) {
+                                return L.marker(latlng, {
+                                    icon: map_manager.get_marker_icon(resource_marker_class)
+                                  });
+                            },
+                        })
                         // force a layer id for access
 
                          geo._leaflet_id = feature.id;

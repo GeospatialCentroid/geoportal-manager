@@ -384,8 +384,10 @@ class Map_Manager {
 
         var html=''
          for (var p in props){
+            if (p !='_id'){
             var val = String(props[p]).hyper_text()
             html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
+            }
          }
         $("#props_table").html(html)
         // update the text
