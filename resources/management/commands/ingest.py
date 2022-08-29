@@ -39,6 +39,8 @@ class Command(BaseCommand):
                             help="(Optional) If there are one or more resource ids you would like choose to ingest from a known endpoint. Use comma separation.", )
         parser.add_argument("-j", "--use_existing_json", action='store_true',
                             help="(Optional) When you simply want to ingest the files in the 'json' folder", )
+        parser.add_argument("-k", "--keep_existing_json", action='store_true',
+                            help="(Optional) Prevent deleleting the existing json files. Useful for when you want to share the metadata with others", )
 
         #todo allow specific collections, file types, etc
         # we might also want to run
@@ -59,13 +61,14 @@ class Command(BaseCommand):
             return
 
         # clear the contents of a directory
-        if path.exists(directory + "/json"):
-            files = glob.glob(directory + "/json/*")
-            if (verbosity>1):
-                print("removing existing files from past ingest for a fresh start!")
+        if not kwargs['keep_existing_json']:
+            if path.exists(directory + "/json"):
+                files = glob.glob(directory + "/json/*")
+                if (verbosity>1):
+                    print("removing existing files from past ingest for a fresh start!")
+                for f in files:
+                    os.remove(f)
 
-            for f in files:
-                os.remove(f)
         if (verbosity > 1):
             print("Retrieving all Resources with status of", kwargs['status'])
 
