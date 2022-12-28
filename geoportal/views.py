@@ -24,6 +24,7 @@ from django.contrib.auth.decorators import login_required
 
 import resources.ingester.DB_ToGBL as db_to_gbl
 
+from urllib.parse import unquote,urlparse
 
 fq="&fq=solr_type:parent"
 child_filter="&childFilter={!edismax v=$q.user}"
@@ -166,7 +167,7 @@ def get_solr_data(_query):
 
 
 
-def get_disclaimer(request):
+def get_endpoint_details(request):
    if request.GET.get('e'):
        e = End_Point.objects.get(id=request.GET.get('e'))
        return HttpResponse(e.disclaimer)
@@ -201,11 +202,22 @@ def get_rss(request):
     args["base_url"] = settings.BASE_URL
     return TemplateResponse(request, 'geoportal/rss.html', args, content_type="application/xml")
 
-def spoof_request(request):
+def spoof_request(request,url):
 
+    extra=[]
+    for i in request.GET.items():
+        str=i[0]
+        if i[1]:
+            str += '='+i[1]
+        extra.append(str)
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 
-    response = requests.get(request.GET.get('url'), headers=headers)
+    print("------:"+url+'?'+"&".join(extra))
+    response = requests.get( url+'?'+"&".join(extra), headers=headers)
+    content_type=None
+    if '/tile/' in url:
+        content_type= "image/jpeg"
 
-    return HttpResponse(response.content)
+
+    return HttpResponse(response.content, content_type=content_type)

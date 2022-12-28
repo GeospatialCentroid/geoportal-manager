@@ -455,6 +455,7 @@ class Layer_Manager {
     // create layer at pane
 
     var resource = filter_manager.get_resource(_resource_id)
+    console.log(url)
     var layer_options = this.get_layer_options(_resource_id,url,_drawing_info)
 
     //create a pane for the resource
@@ -468,9 +469,14 @@ class Layer_Manager {
 
     var service_method = this.get_service_method(service_type)
 
+    console.log(layer_options.url)
+    //todo attempt overcoming cors
+//     layer_options.url='http://localhost:8000/sr/'+encodeURIComponent(layer_options.url)
      //check for a legend
     if(service_method._method=="tiledMapLayer" || service_method._method=="dynamicMapLayer" ){
 
+        // todo test tms
+        layer_options.tms = false
         // if the last character is a 0
         if (layer_options.url.substring(layer_options.url.length-1) =='0'){
             layer_options.url=layer_options.url.substring(0,layer_options.url.length-1)
@@ -482,6 +488,9 @@ class Layer_Manager {
         filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
     console_log(service_method,"service_method")
+     console.log(layer_options.url)
+    console.log(layer_options,"layer_options")
+
     if (service_method._class=="distortableImageOverlay"){
         // get the corners from the solr field
         var corners = filter_manager.get_poly_array(resource["locn_geometry"])
@@ -523,9 +532,11 @@ class Layer_Manager {
         layer_options.maxZoom= 21
         console.log(service_method,service_method._class,service_method._method)
         var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
+
     }else if(service_method?._method && service_method._method.indexOf(".")>-1){
         var method_parts=service_method._method.split(".")
-        var layer_obj =  L[service_method._class][method_parts[0]][method_parts[1]](layer_options.url).addTo(this.map);
+        var layer_obj =  L[service_method._class][method_parts[0]][method_parts[1]](layer_options.url,layer_options).addTo(this.map);
+
 
     }else{
       if (service_method._method=="ajax"){
@@ -534,7 +545,8 @@ class Layer_Manager {
             this.load_ajax(url,layer_obj,_resource_id)
 
       }else{
-        var layer_obj =  L[service_method._class][service_method._method](layer_options,filter_manager.get_bounds(resource.locn_geometry)).addTo(this.map);
+ console.log("Passed in",layer_options)/*filter_manager.get_bounds(resource.locn_geometry),*/ // pass in the bounds
+       var layer_obj =  L[service_method._class][service_method._method](layer_options).addTo(this.map);
       }
 
     }
@@ -570,6 +582,7 @@ class Layer_Manager {
      }
 
      var layer = { type:type,"id":_resource_id,"url":url,"layer_obj":layer_obj,"resource_obj":Object.assign({}, resource)}
+
 
      if(typeof(_z)=="undefined"){
           this.layers.push(layer);
@@ -630,8 +643,9 @@ class Layer_Manager {
                         // be sure to exclude this from export
                         if (!feature.properties?.id){
                             feature.properties._id=unique_id++
+                        }else{
+                            feature.properties._id = feature.properties.id
                         }
-
                         var geo =L.geoJSON(feature, {pane: _resource_id, style: style,
                             pointToLayer: function(feature, latlng) {
                                 return L.marker(latlng, {
@@ -640,8 +654,8 @@ class Layer_Manager {
                             },
                         })
                         // force a layer id for access
+                        geo._leaflet_id = feature.id;
 
-                         geo._leaflet_id = feature.id;
 
                          //temp add service options
                          layer_obj.service= {options:{url:url}}
@@ -663,7 +677,7 @@ class Layer_Manager {
             }
         }).error(function() {
              console.log("Lets overcome CORS!!!")
-             var prefix="/sr/?url="
+             var prefix="/sr/"
              if(url.indexOf(prefix)==-1){
                 $this.load_ajax(prefix+url,layer_obj,_resource_id)
 
@@ -686,13 +700,24 @@ class Layer_Manager {
         map_manager.popup_show();
          console.log(e)
         try{
-              map_manager.selected_feature_id=e.layer.feature.id
+              map_manager.selected_feature_id=layer_manager.get_object_id(e.layer.feature);
               map_manager.show_popup_details([e.layer.feature])
         }catch(error){
             // could be an artificial click
              console.log(e)
         }
          //map_manager.layer_clicked=false
+  }
+    get_object_id(_feature){
+        // as the objectid might not be consistent between layers, we'll to no consistently determine what it is
+        if(!_feature?.id ){
+            if( _feature?.properties && _feature.properties?.id){
+                 return  _feature.properties.id
+            }else{
+                return  _feature.properties._id
+            }
+        }
+        return _feature["id"]
   }
   layer_load_complete(elm){
     $("."+elm.layer_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated")
@@ -701,6 +726,7 @@ class Layer_Manager {
     this.update_layer_count();
     download_manager.add_downloadable_layers()
   }
+
 
   show_image_viewer_layer(_layer){
         var  $this = this
@@ -855,19 +881,36 @@ class Layer_Manager {
   }
 
     //
-    get_layer_select_html(_layer_id,_change_event,is_table){
+    get_layer_select_html(_layer_id,_change_event,is_table,omit_selected){
 
-        var html="<span>"+LANG.IDENTIFY.IDENTIFY_SELECT_LAYER+"</span> <select onchange='"+_change_event+"(this)'>"
+        var html=""
+        if(_change_event){
+            html+="<span>"+LANG.IDENTIFY.IDENTIFY_SELECT_LAYER+"</span>"
+        }
+        html+="<select "
+        if(_change_event){
+            html+="onchange='"+_change_event+"(this)'"
+        }
+        html+=">"
 
         for(var i =0;i<this.layers.length;i++){
+            var skip =false
+
             var selected =""
             if (this.layers[i].id==_layer_id){
-                selected += "selected"
+                selected = "selected"
+                if (omit_selected){
+                    skip=true
+                }
             }
             var title = this.layers[i].resource_obj.dct_title_s;
             title = title.clip_text(30)
             if ($.inArray(this.layers[i].type,this.table_types)>-1 || !is_table){
-                html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
+                // omit the selected value if flag set
+                if(!skip){
+                    html += "<option "+selected+" value='"+this.layers[i].id+"'>"+title+"</option>"
+                }
+
             }
         }
         html+="<select>"

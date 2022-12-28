@@ -62,7 +62,7 @@ class Disclaimer_Manager {
 
     }else if (!this.disclaimers[end_point_id]?.html && this.disclaimers[end_point_id].html!="" ){
          //first time load the disclaimer
-         this.load_disclaimer("/disclaimer/?e="+end_point_id,disclaimer_manager.show_disclaimer,end_point_id);
+         this.load_disclaimer("/endpoint_details/?e="+end_point_id,disclaimer_manager.show_disclaimer,end_point_id);
     }else if(this.disclaimers[end_point_id].status!="a" && this.disclaimers[end_point_id]?.html){
         // no accepted but has html
         this.show_disclaimer(this.disclaimers[end_point_id].html,end_point_id)

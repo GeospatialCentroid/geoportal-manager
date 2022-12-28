@@ -1,4 +1,5 @@
 from django.urls import path
+from django.urls import include, re_path
 from . import views
 
 urlpatterns = [
@@ -20,12 +21,12 @@ urlpatterns = [
     path('result/', views.result_page, name='result_page'),
     #
     # path('admin/delete/', views.resource_admin_delete_page, name='delete_page'),
-    path('disclaimer/', views.get_disclaimer, name='get_disclaimer'),
+    path('endpoint_details/', views.get_endpoint_details, name='get_endpoint_details'),
     path('url_types/', views.get_url_types, name='get_url_types'),
     path('services/', views.get_services, name='get_services'),
     path('suggest/', views.get_suggest, name='get_suggest'),
     path('rss/', views.get_rss, name='get_rss'),
-    path('sr/', views.spoof_request, name='spoof_request'),
+    re_path('sr/(?P<url>.*)$', views.spoof_request, name='spoof_request'),
 ]
 
 

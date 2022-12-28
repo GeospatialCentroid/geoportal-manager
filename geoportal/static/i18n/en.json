@@ -146,6 +146,7 @@
 		"IDENTIFY_SELECT_LAYER":	"Select identify layer:",
 		"ZOOM_TO": 					"Zoom to",
 		"SEND_BACK": 				"Send to back",
+		"SELECT_BY_SHAPE": 			"Select by shape",
 		"PREVIOUS": "Previous",
 		"NEXT": "Next",
 		"SHOWING_RESULT": "Showing",

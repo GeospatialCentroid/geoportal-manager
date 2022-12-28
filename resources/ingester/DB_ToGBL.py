@@ -5,6 +5,7 @@ from datetime import datetime
 from .. import utils
 from django.forms.models import model_to_dict
 import pytz
+import requests
 
 class DB_ToGBL:
     '''
@@ -167,7 +168,7 @@ class DB_ToGBL:
 
 
         # store the list of references for injection
-        ref = self.get_refs(r.url_set.all(), str(r.type))
+        ref = self.get_refs(r.url_set.all(), str(r.type),r.end_point.cors_block)
         p_data["dct_references_s"] = '{' + (','.join(ref)) + '}'
         print(p_data["dct_references_s"])
         if self.verbosity > 1:
@@ -269,7 +270,7 @@ class DB_ToGBL:
             # keep track of the fact that this is a record so the urls aren't tampered with
             is_child_record = True
             print(_l)
-            ref = self.get_refs(_l.url_set.all(), str(r.type))  # store the list of references for injection
+            ref = self.get_refs(_l.url_set.all(), str(r.type),r.end_point.cors_block)  # store the list of references for injection
             if self.verbosity > 1:
                 print(ref, "ref")
 
@@ -452,14 +453,16 @@ class DB_ToGBL:
             return _type
 
 
-    def get_refs(self,urls,_type):
+    def get_refs(self,urls,_type,cors_block=False):
         refs=[]
         downloads=[]
         print("get REFS *",urls)
         for u in urls:
             type = str(u.url_type.name).lower()
 
-
+            if cors_block:
+                print("Overcome cors", u.url_type, cors_block)
+                u.url='sr/'+requests.utils.quote(u.url)
             ref = self.match_ref(u.url, u.url_type)
             if ref:
                 if type =="download":

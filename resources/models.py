@@ -49,6 +49,8 @@ class End_Point(models.Model):
                                  blank=True)
 
     disclaimer = RichTextField(null=True, blank=True)
+    cors_block = models.BooleanField(help_text="Should the endpoint be blocked by cors", default=False)
+
     def __str__(self):
         return str(self.name)
 

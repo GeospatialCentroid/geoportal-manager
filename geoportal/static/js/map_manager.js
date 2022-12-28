@@ -41,7 +41,7 @@ class Map_Manager {
     this.highlighted_feature;
     this.highlighted_rect;
 
-   var options ={}
+   var options ={}//default L.CRS.EPSG3857, messy crs: L.CRS.EPSG4326
 
     this.map = L.map('map',options).setView([this.lat, this.lng], this.z);
 
@@ -275,7 +275,13 @@ class Map_Manager {
         }else{
             var query_full = query_base.limit(this.limit)
         }
-        query_full.run(function (error, featureCollection) {
+        this.run_query(query_full)
+
+
+    }
+    run_query(_query){
+        var $this=this;
+        _query.run(function (error, featureCollection) {
 
           if (error || featureCollection?.features.length==0) {
               console_log("feature query error", error)
@@ -296,7 +302,6 @@ class Map_Manager {
               $this.show_popup_details(featureCollection.features)
           }
          });
-
 
     }
 
@@ -354,6 +359,11 @@ class Map_Manager {
             // if we are working with GeoJSON - all sending layer to back
             if (layer.type == 'GeoJSON'){
                 html+= "<a id='send_to_back_link' href='javascript:map_manager.send_back_event()'>"+LANG.IDENTIFY.SEND_BACK+"</a><br/>"
+            }
+             if (layer.type == 'GeoJSON' && layer_manager.layers.length>0){
+                html+= "<a id='select_by_shape' href='javascript:map_manager.select_by_shape_event()'>"+LANG.IDENTIFY.SELECT_BY_SHAPE+"</a>"
+                html+= "<span id='select_by_shape_span'>"+layer_manager.get_layer_select_html(this.selected_layer_id,false,false,true)+"</span>"
+                html+="<br/>"
             }
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
@@ -491,10 +501,10 @@ class Map_Manager {
             }).addTo(this.map);
         }else{
             this.highlighted_feature =  L.geoJSON(geo_json,{
-                    style: function (feature) {
-                        return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
-                    }
-                    }).addTo(this.map);
+                style: function (feature) {
+                    return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
+                }
+                }).addTo(this.map);
         }
 
     }
@@ -521,17 +531,95 @@ class Map_Manager {
     send_back_event(){
        var feature = this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id)
        this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id).bringToBack()
-        $("#send_to_back_link").attr("aria-disabled","true")
+       //todo no showing as disabled
+       $("#send_to_back_link").attr("aria-disabled","true")
 
     }
+     select_by_shape_event(){
+       var feature;
+        if(this.get_selected_layer().layer_obj.getLayer()){
+            feature = this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id)
+
+        }else{
+            // we need to look over the data
+
+            var data = this.get_selected_layer().layer_obj.data
+            var features = data
+            if(data?.features){
+                features = data.features;
+            }
+            // determine the id
+            for (var i=0;i<features.length;i++){
+               // todo this needs to be more robust see table_manager.js line 367
+                var object_id = layer_manager.get_object_id(features[i])
+                if(this.selected_feature_id==object_id){
+                    feature = features[i]
+                    break
+                }
+            }
+        }
+       //
+       console.log("the feature is",feature)
+
+       var layer=layer_manager.get_layer_obj($('#select_by_shape_span select').val())
+        if(typeof layer.layer_obj.query === "function"){
+                var query_base = layer.layer_obj.query()
+                var full_query= query_base['within'](feature.geometry)
+                this.run_query(full_query)
+            }else{
+                // try with turf
+               this.turf_search(layer,feature)
+            }
+    }
+    turf_search(_to,_from){
+        console.log("try with turf")
+        console.log(_from)
+         console.log(_to)
+        // approach depends on layer type
+        var from_layer_type = _from.geometry.type
+
+        var to_layer_type
+        if(_to.layer_obj.data[0]?.geometry){
+            to_layer_type=_to.layer_obj.data[0].geometry.type
+        }else if(_to.layer_obj.data?.features){
+            to_layer_type=_to.layer_obj.data.features[0].geometry.type
+        }
+
+
+
+          console.log(from_layer_type)
+         console.log(to_layer_type)
+        var geo_result
+        if(from_layer_type=="Point" && to_layer_type=="Polygon"){
+            var features = _to.layer_obj.data
+            var geo_result ={
+                  "type": "FeatureCollection",
+                  "features": []
+                };
+            for (var i=0;i<features.length;i++){
+
+                 if(turf.booleanPointInPolygon(_from,features[i])==true){
+                    geo_result.features.push(features[i])
+                 }
+            }
+
+        }else{
+
+             geo_result = turf.pointsWithinPolygon(_to.layer_obj.data, _from);
+         }
+
+        this.show_popup_details(geo_result.features)
+    }
      map_zoom_event(_bounds){
+        var bounds
         if (_bounds){
             bounds=_bounds
         }else{
-           var bounds=this.highlighted_feature.getBounds()
+           bounds=this.highlighted_feature.getBounds()
         }
 
         var zoom_level = this.map.getBoundsZoom(bounds)
+        console.log(zoom_level,_bounds)
         //prevent zooming in too close
         if (zoom_level>19){
             this.map.flyTo(bounds.getCenter(),19);
@@ -580,7 +668,7 @@ class Map_Manager {
     }
     //
     init_image_map(){
-      this.image_map = L.map('image_map', {
+       this.image_map = L.map('image_map', {
           center: [0, 0],
           zoom:  1,
           crs: L.CRS.Simple,

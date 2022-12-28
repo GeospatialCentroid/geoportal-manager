@@ -26,7 +26,7 @@ class Table_Manager {
      this.query="1=1"
      this.sort_col;
      this.csv=""
-
+     this.id="id" // to map the rows to the features
 
 
   }
@@ -44,6 +44,7 @@ class Table_Manager {
     $("#"+this.elm).scroll( function(e) {
          if (Math.round($(this).scrollTop() + $(this).innerHeight()) >= $(this)[0].scrollHeight){
             // check if there are more to load
+            console.log($this.page_count,$this.page_start)
             if( $this.page_count> $this.page_start){
                 // load the next page
                  $this.page_start+=$this.page_rows;//start where we left off
@@ -167,7 +168,7 @@ class Table_Manager {
     if (typeof(_layer_id)!="undefined"){
         this.selected_layer_id = _layer_id
      }
-     console.log("the layer select ID is ", this.selected_layer_id)
+     console_log("the layer select ID is ", this.selected_layer_id)
      // if the _layer_id is not set and the this.selected_layer_id is no longer on the map trigger a new map click with the first layer
      if ((!_layer_id || !layer_manager.is_on_map(this.selected_layer_id)) && this.elm_wrap.is(":visible")){
         if(layer_manager.layers.length>0){
@@ -208,13 +209,19 @@ class Table_Manager {
     var $this=this
 
     var layer = layer_manager.get_layer_obj(_layer_id)
+    if (!layer?.layer_obj){
+        console.log("no layer_obj",layer)
+
+    return
+    }
     if (layer.layer_obj?.data){
         // when the data is already loaded - i.e geojson
         $this.generate_table(layer.layer_obj.data)
-        $this.show_total_records(layer.layer_obj.data.length)
-         $this.show_totals()
+        $this.show_totals()
+        $this.show_total_records($this.results.length)
+
         $("#data_table_spinner").hide();
-        $("#advanced_table_filters").hide()
+        $("#advanced_table_filters").hide();
         return
     }
      $("#advanced_table_filters").show()
@@ -300,7 +307,14 @@ class Table_Manager {
   }
   //
   generate_table(_features){
+    this.id="id";//reset
     this.elm_wrap.show()
+
+    if(_features?.features){
+        //drop down a level if the features ar buried
+        _features= _features.features
+
+    }
     this.results = _features
     //the first call to generated the table
     var html= "<table class='fixed_headers'><thead><tr>"
@@ -309,18 +323,23 @@ class Table_Manager {
         $("#"+this.elm).html(LANG.DATA_TABLE.NO_QUERY_RESULT)
         return
     }
+
+
     var first_row = _features[0]
     var csv_array=[]
     var cols=[]
+
     for (var p in first_row.properties){
         //todo add domain names (alias) for headers and pass database name to function for sorting
-         var sort_icon="<i/>"
-         if(this.sort_col ==p){
-            sort_icon=this.get_sort_icon(this.sort_dir)
-         }
-         html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
-         cols.push(p)
-        csv_array.push(p)
+          if(p!="_id"){
+             var sort_icon="<i/>"
+             if(this.sort_col ==p){
+                sort_icon=this.get_sort_icon(this.sort_dir)
+             }
+             html +="<th><span onclick='table_manager.sort(this,\""+p+"\")'>"+p+" "+sort_icon+"</span></th>";
+             cols.push(p)
+            csv_array.push(p)
+            }
     }
     this.csv=csv_array.join(",")+"\n"
 
@@ -331,7 +350,7 @@ class Table_Manager {
 
     $("#"+this.elm).html(html)
 
-    setTimeout(function(){ $(window).trigger("resize"); }, 100);
+    setTimeout(function(){ $(window).trigger("resize"); }, 10);
 
   }
   get_rows_html(_rows,_cols){
@@ -341,24 +360,31 @@ class Table_Manager {
 
     var html="";
 
+    //determine the id, which isn;t always the same for each geojson
+    if(typeof(_rows[0][this.id])=="undefined"){
+             this.id = "_id"
+    }
+    // todo this needs to be more robust
+    if (!_rows[0].properties?.id && _rows[0].properties?.OBJECTID ){
+        this.id ="OBJECTID"
+    }
     for(var i =0;i<_rows.length;i++){
 
-        var id=0
+        var id=_rows[i].properties[this.id]
         var csv_array=[]
-        html+="<tr onclick='table_manager.highlight_feature(this,\""+_rows[i].id+"\")' ondblclick='table_manager.zoom_feature(this,\""+_rows[i].id+"\")'>"
+        html+="<tr onclick='table_manager.highlight_feature(this,\""+id+"\")' ondblclick='table_manager.zoom_feature(this,\""+id+"\")'>"
         for (var p in _cols){
-              var text = _rows[i].properties[p]
-
-              if(typeof text === 'string'){
-                csv_array.push(text)
-
-                text = text.hyper_text()
-                if(text.indexOf("<a href")==-1){
-                    text = text.clip_text(50)
-                }
+            if(p!="_id"){
+                  var text = _rows[i].properties[p]
+                  csv_array.push(String(text))
+                  if(typeof text === 'string'){
+                    text = text.hyper_text()
+                    if(text.indexOf("<a href")==-1){
+                        text = text.clip_text(50)
+                    }
+                  }
+                  html+="<td>"+text+"</td>"
               }
-              html+="<td>"+text+"</td>"
-
         }
         html+="</tr>"
         this.csv+=csv_array.join(",")+"\n"
@@ -379,7 +405,6 @@ class Table_Manager {
     //take the currently selected layer and the id to make a selection
     var feature = this.get_feature(_id)
     map_manager.map_zoom_event(L.geoJSON(feature.geometry).getBounds())
-
     analytics_manager.track_event("table","zoom_feature_"+_id,"layer_id",this.selected_layer_id)
   }
 
@@ -396,9 +421,39 @@ class Table_Manager {
     this.sort_col = col
     this.sort_dir = direction
     this.page_start=0;
-    this.get_layer_data()
+
+    if (layer_manager.get_layer_obj(this.selected_layer_id).layer_obj?.data){
+        console_log("Manual sort")
+        this.manual_sort(layer_manager.get_layer_obj(this.selected_layer_id).layer_obj.data,col,direction)
+    }else{
+        this.get_layer_data()
+    }
 
     analytics_manager.track_event("table","sort_"+col+"_"+direction,"layer_id",this.selected_layer_id)
+  }
+  manual_sort(data,col,direction){
+      if( !Array.isArray(data) ){
+        data=data.features
+
+      }
+
+    data.sort(function(a, b) {
+      const col_a = a.properties[col]
+      const col_b = b.properties[col]
+      if (col_a < col_b) {
+        return -1;
+      }else if (col_a > col_b) {
+        return 1;
+      }else{
+        return 0;//equal
+      }
+
+
+    });
+    if(direction=="DESC"){
+       data.reverse()
+    }
+    this.get_layer_data(this.selected_layer_id)
   }
   get_sort_icon(direction){
     var icon = "up"
@@ -408,7 +463,7 @@ class Table_Manager {
 
   get_feature(_id){
     for (var i =0;i<this.results.length;i++){
-        if(this.results[i].id==_id){
+        if(this.results[i]?.properties[this.id]==_id || this.results[i][this.id]){
             return this.results[i]
         }
     }

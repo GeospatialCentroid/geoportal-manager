@@ -209,6 +209,11 @@ class Table_Manager {
     var $this=this
 
     var layer = layer_manager.get_layer_obj(_layer_id)
+    if (!layer?.layer_obj){
+        console.log("no layer_obj",layer)
+
+    return
+    }
     if (layer.layer_obj?.data){
         // when the data is already loaded - i.e geojson
         $this.generate_table(layer.layer_obj.data)
@@ -345,7 +350,7 @@ class Table_Manager {
 
     $("#"+this.elm).html(html)
 
-    setTimeout(function(){ $(window).trigger("resize"); }, 100);
+    setTimeout(function(){ $(window).trigger("resize"); }, 10);
 
   }
   get_rows_html(_rows,_cols){
@@ -358,6 +363,10 @@ class Table_Manager {
     //determine the id, which isn;t always the same for each geojson
     if(typeof(_rows[0][this.id])=="undefined"){
              this.id = "_id"
+    }
+    // todo this needs to be more robust
+    if (!_rows[0].properties?.id && _rows[0].properties?.OBJECTID ){
+        this.id ="OBJECTID"
     }
     for(var i =0;i<_rows.length;i++){
 

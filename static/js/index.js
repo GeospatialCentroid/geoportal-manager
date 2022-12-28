@@ -122,7 +122,8 @@ $( function() {
         lat:36.25408922222581,
         lng: -98.7485718727112,
         z:3,
-        limit:100 // max results for identify
+        limit:100, // max results for identify
+        crs: L.CRS.EPSG3857
         })
 
      map_manager.init()

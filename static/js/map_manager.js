@@ -247,7 +247,7 @@ class Map_Manager {
         analytics_manager.track_event("web_map","click","layer_id",this.get_selected_layer()?.id)
         //start by using the first loaded layer
         var layer = this.get_selected_layer()
-        console.log("Get selected layer",layer)
+        console_log("Get selected layer",layer)
         if (!layer){
 
             return
@@ -275,7 +275,13 @@ class Map_Manager {
         }else{
             var query_full = query_base.limit(this.limit)
         }
-        query_full.run(function (error, featureCollection) {
+        this.run_query(query_full)
+
+
+    }
+    run_query(_query){
+        var $this=this;
+        _query.run(function (error, featureCollection) {
 
           if (error || featureCollection?.features.length==0) {
               console_log("feature query error", error)
@@ -296,7 +302,6 @@ class Map_Manager {
               $this.show_popup_details(featureCollection.features)
           }
          });
-
 
     }
 
@@ -322,7 +327,7 @@ class Map_Manager {
     }
 
     show_popup_details(_features){
-           console.log("show pop up details",_features)
+           console_log("show pop up details",_features)
            var $this =this
            var layer = this.get_selected_layer()
            if(!layer){
@@ -342,8 +347,8 @@ class Map_Manager {
               $this.last_click_features=_features
               var prev_link="<a href='javascript:map_manager.show_popup_details_show_num(-1)' id='popup_prev' class='disabled_link'>« "+LANG.IDENTIFY.PREVIOUS+"</a> "
               var next_link=" <a href='javascript:map_manager.show_popup_details_show_num(1)' id='popup_next' class='disabled_link' onclick=''>"+LANG.IDENTIFY.NEXT+" »</a>"
-              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span> <a href='javascript:table_manager.generate_table(map_manager.last_click_features);table_manager.show_total_records(map_manager.last_click_features.length);$(\"#data_table_spinner\").hide();'>"+LANG.IDENTIFY.SHOW_IN_TABLE+"</a><br/>"
-              html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span></th><th>"+next_link+"</th></tr></table>"
+              html += "<span class=''>"+LANG.IDENTIFY.FOUND+" "+_features.length+"</span> <a href='javascript:table_manager.generate_table(map_manager.last_click_features);table_manager.page_start="+_features.length+";table_manager.show_total_records(map_manager.last_click_features.length);$(\"#data_table_spinner\").hide();$(\"#advanced_table_filters\").hide();'>"+LANG.IDENTIFY.SHOW_IN_TABLE+"</a><br/>"
+              html += "<table id='popup_control_table'><tr><th>"+prev_link+"</th><th><span class=''>"+LANG.IDENTIFY.SHOWING_RESULT+"</span> <span id='popup_result_num'></span> "+LANG.IDENTIFY.OF+" "+_features.length+"</th><th>"+next_link+"</th></tr></table>"
             }
 
 
@@ -354,6 +359,11 @@ class Map_Manager {
             // if we are working with GeoJSON - all sending layer to back
             if (layer.type == 'GeoJSON'){
                 html+= "<a id='send_to_back_link' href='javascript:map_manager.send_back_event()'>"+LANG.IDENTIFY.SEND_BACK+"</a><br/>"
+            }
+             if (layer.type == 'GeoJSON' && layer_manager.layers.length>0){
+                html+= "<a id='select_by_shape' href='javascript:map_manager.select_by_shape_event()'>"+LANG.IDENTIFY.SELECT_BY_SHAPE+"</a>"
+                html+= "<span id='select_by_shape_span'>"+layer_manager.get_layer_select_html(this.selected_layer_id,false,false,true)+"</span>"
+                html+="<br/>"
             }
           } else {
             html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
@@ -384,8 +394,10 @@ class Map_Manager {
 
         var html=''
          for (var p in props){
+            if (p !='_id'){
             var val = String(props[p]).hyper_text()
             html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
+            }
          }
         $("#props_table").html(html)
         // update the text
@@ -489,10 +501,10 @@ class Map_Manager {
             }).addTo(this.map);
         }else{
             this.highlighted_feature =  L.geoJSON(geo_json,{
-                    style: function (feature) {
-                        return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
-                    }
-                    }).addTo(this.map);
+                style: function (feature) {
+                    return {color: "#fff",fillColor:"#fff",fillOpacity:.5};
+                }
+                }).addTo(this.map);
         }
 
     }
@@ -519,17 +531,95 @@ class Map_Manager {
     send_back_event(){
        var feature = this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id)
        this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id).bringToBack()
-        $("#send_to_back_link").attr("aria-disabled","true")
+       //todo no showing as disabled
+       $("#send_to_back_link").attr("aria-disabled","true")
 
     }
+     select_by_shape_event(){
+       var feature;
+        if(this.get_selected_layer().layer_obj.getLayer()){
+            feature = this.get_selected_layer().layer_obj.getLayer(this.selected_feature_id)
+
+        }else{
+            // we need to look over the data
+
+            var data = this.get_selected_layer().layer_obj.data
+            var features = data
+            if(data?.features){
+                features = data.features;
+            }
+            // determine the id
+            for (var i=0;i<features.length;i++){
+               // todo this needs to be more robust see table_manager.js line 367
+                var object_id = layer_manager.get_object_id(features[i])
+                if(this.selected_feature_id==object_id){
+                    feature = features[i]
+                    break
+                }
+            }
+        }
+       //
+       console.log("the feature is",feature)
+
+       var layer=layer_manager.get_layer_obj($('#select_by_shape_span select').val())
+        if(typeof layer.layer_obj.query === "function"){
+                var query_base = layer.layer_obj.query()
+                var full_query= query_base['within'](feature.geometry)
+                this.run_query(full_query)
+            }else{
+                // try with turf
+               this.turf_search(layer,feature)
+            }
+    }
+    turf_search(_to,_from){
+        console.log("try with turf")
+        console.log(_from)
+         console.log(_to)
+        // approach depends on layer type
+        var from_layer_type = _from.geometry.type
+
+        var to_layer_type
+        if(_to.layer_obj.data[0]?.geometry){
+            to_layer_type=_to.layer_obj.data[0].geometry.type
+        }else if(_to.layer_obj.data?.features){
+            to_layer_type=_to.layer_obj.data.features[0].geometry.type
+        }
+
+
+
+          console.log(from_layer_type)
+         console.log(to_layer_type)
+        var geo_result
+        if(from_layer_type=="Point" && to_layer_type=="Polygon"){
+            var features = _to.layer_obj.data
+            var geo_result ={
+                  "type": "FeatureCollection",
+                  "features": []
+                };
+            for (var i=0;i<features.length;i++){
+
+                 if(turf.booleanPointInPolygon(_from,features[i])==true){
+                    geo_result.features.push(features[i])
+                 }
+            }
+
+        }else{
+
+             geo_result = turf.pointsWithinPolygon(_to.layer_obj.data, _from);
+         }
+
+        this.show_popup_details(geo_result.features)
+    }
      map_zoom_event(_bounds){
+        var bounds
         if (_bounds){
             bounds=_bounds
         }else{
-           var bounds=this.highlighted_feature.getBounds()
+           bounds=this.highlighted_feature.getBounds()
         }
 
         var zoom_level = this.map.getBoundsZoom(bounds)
+        console.log(zoom_level,_bounds)
         //prevent zooming in too close
         if (zoom_level>19){
             this.map.flyTo(bounds.getCenter(),19);
@@ -539,6 +629,7 @@ class Map_Manager {
          this.scroll_to_map()
      }
      zoom_rect(bounds){
+        this.hide_highlight_rect()
          this.map.flyToBounds(bounds);
           this.scroll_to_map()
      }
@@ -577,7 +668,7 @@ class Map_Manager {
     }
     //
     init_image_map(){
-      this.image_map = L.map('image_map', {
+       this.image_map = L.map('image_map', {
           center: [0, 0],
           zoom:  1,
           crs: L.CRS.Simple,
