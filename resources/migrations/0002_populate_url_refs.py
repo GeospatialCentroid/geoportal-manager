@@ -19,8 +19,8 @@ def load_data(apps, schema_editor):
 
         # 1) generate the categories
         for obj in objects:
-            {"name": "imageserver", "service": "true", "ref": "urn:x-esri:serviceType:ArcGIS#ImageMapLayer",
-             "class": "esri", "method": "imageMapLayer"},
+            # {"name": "imageserver", "service": "true", "ref": "urn:x-esri:serviceType:ArcGIS#ImageMapLayer",
+            #  "class": "esri", "method": "imageMapLayer"},
             if 'service' not in obj:
                 obj['service']=False
             else :
@@ -31,10 +31,12 @@ def load_data(apps, schema_editor):
             if 'method' not in obj:
                 obj['method'] = ""
 
-            try:
-                URL_Type(name=obj['name'], ref = obj['ref'],service=obj['service'],_class=obj['class'],_method=obj['method']).save()
-            except:
-                print("already loaded")
+            URL_Type(name=obj['name'], ref=obj['ref'], service=obj['service'], _class=obj['class'],
+                     _method=obj['method']).save()
+            # try:
+            #
+            # except:
+            #     print("already loaded")
 
 
 
@@ -47,7 +49,7 @@ def reverse_func(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('resources', '0005_auto_20220120_1818'),
+        ('resources', '0001_initial'),
     ]
 
     operations = [

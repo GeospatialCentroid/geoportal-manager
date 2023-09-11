@@ -80,8 +80,8 @@ class FileCollection:
         except:
 
             _json = self.parse_json(_file)
-
-        getattr(self, _func)(_json, parent_obj)
+        if _json:
+            getattr(self, _func)(_json, parent_obj)
 
     def open_json(self,_file):
         """
@@ -108,7 +108,10 @@ class FileCollection:
         s = outfile.read()
         _json = s[s.find("(") + 1:s.rfind(")")]
         outfile.close()
-        return json.loads(_json)
+        try:
+            return json.loads(_json)
+        except:
+            return
 
     def convert_date_to_db_format(self,date_str):
         """

@@ -38,7 +38,7 @@ class Layer_Manager {
     this.split_right_layers=[];
 
     //  only show the table for specific types
-    this.table_types=["esriSFS","esriPMS","esriSLS","vector","GeoJSON","mapserver"]
+    this.table_types=["esriSFS","esriPMS","esriSLS","Vector","GeoJSON","mapserver","feature layer"]
     //
     var $this=this;
     // make the map layers sortable
@@ -525,6 +525,9 @@ class Layer_Manager {
         //todo - get this from the service
         layer_options.maxZoom= 21
         console.log(service_method,service_method._class,service_method._method)
+        if(service_method.name=="tms"){
+           layer_options.tms=true
+        }
         var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
     }else if(service_method?._method && service_method._method.indexOf(".")>-1){
         var method_parts=service_method._method.split(".")

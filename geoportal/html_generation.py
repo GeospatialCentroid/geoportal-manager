@@ -24,36 +24,60 @@ def get_browse_html(request,_LANG=False):
 
     html = '<ul class="list-group list-group-flush">'
 
-    html += get_list_group_html(-1,args['LANG']["FACET"]["TOPICS"], facets["facet_counts"]["facet_fields"]["dct_subject_sm"],
+    try:
+
+        html += get_list_group_html(-1,args['LANG']["FACET"]["TOPICS"], facets["facet_counts"]["facet_fields"]["dct_subject_sm"],
                                      "dct_subject_sm", args['LANG']["FACET"]["CATEGORIES"], True, "true")
+    except:
+        pass
+    try:
+        html += get_list_group_html(-2, args['LANG']["FACET"]["PRODUCERS"],
+                                    facets["facet_counts"]["facet_fields"]["dct_publisher_sm"],
+                                    "dct_publisher_sm", False, True, "true")
+        # html += get_list_group_html(-2, args['LANG']["FACET"]["KEYWORDS"],
+        #                             facets["facet_counts"]["facet_fields"]["dcat_keyword_sm"],
+        #                             "dcat_keyword_sm", False, False, "true")
+    except:
+        pass
+    try:
+        html += get_list_group_html(-3, args['LANG']["FACET"]["PLACE"],
+                                    facets["facet_counts"]["facet_fields"]["dct_spatial_sm"],
+                                    'dct_spatial_sm', False, False, "true")
+    except:
+        pass
+    try:
+        html += get_list_group_html(-4, args['LANG']["FACET"]["AUTHOR"],
+                                    facets["facet_counts"]["facet_fields"]["dct_creator_sm"],
+                                    "dct_creator_sm", False, False, "true")
+    except:
+        pass
 
-    html += get_list_group_html(-2, args['LANG']["FACET"]["PRODUCERS"],
-                                facets["facet_counts"]["facet_fields"]["dct_publisher_sm"],
-                                "dct_publisher_sm", False, True, "true")
-    # html += get_list_group_html(-2, args['LANG']["FACET"]["KEYWORDS"],
-    #                             facets["facet_counts"]["facet_fields"]["dcat_keyword_sm"],
-    #                             "dcat_keyword_sm", False, False, "true")
+    try:
+        # html += get_list_group_html(-5, args['LANG']["FACET"]["DATA_TYPE"],
+        #                             facets["facet_counts"]["facet_fields"]["gbl_resourceType_sm"],
+        #                             "gbl_resourceType_sm", False, False, "true")
+        html += get_list_group_html(-6, args['LANG']["FACET"]["FORMAT"],
+                                    facets["facet_counts"]["facet_fields"]["dct_format_s"],
+                                    "dct_format_s", False, False, "true")
+    except:
+        pass
 
-    html += get_list_group_html(-3,args['LANG']["FACET"]["PLACE"], facets["facet_counts"]["facet_fields"]["dct_spatial_sm"],
-                                     'dct_spatial_sm', False, False, "true")
-    html += get_list_group_html(-4,args['LANG']["FACET"]["AUTHOR"], facets["facet_counts"]["facet_fields"]["dct_creator_sm"],
-                                     "dct_creator_sm", False, False, "true")
-    # html += get_list_group_html(-5, args['LANG']["FACET"]["DATA_TYPE"],
-    #                             facets["facet_counts"]["facet_fields"]["gbl_resourceType_sm"],
-    #                             "gbl_resourceType_sm", False, False, "true")
-    html += get_list_group_html(-6, args['LANG']["FACET"]["FORMAT"],
-                                facets["facet_counts"]["facet_fields"]["dct_format_s"],
-                                "dct_format_s", False, False, "true")
+
     # new data
     new_data = views.get_rss(request).render()
     root = ET.fromstring(new_data.content)
     a_links=[]
     a_titles = []
     for i in root.findall('channel/item'):
-        a_titles.append(i.find("title").text+"<br/><span class='small'>"+i.find("pubDate").text+"</span>")
+        str=i.find("title").text
+        if i.find("pubDate").text:
+            str+="<br/><span class='small'>"+i.find("pubDate").text+"</span>"
+        a_titles.append(str)
+
         id = i.find("guid").text
-        # we want links to go directly to the details page
-        a_links.append( ' onclick="filter_manager.show_details(\'' + id +'\')" href="/?t=search_tab/details/' + id + '"')
+        if id:
+            # we want links to go directly to the details page
+            a_links.append( ' onclick="filter_manager.show_details(\'' + id +'\')" href="/?t=search_tab/details/' + id + '"')
 
     html += get_list_group_html(-7, args['LANG']["FACET"]["NEW_DATA"],
                                 a_titles,
@@ -107,7 +131,7 @@ def get_list_group_html(id,title, list,facet_name,translate,no_collapsed,reset,a
                     title =translate[list[i]]['title']
 
             html +=title
-            if not a_links:
+            if not a_links and len(list)>1:
                 html +='<span class="badge badge-primary badge-pill">'+str(list[i+1])+'</span>'
 
             html +='</a>'

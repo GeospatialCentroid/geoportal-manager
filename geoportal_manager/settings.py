@@ -101,11 +101,11 @@ if ENV_ROLE == 'development':
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'geoportal',
+        'NAME': 'geoportal_manager',
         'USER': 'geoportal_admin',
         'PASSWORD': GEOPORTAL_DB_PASS,
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '5433',
     }
 }
 
