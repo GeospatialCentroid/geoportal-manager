@@ -54,7 +54,7 @@ class FileCollection_DCAT(FileCollection):
         """
         # scan the json looking for how many records have been downloaded
         # can setup the next request if there are more pages to be downloaded
-        # print(data)
+        #print(data)
         self.drill_loaded_data(data)
 
     def drill_loaded_data(self, data):
@@ -78,9 +78,18 @@ class FileCollection_DCAT(FileCollection):
                 id = _id[_id.rindex('/')+1:_id.rindex('_')]
             except:
                 id = _id[_id.rindex('/')+1:]
+            # KW 20230309 ESRI has changed their identifier
+            if "id=" in id:
+                id=id[id.index("id=")+3:]
+            if "&" in id:
+                id = id[:id.index("&")]
+
+            r['identifier']=id
+            #######
             # todo  - remove when done testing - should be 'arg' flag
             # if index >1:
             #     break
+            ###############
             if self.resource_ids:
                 # only load specified resource ids
                 for r_id in self.resource_ids:
@@ -103,7 +112,6 @@ class FileCollection_DCAT(FileCollection):
         """
         _file = layers_path + "/" + id + ".json"
         _url = self.arc_item_prefix + id + "/layers?f=pjson"
-        #
         self.load_file_call_func(_file, _url, 'ingest_parent_record', r)
 
 
@@ -116,7 +124,7 @@ class FileCollection_DCAT(FileCollection):
         """
 
         obj = self.file_parser.create_record(data,False, self)
-
+        print(obj)
         # create a parent object
         r = self.save_record(obj,child_data,data)
 
@@ -127,7 +135,7 @@ class FileCollection_DCAT(FileCollection):
                 # store the base url
                 layers_path = self.path + self.folder + "/layers"
                 _id = child_data['identifier']
-                id = _id[_id.rindex('/'):]
+                id = _id#[_id.rindex('/'):]
                 _file = layers_path + "/" + id + "_service.json"
 
                 if "accessURL" in d:

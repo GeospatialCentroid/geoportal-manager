@@ -42,7 +42,10 @@ class FileParser_ARC(FileParser):
                 resource['tags'] =  resource['keyword']
 
             if 'identifier' in resource:
-                resource['id'] = resource['identifier'][resource['identifier'].rindex('/')+1:]
+
+                resource['id'] = resource['identifier']
+                if "/" in resource['id']:
+                    resource['id'] = resource['identifier'][resource['identifier'].rindex('/') + 1:]
 
             if 'contactPoint' in resource:
                 resource['owner'] = resource['contactPoint']['fn']

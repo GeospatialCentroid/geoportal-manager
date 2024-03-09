@@ -35,10 +35,10 @@ class FileParser:
             categories=[]
 
         text = ''
-        if 'description' in r:
+        if 'description' in r and r['description']!=None:
             text = r['description']
-        # append the keywords
 
+        # append the keywords
         if 'tags' in r:
             text += ', '.join(r['tags'])
 
