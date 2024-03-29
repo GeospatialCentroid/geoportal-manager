@@ -26,7 +26,7 @@ class Command(BaseCommand):
         parser.add_argument("-l", "--local", help="choose if local run",
                             action="store_true",)
 
-        parser.add_argument("-e", "--end_point_id", type=int, help="specify an End Point ID")
+        parser.add_argument("-e", "--end_point_id", type=str, help="specify an End Point ID")
 
         parser.add_argument("-d", "--date", type=str,
                             help="(Optional) The date of when to run - useful when wanting to overwrite the run date. Format YYYYMMDD. Could use '' for no date tracking.",)
@@ -74,8 +74,13 @@ class Command(BaseCommand):
         # get the end points from the data base and loop over them
         if (kwargs['end_point_id']):
             # end_points = [End_Point.objects.get(pk=kwargs['end_point_id'])]
-            # allow mulitple ids
-            end_points = End_Point.objects.filter(id__in=kwargs['end_point_id'].split(","))
+            # allow multiple ids
+            ids= kwargs['end_point_id']
+            if ',' in ids:
+                ids=ids.split(",")
+            else:
+                ids=[ids]
+            end_points = End_Point.objects.filter(id__in=ids)
             print("end_points",end_points)
         else:
             end_points = End_Point.objects.all()
