@@ -70,10 +70,13 @@ class Command(BaseCommand):
             "report_file": report_file,
 
         })
-
+        print("################################")
         # get the end points from the data base and loop over them
         if (kwargs['end_point_id']):
-            end_points = [End_Point.objects.get(pk=kwargs['end_point_id'])]
+            # end_points = [End_Point.objects.get(pk=kwargs['end_point_id'])]
+            # allow mulitple ids
+            end_points = End_Point.objects.filter(id__in=kwargs['end_point_id'].split(","))
+            print("end_points",end_points)
         else:
             end_points = End_Point.objects.all()
 

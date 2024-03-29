@@ -264,15 +264,19 @@ class Resource(models.Model):
                     need_to_track=False
 
                 if need_to_track:
-                    Change_Log.objects.get_or_create(
-                        change_type=change_type,
-                        community_input=community_input,
-                        resource=self,
-                        field_name=f,
-                        # truncate really long values
-                        old=(d1[:limit-2] + '..') if len(d1) > limit else d1,
-                        new = (d2[:limit - 2] + '..') if len(d2) > limit else d2
-                    )
+                    try:
+                        Change_Log.objects.get_or_create(
+                            change_type=change_type,
+                            community_input=community_input,
+                            resource=self,
+                            field_name=f,
+                            # truncate really long values
+                            old=(d1[:limit-2] + '..') if len(d1) > limit else d1,
+                            new = (d2[:limit - 2] + '..') if len(d2) > limit else d2
+                        )
+                    except:
+                        print("An exception occurred")
+
                     #if the field is status - create a status log record
                     if f =="status_type":
                         Status_Log.objects.get_or_create(

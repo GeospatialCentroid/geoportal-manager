@@ -21,6 +21,11 @@ from django.http import HttpResponseRedirect
 import resources.ingester.Delete_From_Solr as Delete_From_Solr
 import resources.ingester.DB_ToGBL as db_to_gbl
 import resources.ingester.Publish_ToGBL as publish_to_gbl
+
+from django.core.management import call_command
+
+
+
 from django.shortcuts import render
 
 import decimal
@@ -363,7 +368,20 @@ def get_pretty_json(_json):
 admin_site.register(Resource, ResourceAdmin)
 
 class End_PointAdmin(OSMGeoAdmin):
-   pass
+    actions = ["harvest_selected_endpoints"]
+
+    def harvest_selected_endpoints(self, request, queryset):
+        endpoint_list=[]
+        for obj in queryset:
+            endpoint_list.append(obj.id)
+        print("endpoint_list",endpoint_list)
+        call_command('harvest', end_point_id=",".join(str(x) for x in endpoint_list))
+        msg="Endpoints "+str(endpoint_list)+" were harvested."
+
+        self.message_user(request, msg, messages.SUCCESS)
+
+    harvest_selected_endpoints.short_description = "Havest Endpoint(s)"
+
 
 admin_site.register(End_Point, End_PointAdmin)
 
